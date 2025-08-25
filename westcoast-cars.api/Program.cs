@@ -6,7 +6,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 // Add database support
 builder.Services.AddDbContext<WestcoastCarsContext>(options => {
-    options.UseSqlite(builder.Configuration.GetConnectionString("Sqlite"));
+    var connectionString = builder.Configuration.GetConnectionString("MySql");
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
 });
 
 builder.Services.AddControllers();

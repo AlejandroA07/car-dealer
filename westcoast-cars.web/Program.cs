@@ -8,7 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHttpClient();
 
 // set up db configuration/DbConnectionStringPipeline
-builder.Services.AddDbContext<WestcoastCarsContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("Sqlite")));
+builder.Services.AddDbContext<WestcoastCarsContext>(options => options.UseMySql(builder.Configuration.GetConnectionString("MySqlConnection"), ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("MySqlConnection"))));
 
 builder.Services.AddControllersWithViews();
 
