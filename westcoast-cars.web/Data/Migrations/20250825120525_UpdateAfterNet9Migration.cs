@@ -132,8 +132,7 @@ namespace westcoast_cars.web.Data.Migrations
                 type: "int",
                 nullable: false,
                 oldClrType: typeof(int),
-                oldType: "INTEGER")
-                .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn);
+                oldType: "INTEGER"); // Removed .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn);
 
             migrationBuilder.AlterColumn<string>(
                 name: "Name",
@@ -152,8 +151,7 @@ namespace westcoast_cars.web.Data.Migrations
                 type: "int",
                 nullable: false,
                 oldClrType: typeof(int),
-                oldType: "INTEGER")
-                .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn);
+                oldType: "INTEGER"); // Removed .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn);
 
             migrationBuilder.AlterColumn<string>(
                 name: "Name",
@@ -172,8 +170,7 @@ namespace westcoast_cars.web.Data.Migrations
                 type: "int",
                 nullable: false,
                 oldClrType: typeof(int),
-                oldType: "INTEGER")
-                .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn);
+                oldType: "INTEGER"); // Removed .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn);
 
             migrationBuilder.AlterColumn<string>(
                 name: "Name",
@@ -192,8 +189,7 @@ namespace westcoast_cars.web.Data.Migrations
                 type: "int",
                 nullable: false,
                 oldClrType: typeof(int),
-                oldType: "INTEGER")
-                .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn);
+                oldType: "INTEGER"); // Removed .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn);
 
             // Re-create the foreign key constraints
             migrationBuilder.AddForeignKey(
