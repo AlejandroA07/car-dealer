@@ -17,26 +17,7 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Load data into database
-using var scope = app.Services.CreateScope();
-var services = scope.ServiceProvider;
 
-try
-{
-    var context = services.GetRequiredService<WestcoastCarsContext>();
-    // Compares db context with the migration
-    await context.Database.MigrateAsync();
-
-    await SeedData.LoadTransmissionsData(context);
-    await SeedData.LoadFuelTypeData(context);
-    await SeedData.LoadManufacturerData(context);
-    await SeedData.LoadVehicleData(context);
-}
-catch (Exception ex)
-{
-    Console.WriteLine(ex.Message);
-    throw;
-}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

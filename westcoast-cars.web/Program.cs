@@ -28,11 +28,14 @@ try
     var context = services.GetRequiredService<WestcoastCarsContext>();
     // here i do a migration to the db
     await context.Database.MigrateAsync();
-    // Here runs LoadData with the context
-    await SeedData.LoadManufacturerData(context);
-    await SeedData.LoadFuelTypeData(context);
-    await SeedData.LoadTransmissionsData(context);
-    await SeedData.LoadVehicleData(context);
+    // Here runs LoadData with the context, but only if the database is empty
+    if (!context.Vehicles.Any())
+    {
+        await SeedData.LoadManufacturerData(context);
+        await SeedData.LoadFuelTypeData(context);
+        await SeedData.LoadTransmissionsData(context);
+        await SeedData.LoadVehicleData(context);
+    }
     
 }
 catch (Exception ex)

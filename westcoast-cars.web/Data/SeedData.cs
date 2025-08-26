@@ -13,7 +13,7 @@ namespace westcoast_cars.web.Data
             };
 
             // 2. load data if db is empty
-            if(context.Manufacturers.Any()) return;
+            
 
             // 3. read json info from vehicles.json file
             var json = System.IO.File.ReadAllText("Data/json/manufacturer.json");
@@ -38,7 +38,7 @@ namespace westcoast_cars.web.Data
             };
 
             // 2. load data if db is empty
-            if(context.Vehicles.Any()) return;
+            
 
             // 3. read json info from vehicles.json file
             var json = System.IO.File.ReadAllText("Data/json/vehicles.json");
@@ -64,7 +64,7 @@ namespace westcoast_cars.web.Data
             };
 
             // Steg 2. Vill endast ladda data om vår vehicles tabell är tom...
-            if (context.FuelTypes.Any()) return;
+            
 
             // Steg 3. Läsa in json informationen ifrån vår vehicles.json fil...
             var json = System.IO.File.ReadAllText("Data/json/fuelTypes.json");
@@ -89,7 +89,7 @@ namespace westcoast_cars.web.Data
             };
 
             // Steg 2. Vill endast ladda data om vår vehicles tabell är tom...
-            if (context.TransmissionsTypes.Any()) return;
+            
 
             // Steg 3. Läsa in json informationen ifrån vår vehicles.json fil...
             var json = System.IO.File.ReadAllText("Data/json/transmissionTypes.json");
