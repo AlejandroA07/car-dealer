@@ -27,8 +27,10 @@ namespace westcoast_cars.api.Controllers
             .Select(v => new{
                 Id = v.Id,
                 Name = $"{v.Manufacturer.Name} {v.Model}",
-                Modelyear = v.ModelYear,
-                Milage = v.Mileage,
+                Manufacturer = v.Manufacturer.Name,
+                Model = v.Model,
+                ModelYear = v.ModelYear,
+                Mileage = v.Mileage,
                 ImageUrl = _imageBaseUrl + v.ImageUrl ?? "no-car.png"
             })
             .ToListAsync();
