@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using WestcoastCars.Infrastructure.Data;
-using WestcoastCars.Domain.Entities;
+using WestcoastCars.Application.Interfaces;
 
 namespace westcoast_cars.api.Controllers
 {
@@ -9,89 +7,74 @@ namespace westcoast_cars.api.Controllers
     [Route("api/v1/transmissionTypes")]
     public class TransmissionsController : ControllerBase
     {
-        private readonly WestcoastCarsContext _context;
-        public TransmissionsController(WestcoastCarsContext context)
+        private readonly ITransmissionTypeRepository _transmissionRepository;
+
+        public TransmissionsController(ITransmissionTypeRepository transmissionRepository)
         {
-            _context = context;
+            _transmissionRepository = transmissionRepository;
         }
 
         [HttpGet]
         public async Task<IActionResult> ListAll()
         {
-            var result = await _context.TransmissionTypes
-                .Select(c => new
-                {
-                    Name = c.Name
-                })
-                .ToListAsync();
-
+            var transmissions = await _transmissionRepository.ListAllAsync();
+            var result = transmissions.Select(c => new { Name = c.Name }).ToList();
             return Ok(result);
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var result = await _context.TransmissionTypes
-                .Include(c => c.Vehicles)
-                    .ThenInclude(v => v.Manufacturer)
-                .Select(v => new
-                {
-                    TransmissionTypeName = v.Name,
-                    Vehicles = v.Vehicles.Select(m => new 
-                    {
-                        VehicleName = $"{m.Manufacturer.Name} {m.Model}",
-                        TransmissionType = m.TransmissionsType.Name
-                    }).ToList()
-                })
-                .FirstOrDefaultAsync();
+            var transmission = await _transmissionRepository.FindByIdWithVehiclesAsync(id);
+            if (transmission is null) return NotFound();
 
+            var result = new
+            {
+                TransmissionTypeName = transmission.Name,
+                Vehicles = transmission.Vehicles.Select(m => new
+                {
+                    VehicleName = $"{m.Manufacturer.Name} {m.Model}",
+                    TransmissionType = m.TransmissionsType.Name
+                }).ToList()
+            };
             return Ok(result);
         }
 
         [HttpGet("name/{name}")]
         public async Task<IActionResult> GetByName(string name)
         {
-            var result = await _context.TransmissionTypes
-                .Where(c => c.Name.ToUpper().StartsWith(name.ToUpper()))
-                .Select(c => new
+            var transmissions = await _transmissionRepository.FindByNameWithVehiclesAsync(name);
+            var result = transmissions.Select(t => new
+            {
+                Name = t.Name,
+                Vehicles = t.Vehicles.Select(v => new
                 {
-                    Name = c.Name,
-                    Vehicles = c.Vehicles.Select(v => new
-                    {
-                        RegistraitionNumber = v.RegistrationNumber,
-                        Model = v.Model,
-                        Manufacturer = v.Manufacturer.Name,
-                        ModelYear = v.ModelYear
-                    })
+                    RegistraitionNumber = v.RegistrationNumber,
+                    Model = v.Model,
+                    Manufacturer = v.Manufacturer.Name,
+                    ModelYear = v.ModelYear
                 })
-                .ToListAsync();
-
+            }).ToList();
+            
             return Ok(result);
         }
 
         [HttpGet("{name}/vehicles")]
         public async Task<IActionResult> ListVehiclesByTransmissionTypes(string name)
         {
-            var result = await _context.TransmissionTypes
-                .Where(c => c.Name.ToUpper().StartsWith(name.ToUpper()))
-                .Include(c => c.Vehicles)
-                    .ThenInclude(v => v.Manufacturer)
-                .Select(v => new 
+            var transmissions = await _transmissionRepository.FindByNameWithVehiclesAsync(name);
+            var result = transmissions.Select(t => new
+            {
+                Name = t.Name,
+                Vehicles = t.Vehicles.Select(m => new
                 {
-                    Name = v.Name,
-                    Vehicles = v.Vehicles.Select(m => new 
-                    {
-                        Name = $"{m.Manufacturer.Name} {m.Model}",
-                        RegistrationNumber = m.RegistrationNumber,
-                        Model = m.Model
-                    
-                    }).ToList()
-
-                })
-                .ToListAsync();
+                    Name = $"{m.Manufacturer.Name} {m.Model}",
+                    RegistrationNumber = m.RegistrationNumber,
+                    Model = m.Model
+                }).ToList()
+            }).ToList();
 
             return Ok(result);
         }
-
     }
 }
