@@ -42,17 +42,17 @@ public interface IVehicleRepository
     /// Adds a new vehicle to the repository.
     /// </summary>
     /// <param name="vehicle">The vehicle entity to add.</param>
-    Task AddAsync(Vehicle vehicle);
+    void Add(Vehicle vehicle);
 
     /// <summary>
     /// Updates an existing vehicle in the repository.
     /// </summary>
     /// <param name="vehicle">The vehicle entity to update.</param>
-    Task UpdateAsync(Vehicle vehicle);
+    void Update(Vehicle vehicle);
 
     /// <summary>
     /// Deletes a vehicle from the repository by its ID.
     /// </summary>
     /// <param name="id">The ID of the vehicle to delete.</param>
-    Task DeleteAsync(int id);
+    void Delete(int id);
 }

@@ -10,5 +10,5 @@ public interface ITransmissionTypeRepository
     Task<IReadOnlyList<TransmissionType>> ListAsync(Expression<Func<TransmissionType, bool>> expression);
     Task<TransmissionType?> FindByIdWithVehiclesAsync(int id);
     Task<IReadOnlyList<TransmissionType>> FindByNameWithVehiclesAsync(string name);
-    Task AddAsync(TransmissionType transmissionType);
+    void Add(TransmissionType transmissionType);
 }

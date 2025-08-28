@@ -39,5 +39,5 @@ public interface IManufacturerRepository
     /// Adds a new manufacturer to the repository.
     /// </summary>
     /// <param name="manufacturer">The manufacturer entity to add.</param>
-    Task AddAsync(Manufacturer manufacturer);
+    void Add(Manufacturer manufacturer);
 }
