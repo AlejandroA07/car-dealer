@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using WestcoastCars.Infrastructure.Data;
+using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Domain.Entities;
 using westcoast_cars.api.ViewModels;
+using WestcoastCars.Infrastructure.Data;
 
 namespace westcoast_cars.api.Controllers
 {
@@ -10,59 +10,56 @@ namespace westcoast_cars.api.Controllers
     [Route("api/v1/manufacturers")]
     public class ManufacturersController : ControllerBase
     {
-        private readonly WestcoastCarsContext _context;
-        public ManufacturersController(WestcoastCarsContext context)
+        private readonly IManufacturerRepository _manufacturerRepository;
+        private readonly WestcoastCarsContext _context; // Se mantiene para SaveChangesAsync
+
+        public ManufacturersController(IManufacturerRepository manufacturerRepository, WestcoastCarsContext context)
         {
+            _manufacturerRepository = manufacturerRepository;
             _context = context;
         }
 
         [HttpGet]
         public async Task<IActionResult> ListAll()
         {
-            var result = await _context.Manufacturers
-                .Select(v => new 
-                {
-                    Name = v.Name
-                })
-                .ToListAsync();
-
+            var manufacturers = await _manufacturerRepository.ListAllAsync();
+            var result = manufacturers.Select(m => new { Name = m.Name }).ToList();
             return Ok(result);
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var result = await _context.Manufacturers.FindAsync(id);
-            return Ok(result);
+            var manufacturer = await _manufacturerRepository.FindByIdAsync(id);
+            if (manufacturer is null) return NotFound();
+            return Ok(manufacturer);
         }
 
         [HttpGet("name/{name}")]
         public async Task<IActionResult> GetByName(string name)
         {
-            var result = await _context.Manufacturers
-                .Where(c => c.Name.ToUpper().StartsWith(name.ToUpper()))
-                .ToListAsync();
-            return Ok(result);
+            var manufacturers = await _manufacturerRepository.ListAsync(c => c.Name.ToUpper().StartsWith(name.ToUpper()));
+            return Ok(manufacturers);
         }
 
         [HttpGet("{name}/vehicles")]
         public async Task<IActionResult> ListVehiclesByMake(string name)
         {
-            var result = await _context.Manufacturers
-                .Where(c => c.Name.ToUpper().StartsWith(name.ToUpper()))
-                .Select(m => new
+            var manufacturer = await _manufacturerRepository.FindByNameWithVehiclesAsync(name);
+            if (manufacturer is null) return NotFound();
+
+            var result = new
+            {
+                Name = manufacturer.Name,
+                Vehicles = manufacturer.Vehicles.Select(v => new
                 {
-                    Name = m.Name,
-                    Vehicles = m.Vehicles.Select(v => new
-                    {
-                        RegistrationNumber = v.RegistrationNumber,
-                        Model = v.Model,
-                        ModelYear = v.ModelYear,
-                        Mileage = v.Mileage
-                    }).ToList()
-                }).ToListAsync();
-
-
+                    RegistrationNumber = v.RegistrationNumber,
+                    Model = v.Model,
+                    ModelYear = v.ModelYear,
+                    Mileage = v.Mileage
+                }).ToList()
+            };
+            
             return Ok(result);
         }
 
@@ -71,41 +68,28 @@ namespace westcoast_cars.api.Controllers
         {
             if (!ModelState.IsValid) return BadRequest("All information är inte med i anropet");
 
-            if(await _context.Manufacturers.SingleOrDefaultAsync(c => c.Name.ToUpper() == model.Name.ToUpper()) is not null)
+            var existing = await _manufacturerRepository.ListAsync(m => m.Name.ToUpper() == model.Name.ToUpper());
+            if (existing.Any())
             {
                 return BadRequest($"Manufacturer {model.Name} finns redan i systemet");
             }
-
 
             var modelToAdd = new Manufacturer
             {
                 Name = model.Name
             };
 
-            try
-            {
-                await _context.Manufacturers.AddAsync(modelToAdd);
+            await _manufacturerRepository.AddAsync(modelToAdd);
 
-                if(await _context.SaveChangesAsync() > 0)
-                {
-                    return CreatedAtAction(nameof(GetById), new { id = modelToAdd.Id},
-                    new
-                    {
-                        Id = modelToAdd.Id,
-                        Name = modelToAdd.Name
-                    });
-                }
-
-                return StatusCode(500, "Internal Server Error");
-            }
-            catch (Exception ex)
+            if (await _context.SaveChangesAsync() > 0)
             {
-                // loggning till en databas som hanterar debug information...
-                Console.WriteLine(ex.Message);
-                return StatusCode(500, "Internal Server Error");
+                return CreatedAtAction(nameof(GetById), new { id = modelToAdd.Id }, new {
+                    Id = modelToAdd.Id,
+                    Name = modelToAdd.Name
+                });
             }
+
+            return StatusCode(500, "Internal Server Error");
         }
-
-        
     }
 }
