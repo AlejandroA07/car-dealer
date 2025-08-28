@@ -12,11 +12,8 @@ builder.Services.AddDbContext<WestcoastCarsContext>(options => {
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
 });
 
-// Register repositories for dependency injection
-builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
-builder.Services.AddScoped<IManufacturerRepository, ManufacturerRepository>();
-builder.Services.AddScoped<IFuelTypeRepository, FuelTypeRepository>();
-builder.Services.AddScoped<ITransmissionTypeRepository, TransmissionTypeRepository>();
+// Register Unit of Work for dependency injection
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
