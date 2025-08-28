@@ -15,6 +15,7 @@ builder.Services.AddDbContext<WestcoastCarsContext>(options => {
 // Register repositories for dependency injection
 builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
 builder.Services.AddScoped<IManufacturerRepository, ManufacturerRepository>();
+builder.Services.AddScoped<IFuelTypeRepository, FuelTypeRepository>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
