@@ -1,7 +1,7 @@
 using System.Text.Json;
-using westcoast_cars.api.Entities;
+using WestcoastCars.Domain.Entities;
 
-namespace westcoast_cars.api.Data
+namespace WestcoastCars.Infrastructure.Data
 {
     public static class SeedData
     {

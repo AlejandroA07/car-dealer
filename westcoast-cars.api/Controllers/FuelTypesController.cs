@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using westcoast_cars.api.Data;
+using WestcoastCars.Infrastructure.Data;
 
 namespace westcoast_cars.api.Controllers
 {

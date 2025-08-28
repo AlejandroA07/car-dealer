@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using westcoast_cars.api.Data;
-using westcoast_cars.api.Entities;
+using WestcoastCars.Infrastructure.Data;
+using WestcoastCars.Domain.Entities;
 
 namespace westcoast_cars.api.Controllers
 {
@@ -33,12 +33,13 @@ namespace westcoast_cars.api.Controllers
         {
             var result = await _context.TransmissionTypes
                 .Include(c => c.Vehicles)
+                    .ThenInclude(v => v.Manufacturer)
                 .Select(v => new
                 {
                     TransmissionTypeName = v.Name,
                     Vehicles = v.Vehicles.Select(m => new 
                     {
-                        VehicleName = m.Name,
+                        VehicleName = $"{m.Manufacturer.Name} {m.Model}",
                         TransmissionType = m.TransmissionsType.Name
                     }).ToList()
                 })
@@ -73,12 +74,14 @@ namespace westcoast_cars.api.Controllers
         {
             var result = await _context.TransmissionTypes
                 .Where(c => c.Name.ToUpper().StartsWith(name.ToUpper()))
+                .Include(c => c.Vehicles)
+                    .ThenInclude(v => v.Manufacturer)
                 .Select(v => new 
                 {
                     Name = v.Name,
                     Vehicles = v.Vehicles.Select(m => new 
                     {
-                        Name = m.Name,
+                        Name = $"{m.Manufacturer.Name} {m.Model}",
                         RegistrationNumber = m.RegistrationNumber,
                         Model = m.Model
                     

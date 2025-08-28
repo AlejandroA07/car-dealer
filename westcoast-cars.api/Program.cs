@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using westcoast_cars.api.Data;
+using WestcoastCars.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
