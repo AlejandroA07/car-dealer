@@ -47,8 +47,8 @@ public class TransmissionTypeRepository : ITransmissionTypeRepository
             .ToListAsync();
     }
 
-    public async Task AddAsync(TransmissionType transmissionType)
+    public void Add(TransmissionType transmissionType)
     {
-        await _context.TransmissionTypes.AddAsync(transmissionType);
+        _context.TransmissionTypes.Add(transmissionType);
     }
 }

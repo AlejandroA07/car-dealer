@@ -50,20 +50,19 @@ public class VehicleRepository : IVehicleRepository
             .ToListAsync();
     }
 
-    public async Task AddAsync(Vehicle vehicle)
+    public void Add(Vehicle vehicle)
     {
-        await _context.Vehicles.AddAsync(vehicle);
+        _context.Vehicles.Add(vehicle);
     }
 
-    public Task UpdateAsync(Vehicle vehicle)
+    public void Update(Vehicle vehicle)
     {
         _context.Entry(vehicle).State = EntityState.Modified;
-        return Task.CompletedTask;
     }
 
-    public async Task DeleteAsync(int id)
+    public void Delete(int id)
     {
-        var vehicle = await _context.Vehicles.FindAsync(id);
+        var vehicle = _context.Vehicles.Find(id);
         if (vehicle is not null)
         {
             _context.Vehicles.Remove(vehicle);

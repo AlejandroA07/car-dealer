@@ -37,8 +37,8 @@ public class FuelTypeRepository : IFuelTypeRepository
             .SingleOrDefaultAsync(f => f.Name.ToUpper() == name.ToUpper());
     }
 
-    public async Task AddAsync(FuelType fuelType)
+    public void Add(FuelType fuelType)
     {
-        await _context.FuelTypes.AddAsync(fuelType);
+        _context.FuelTypes.Add(fuelType);
     }
 }

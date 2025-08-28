@@ -37,8 +37,8 @@ public class ManufacturerRepository : IManufacturerRepository
             .SingleOrDefaultAsync(m => m.Name.ToUpper() == name.ToUpper());
     }
 
-    public async Task AddAsync(Manufacturer manufacturer)
+    public void Add(Manufacturer manufacturer)
     {
-        await _context.Manufacturers.AddAsync(manufacturer);
+        _context.Manufacturers.Add(manufacturer);
     }
 }
