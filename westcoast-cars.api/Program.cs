@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Infrastructure.Data;
+using WestcoastCars.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +11,9 @@ builder.Services.AddDbContext<WestcoastCarsContext>(options => {
     var connectionString = builder.Configuration.GetConnectionString("MySql");
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
 });
+
+// Register repositories for dependency injection
+builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
