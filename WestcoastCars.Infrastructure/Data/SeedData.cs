@@ -106,3 +106,11 @@ namespace WestcoastCars.Infrastructure.Data
         }
     }
 }
+
+/* 
+    dotnet ef database drop
+    delete migration folder
+    dotnet ef migrations add InicialCreate -o Data/Migrations
+    dotnet ef database update
+    dotnet ef migrations remove
+ */

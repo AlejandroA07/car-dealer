@@ -2,29 +2,26 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using westcoast_cars.web.Data;
+using WestcoastCars.Infrastructure.Data;
 
 #nullable disable
 
-namespace westcoast_cars.web.Data.Migrations
+namespace WestcoastCars.Infrastructure.Migrations
 {
     [DbContext(typeof(WestcoastCarsContext))]
-    [Migration("20250825120525_UpdateAfterNet9Migration")]
-    partial class UpdateAfterNet9Migration
+    partial class WestcoastCarsContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.0")
+                .HasAnnotation("ProductVersion", "9.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
-            modelBuilder.Entity("westcoast_cars.web.Models.FuelTypeModel", b =>
+            modelBuilder.Entity("WestcoastCars.Domain.Entities.FuelType", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -33,6 +30,7 @@ namespace westcoast_cars.web.Data.Migrations
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
@@ -40,7 +38,7 @@ namespace westcoast_cars.web.Data.Migrations
                     b.ToTable("FuelTypes");
                 });
 
-            modelBuilder.Entity("westcoast_cars.web.Models.ManufacturerModel", b =>
+            modelBuilder.Entity("WestcoastCars.Domain.Entities.Manufacturer", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -49,6 +47,7 @@ namespace westcoast_cars.web.Data.Migrations
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
@@ -56,7 +55,7 @@ namespace westcoast_cars.web.Data.Migrations
                     b.ToTable("Manufacturers");
                 });
 
-            modelBuilder.Entity("westcoast_cars.web.Models.TransmissionsTypeModel", b =>
+            modelBuilder.Entity("WestcoastCars.Domain.Entities.TransmissionType", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -65,14 +64,15 @@ namespace westcoast_cars.web.Data.Migrations
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
 
-                    b.ToTable("TransmissionsTypes");
+                    b.ToTable("TransmissionTypes");
                 });
 
-            modelBuilder.Entity("westcoast_cars.web.Models.VehicleModel", b =>
+            modelBuilder.Entity("WestcoastCars.Domain.Entities.Vehicle", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -81,12 +81,14 @@ namespace westcoast_cars.web.Data.Migrations
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<int>("FuelTypeId")
                         .HasColumnType("int");
 
                     b.Property<string>("ImageUrl")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<bool>("IsSold")
@@ -99,12 +101,15 @@ namespace westcoast_cars.web.Data.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Model")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("ModelYear")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("RegistrationNumber")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<int>("TransmissionsTypeId")
@@ -124,21 +129,21 @@ namespace westcoast_cars.web.Data.Migrations
                     b.ToTable("Vehicles");
                 });
 
-            modelBuilder.Entity("westcoast_cars.web.Models.VehicleModel", b =>
+            modelBuilder.Entity("WestcoastCars.Domain.Entities.Vehicle", b =>
                 {
-                    b.HasOne("westcoast_cars.web.Models.FuelTypeModel", "FuelType")
+                    b.HasOne("WestcoastCars.Domain.Entities.FuelType", "FuelType")
                         .WithMany("Vehicles")
                         .HasForeignKey("FuelTypeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("westcoast_cars.web.Models.ManufacturerModel", "Manufacturer")
+                    b.HasOne("WestcoastCars.Domain.Entities.Manufacturer", "Manufacturer")
                         .WithMany("Vehicles")
                         .HasForeignKey("MakeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("westcoast_cars.web.Models.TransmissionsTypeModel", "TransmissionsType")
+                    b.HasOne("WestcoastCars.Domain.Entities.TransmissionType", "TransmissionsType")
                         .WithMany("Vehicles")
                         .HasForeignKey("TransmissionsTypeId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -151,17 +156,17 @@ namespace westcoast_cars.web.Data.Migrations
                     b.Navigation("TransmissionsType");
                 });
 
-            modelBuilder.Entity("westcoast_cars.web.Models.FuelTypeModel", b =>
+            modelBuilder.Entity("WestcoastCars.Domain.Entities.FuelType", b =>
                 {
                     b.Navigation("Vehicles");
                 });
 
-            modelBuilder.Entity("westcoast_cars.web.Models.ManufacturerModel", b =>
+            modelBuilder.Entity("WestcoastCars.Domain.Entities.Manufacturer", b =>
                 {
                     b.Navigation("Vehicles");
                 });
 
-            modelBuilder.Entity("westcoast_cars.web.Models.TransmissionsTypeModel", b =>
+            modelBuilder.Entity("WestcoastCars.Domain.Entities.TransmissionType", b =>
                 {
                     b.Navigation("Vehicles");
                 });

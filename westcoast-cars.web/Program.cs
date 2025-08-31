@@ -1,50 +1,33 @@
-using Microsoft.EntityFrameworkCore;
-using westcoast_cars.web.Data;
+// Las sentencias 'using' para EntityFrameworkCore y la carpeta Data han sido eliminadas.
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Añadir servicios al contenedor.
 
-builder.Services.AddHttpClient();
+// Configura el HttpClient para conectarse a la API.
+// Lee "ApiBaseUrl" desde la configuración (provista por docker-compose.yml o appsettings.json).
+builder.Services.AddHttpClient("ApiClient", client =>
+{
+    var baseUrl = builder.Configuration["ApiBaseUrl"];
 
-// set up db configuration/DbConnectionStringPipeline
-builder.Services.AddDbContext<WestcoastCarsContext>(options => options.UseMySql(builder.Configuration.GetConnectionString("MySqlConnection"), ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("MySqlConnection"))));
+    // Un valor de respaldo por si se ejecuta localmente fuera de Docker.
+    if (string.IsNullOrEmpty(baseUrl))
+    {
+        // Esta URL debe coincidir con la de tu API al ejecutarla localmente.
+        baseUrl = "http://localhost:5001"; 
+    }
+    
+    client.BaseAddress = new Uri(baseUrl);
+});
 
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
-// load data to db, this goes after var app = builder.Build();
+// Toda la lógica de base de datos y 'seeding' ha sido eliminada.
+// La API es ahora responsable de sus propios datos.
 
-// this is for access to load SeedData Context
-// Here i create an execution environment that lives as long as I need it (variable)
-using var scope = app.Services.CreateScope();
-// The scope above gives me access to a service provider which i'll use for getting WestcoastCarsContex
-var services = scope.ServiceProvider;
-
-try
-{
-    // here is the type
-    var context = services.GetRequiredService<WestcoastCarsContext>();
-    // here i do a migration to the db
-    await context.Database.MigrateAsync();
-    // Here runs LoadData with the context, but only if the database is empty
-    if (!context.Vehicles.Any())
-    {
-        await SeedData.LoadManufacturerData(context);
-        await SeedData.LoadFuelTypeData(context);
-        await SeedData.LoadTransmissionsData(context);
-        await SeedData.LoadVehicleData(context);
-    }
-    
-}
-catch (Exception ex)
-{
-    Console.WriteLine(ex.Message);
-    throw;
-}
-
-// Configure the HTTP request pipeline.
+// Configura el pipeline de peticiones HTTP.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
