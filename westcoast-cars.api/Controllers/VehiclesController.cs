@@ -15,7 +15,7 @@ namespace westcoast_cars.api.Controllers
         public VehiclesController(IUnitOfWork unitOfWork, IConfiguration config)
         {
             _unitOfWork = unitOfWork;
-            _imageBase_url = config.GetSection("apiImageUrl").Value;
+            _imageBaseUrl = config.GetSection("apiImageUrl").Value;
         }
 
         [HttpGet]
