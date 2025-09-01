@@ -20,7 +20,7 @@ namespace westcoast_cars.api.Controllers
         public async Task<IActionResult> ListAll()
         {
             var fuelTypes = await _unitOfWork.FuelTypes.ListAllAsync();
-            var result = fuelTypes.Select(c => new { Name = c.Name }).ToList();
+            var result = fuelTypes.Select(c => new { Id = c.Id, Name = c.Name }).ToList();
             return Ok(result);
         }
 

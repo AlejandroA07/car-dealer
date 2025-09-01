@@ -5,7 +5,7 @@ namespace westcoast_cars.api.ViewModels
     public class VehicleBaseViewModel
     {
         [Required(ErrorMessage = "Tillverkare måste anges")]
-        public string Make { get; set; }
+        public int ManufacturerId { get; set; } // Changed from string Make
         [Required(ErrorMessage = "Bilmodell måste anges")]
         public string Model { get; set; }
         [Required(ErrorMessage = "Årsmodell måste anges")]
@@ -13,9 +13,9 @@ namespace westcoast_cars.api.ViewModels
         [Required(ErrorMessage = "Antal körda km måste anges")]
         public int Mileage { get; set; }
         [Required(ErrorMessage = "Bränsletyp måste anges")]
-        public string FuelType { get; set; }
+        public int FuelTypeId { get; set; } // Changed from string FuelType
         [Required(ErrorMessage = "Typ av växellåda måste anges")]
-        public string Transmission { get; set; }
+        public int TransmissionTypeId { get; set; } // Changed from string Transmission
         [Required(ErrorMessage = "Värde på bilen måste anges")]
         public int Value { get; set; }
         public string Description { get; set; }

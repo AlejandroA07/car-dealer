@@ -92,14 +92,14 @@ namespace westcoast_cars.api.Controllers
                 return BadRequest($"Bilen med regnummer {vehicle.RegistrationNumber} finns redan i systemet");
             }
 
-            var make = (await _unitOfWork.Manufacturers.ListAsync(m => m.Name.ToUpper() == vehicle.Make.ToUpper())).FirstOrDefault();
-            if (make is null) return NotFound($"Tyvärr vi kunde inte hitta en tillverkare med namnet {vehicle.Make}");
+            var make = await _unitOfWork.Manufacturers.FindByIdAsync(vehicle.ManufacturerId);
+            if (make is null) return NotFound($"Tillverkare med Id {vehicle.ManufacturerId} hittades inte.");
 
-            var fueltype = (await _unitOfWork.FuelTypes.ListAsync(f => f.Name.ToUpper() == vehicle.FuelType.ToUpper())).FirstOrDefault();
-            if (fueltype is null) return NotFound($"Tyvärr vi kunde inte hitta en bränsletyp med namnet {vehicle.FuelType}");
+            var fueltype = await _unitOfWork.FuelTypes.FindByIdAsync(vehicle.FuelTypeId);
+            if (fueltype is null) return NotFound($"Bränsletyp med Id {vehicle.FuelTypeId} hittades inte.");
 
-            var transmission = (await _unitOfWork.TransmissionTypes.ListAsync(t => t.Name.ToUpper() == vehicle.Transmission.ToUpper())).FirstOrDefault();
-            if (transmission is null) return NotFound($"Tyvärr vi kunde inte hitta en tillverkare med namnet {vehicle.Transmission}");
+            var transmission = await _unitOfWork.TransmissionTypes.FindByIdAsync(vehicle.TransmissionTypeId);
+            if (transmission is null) return NotFound($"Växellådstyp med Id {vehicle.TransmissionTypeId} hittades inte.");
 
             var vehicleToAdd = new Vehicle
             {
@@ -139,15 +139,17 @@ namespace westcoast_cars.api.Controllers
             var vehicle = await _unitOfWork.Vehicles.FindByIdAsync(id);
             if (vehicle is null) return BadRequest("Tyvärr vi kan inte hitta bilen som ska ändras");
 
-            var make = (await _unitOfWork.Manufacturers.ListAsync(m => m.Name.ToUpper() == model.Make.ToUpper())).FirstOrDefault();
-            if (make is null) return NotFound($"Tyvärr vi kunde inte hitta en tillverkare med namnet {model.Make}");
+            // Efficiently find related entities by their primary key (ID)
+            var make = await _unitOfWork.Manufacturers.FindByIdAsync(model.ManufacturerId);
+            if (make is null) return NotFound($"Tillverkare med Id {model.ManufacturerId} hittades inte.");
 
-            var fueltype = (await _unitOfWork.FuelTypes.ListAsync(f => f.Name.ToUpper() == model.FuelType.ToUpper())).FirstOrDefault();
-            if (fueltype is null) return NotFound($"Tyvärr vi kunde inte hitta en bränsletyp med namnet {model.FuelType}");
+            var fueltype = await _unitOfWork.FuelTypes.FindByIdAsync(model.FuelTypeId);
+            if (fueltype is null) return NotFound($"Bränsletyp med Id {model.FuelTypeId} hittades inte.");
 
-            var transmission = (await _unitOfWork.TransmissionTypes.ListAsync(t => t.Name.ToUpper() == model.Transmission.ToUpper())).FirstOrDefault();
-            if (transmission is null) return NotFound($"Tyvärr vi kunde inte hitta en tillverkare med namnet {model.Transmission}");
+            var transmission = await _unitOfWork.TransmissionTypes.FindByIdAsync(model.TransmissionTypeId);
+            if (transmission is null) return NotFound($"Växellådstyp med Id {model.TransmissionTypeId} hittades inte.");
 
+            // Update vehicle properties
             vehicle.Model = model.Model;
             vehicle.ModelYear = model.ModelYear;
             vehicle.Manufacturer = make;

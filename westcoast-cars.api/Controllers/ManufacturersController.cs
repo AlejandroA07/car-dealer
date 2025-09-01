@@ -20,7 +20,7 @@ namespace westcoast_cars.api.Controllers
         public async Task<IActionResult> ListAll()
         {
             var manufacturers = await _unitOfWork.Manufacturers.ListAllAsync();
-            var result = manufacturers.Select(m => new { Name = m.Name }).ToList();
+            var result = manufacturers.Select(m => new { Id = m.Id, Name = m.Name }).ToList();
             return Ok(result);
         }
 
