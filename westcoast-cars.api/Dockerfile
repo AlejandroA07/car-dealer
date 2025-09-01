@@ -24,8 +24,8 @@ COPY . .
 
 # Set the working directory to the API project
 WORKDIR "/src/westcoast-cars.api"
-# Publish the application, creating the compiled output. --no-restore is used because we already restored.
-RUN dotnet publish "westcoast-cars.api.csproj" -c Release -o /app/publish --no-restore
+# Publish the application, creating the compiled output.
+RUN dotnet publish "westcoast-cars.api.csproj" -c Release -o /app/publish
 
 # ====================================================================================
 # STAGE 2: Final Runtime Image

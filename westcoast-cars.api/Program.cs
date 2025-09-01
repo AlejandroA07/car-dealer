@@ -30,14 +30,11 @@ using (var scope = app.Services.CreateScope())
     var context = services.GetRequiredService<WestcoastCarsContext>();
     try
     {
-        try
-        {
-            await context.Database.MigrateAsync();
-            await SeedData.LoadManufacturerData(context);
-            await SeedData.LoadFuelTypeData(context);
-            await SeedData.LoadTransmissionsData(context);
-            await SeedData.LoadVehicleData(context);
-        }
+        await context.Database.MigrateAsync();
+        await SeedData.LoadManufacturerData(context);
+        await SeedData.LoadFuelTypeData(context);
+        await SeedData.LoadTransmissionsData(context);
+        await SeedData.LoadVehicleData(context);
     }
     catch (Exception ex)
     {

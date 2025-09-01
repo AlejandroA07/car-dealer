@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using WestcoastCars.Domain.Entities;
 
 namespace WestcoastCars.Infrastructure.Data
@@ -7,22 +8,16 @@ namespace WestcoastCars.Infrastructure.Data
     {
         public static async Task LoadManufacturerData(WestcoastCarsContext context)
         {
-            // Steg 1.
             var options = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             };
 
-            // Steg 2. Vill endast ladda data om vår vehicles tabell är tom...
             if (context.Manufacturers.Any()) return;
 
-            // Steg 3. Läsa in json informationen ifrån vår vehicles.json fil...
             var json = System.IO.File.ReadAllText("Data/json/manufacturer.json");
-
-            // Steg 4. Omvandla json objekten till en lista av VehicleModel objekt...
             var manufacturers = JsonSerializer.Deserialize<List<Manufacturer>>(json, options);
 
-            // Steg 5. Skicka listan med VehicleModel objekt till databasen...
             if (manufacturers is not null && manufacturers.Count > 0)
             {
                 await context.Manufacturers.AddRangeAsync(manufacturers);
@@ -32,47 +27,62 @@ namespace WestcoastCars.Infrastructure.Data
 
         public static async Task LoadVehicleData(WestcoastCarsContext context)
         {
-            // Steg 1.
             var options = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             };
 
-            // Steg 2. Vill endast ladda data om vår vehicles tabell är tom...
             if (context.Vehicles.Any()) return;
 
-            // Steg 3. Läsa in json informationen ifrån vår vehicles.json fil...
             var json = System.IO.File.ReadAllText("Data/json/vehicles.json");
+            var vehicleDtos = JsonSerializer.Deserialize<List<VehicleSeedDto>>(json, options);
 
-            // Steg 4. Omvandla json objekten till en lista av VehicleModel objekt...
-            var vehicles = JsonSerializer.Deserialize<List<Vehicle>>(json, options);
+            if (vehicleDtos is null || !vehicleDtos.Any()) return;
 
-            // Steg 5. Skicka listan med VehicleModel objekt till databasen...
-            if (vehicles is not null && vehicles.Count > 0)
+            var manufacturers = await context.Manufacturers.ToDictionaryAsync(m => m.Id);
+            var fuelTypes = await context.FuelTypes.ToDictionaryAsync(f => f.Id);
+            var transmissionTypes = await context.TransmissionTypes.ToDictionaryAsync(t => t.Id);
+
+            var vehicles = new List<Vehicle>();
+            foreach (var dto in vehicleDtos)
             {
-                await context.Vehicles.AddRangeAsync(vehicles);
-                await context.SaveChangesAsync();
+                var vehicle = new Vehicle
+                {
+                    Id = dto.Id,
+                    RegistrationNumber = dto.RegistrationNumber,
+                    Model = dto.Model,
+                    ModelYear = dto.ModelYear,
+                    Mileage = dto.Mileage,
+                    ImageUrl = dto.ImageUrl,
+                    Value = dto.Value,
+                    Description = dto.Description,
+                    IsSold = dto.IsSold,
+                    MakeId = dto.MakeId,
+                    FuelTypeId = dto.FuelTypeId,
+                    TransmissionsTypeId = dto.TransmissionsTypeId,
+                    Manufacturer = manufacturers[dto.MakeId],
+                    FuelType = fuelTypes[dto.FuelTypeId],
+                    TransmissionsType = transmissionTypes[dto.TransmissionsTypeId]
+                };
+                vehicles.Add(vehicle);
             }
+
+            await context.Vehicles.AddRangeAsync(vehicles);
+            await context.SaveChangesAsync();
         }
 
         public static async Task LoadFuelTypeData(WestcoastCarsContext context)
         {
-            // Steg 1.
             var options = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             };
 
-            // Steg 2. Vill endast ladda data om vår vehicles tabell är tom...
             if (context.FuelTypes.Any()) return;
 
-            // Steg 3. Läsa in json informationen ifrån vår vehicles.json fil...
             var json = System.IO.File.ReadAllText("Data/json/fuelTypes.json");
-
-            // Steg 4. Omvandla json objekten till en lista av VehicleModel objekt...
             var fueltypes = JsonSerializer.Deserialize<List<FuelType>>(json, options);
 
-            // Steg 5. Skicka listan med VehicleModel objekt till databasen...
             if (fueltypes is not null && fueltypes.Count > 0)
             {
                 await context.FuelTypes.AddRangeAsync(fueltypes);
@@ -82,35 +92,37 @@ namespace WestcoastCars.Infrastructure.Data
 
         public static async Task LoadTransmissionsData(WestcoastCarsContext context)
         {
-            // Steg 1.
             var options = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             };
 
-            // Steg 2. Vill endast ladda data om vår vehicles tabell är tom...
             if (context.TransmissionTypes.Any()) return;
 
-            // Steg 3. Läsa in json informationen ifrån vår vehicles.json fil...
             var json = System.IO.File.ReadAllText("Data/json/transmissionTypes.json");
-
-            // Steg 4. Omvandla json objekten till en lista av VehicleModel objekt...
             var transmissions = JsonSerializer.Deserialize<List<TransmissionType>>(json, options);
 
-            // Steg 5. Skicka listan med VehicleModel objekt till databasen...
             if (transmissions is not null && transmissions.Count > 0)
             {
                 await context.TransmissionTypes.AddRangeAsync(transmissions);
                 await context.SaveChangesAsync();
             }
         }
+
+        private class VehicleSeedDto
+        {
+            public int Id { get; set; }
+            public string RegistrationNumber { get; set; }
+            public int MakeId { get; set; }
+            public string Model { get; set; }
+            public string ModelYear { get; set; }
+            public int FuelTypeId { get; set; }
+            public int TransmissionsTypeId { get; set; }
+            public string ImageUrl { get; set; }
+            public int Mileage { get; set; }
+            public bool IsSold { get; set; }
+            public int Value { get; set; }
+            public string Description { get; set; }
+        }
     }
 }
-
-/* 
-    dotnet ef database drop
-    delete migration folder
-    dotnet ef migrations add InicialCreate -o Data/Migrations
-    dotnet ef database update
-    dotnet ef migrations remove
- */
