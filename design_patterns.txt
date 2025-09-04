@@ -1,0 +1,12 @@
+# Design Patterns Used in This Project
+
+This file documents the design patterns applied throughout the westcoast-cars solution.
+
+## Repository Pattern
+- **Location:** Implemented in `WestcoastCars.Infrastructure/Repositories`.
+- **Description:** Abstracts the data layer, making our application independent of the data source implementation. It mediates between the domain and data mapping layers using a collection-like interface for accessing domain objects.
+
+## Unit of Work Pattern
+- **Location:** Implemented in `WestcoastCars.Infrastructure/Repositories/UnitOfWork.cs`.
+- **Description:** Maintains a list of objects affected by a business transaction and coordinates the writing out of changes and the resolution of concurrency problems. It helps to manage transactions and ensures data integrity.
+
