@@ -27,6 +27,8 @@ services:
       - ApiBaseUrl=http://api:8080
     depends_on:
       - api
+    volumes:
+      - dataprotection_keys:/app/keys
 
   # Servicio de la Base de Datos (MySQL)
   db:
@@ -48,3 +50,4 @@ services:
 
 volumes:
   mysql_data:
+  dataprotection_keys:

@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.DataProtection;
+
 // Las sentencias 'using' para EntityFrameworkCore y la carpeta Data han sido eliminadas.
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,6 +23,10 @@ builder.Services.AddHttpClient("ApiClient", client =>
 });
 
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo("/app/keys"))
+    .SetApplicationName("WestcoastCars");
 
 var app = builder.Build();
 
