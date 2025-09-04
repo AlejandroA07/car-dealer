@@ -91,9 +91,9 @@ public class VehiclesController : Controller
             Value = vehicleToEdit.Value,
             Description = vehicleToEdit.Description,
             // Find the ID of the current selection to pre-select the dropdown
-            Manufacturer = manufacturers.FirstOrDefault(m => m.Name == vehicleToEdit.Manufacturer)?.Id ?? 0,
-            FuelType = fuelTypes.FirstOrDefault(f => f.Name == vehicleToEdit.FuelType)?.Id ?? 0,
-            TransmissionsType = transmissionsTypes.FirstOrDefault(t => t.Name == vehicleToEdit.TransmissionsType)?.Id ?? 0,
+            ManufacturerId = manufacturers.FirstOrDefault(m => m.Name == vehicleToEdit.Manufacturer)?.Id ?? 0,
+            FuelTypeId = fuelTypes.FirstOrDefault(f => f.Name == vehicleToEdit.FuelType)?.Id ?? 0,
+            TransmissionTypeId = transmissionsTypes.FirstOrDefault(t => t.Name == vehicleToEdit.TransmissionsType)?.Id ?? 0,
             Manufacturers = manufacturers.Select(m => new SelectListItem { Value = m.Id.ToString(), Text = m.Name }).ToList(),
             FuelTypes = fuelTypes.Select(f => new SelectListItem { Value = f.Id.ToString(), Text = f.Name }).ToList(),
             TransmissionsTypes = transmissionsTypes.Select(t => new SelectListItem { Value = t.Id.ToString(), Text = t.Name }).ToList()
@@ -116,9 +116,9 @@ public class VehiclesController : Controller
             Value = vehicle.Value,
             IsSold = false,
             ImageUrl = "",
-            ManufacturerId = vehicle.Manufacturer,
-            FuelTypeId = vehicle.FuelType,
-            TransmissionTypeId = vehicle.TransmissionsType
+                        ManufacturerId = vehicle.ManufacturerId,
+            FuelTypeId = vehicle.FuelTypeId,
+            TransmissionTypeId = vehicle.TransmissionTypeId
         };
         var jsonPayload = JsonSerializer.Serialize(updatePayload);
         var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");

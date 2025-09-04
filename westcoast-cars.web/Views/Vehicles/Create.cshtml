@@ -3,6 +3,7 @@
 <section class="page">
     <h1 class="page-title">Lägg till bil</h1>
     <form asp-action="Create" method="post">
+        <div asp-validation-summary="All" class="error"></div>
         <div class="form-control">
             <label asp-for="RegistrationNumber"></label>
             <input asp-for="RegistrationNumber" type="text">
@@ -10,9 +11,9 @@
         </div>
 
         <div class="form-control">
-            <label asp-for="Manufacturer"></label>
-            <select asp-for="Manufacturer" asp-items="Model.Manufacturers"></select>
-            <span class="error" asp-validation-for="Manufacturer"></span>
+            <label asp-for="ManufacturerId"></label>
+            <select asp-for="ManufacturerId" asp-items="Model.Manufacturers"></select>
+            <span class="error" asp-validation-for="ManufacturerId"></span>
         </div>
         <div class="form-control">
             <label asp-for="Model"></label>
@@ -25,14 +26,14 @@
             <span class="error" asp-validation-for="ModelYear"></span>
         </div>
         <div class="form-control">
-            <label asp-for="FuelType"></label>
-            <select asp-for="FuelType" asp-items="Model.FuelTypes"></select>
-            <span class="error" asp-validation-for="FuelType"></span>
+            <label asp-for="FuelTypeId"></label>
+            <select asp-for="FuelTypeId" asp-items="Model.FuelTypes"></select>
+            <span class="error" asp-validation-for="FuelTypeId"></span>
         </div>
         <div class="form-control">
-            <label asp-for="TransmissionsType"></label>
-            <select asp-for="TransmissionsType" asp-items="Model.TransmissionsTypes"></select>
-            <span class="error" asp-validation-for="FuelType"></span>
+            <label asp-for="TransmissionTypeId"></label>
+            <select asp-for="TransmissionTypeId" asp-items="Model.TransmissionsTypes"></select>
+            <span class="error" asp-validation-for="TransmissionTypeId"></span>
         </div>
         <div class="form-control">
             <label asp-for="Mileage"></label>
@@ -46,7 +47,7 @@
         </div>
         <div class="form-control">
             <div class="buttons-container">
-                <button class="btn btn-primary">Spara</button>
+                <button type="submit" class="btn btn-primary">Spara</button>
                 <a asp-action="Index" class="btn btn-warning">Avbryt</a>
             </div>
         </div>

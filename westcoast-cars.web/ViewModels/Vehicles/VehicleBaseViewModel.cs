@@ -9,11 +9,11 @@ namespace westcoast_cars.web.ViewModels.Vehicles
         [Required(ErrorMessage = "Registeringsnummer saknas!")]
         [DisplayName("Registeringsnummer")]
         public string RegistrationNumber { get; set; }
-        public int Manufacturer { get; set; }
+        public int ManufacturerId { get; set; }
         public List<SelectListItem> Manufacturers { get; set; }
-        public int FuelType { get; set; }
+        public int FuelTypeId { get; set; }
         public List<SelectListItem> FuelTypes { get; set; }
-        public int TransmissionsType { get; set; }
+        public int TransmissionTypeId { get; set; }
         public List<SelectListItem> TransmissionsTypes { get; set; }
         [Required(ErrorMessage = "Modell typ saknas!")]
         [DisplayName("Modell typ")]
