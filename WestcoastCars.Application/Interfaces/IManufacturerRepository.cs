@@ -40,4 +40,10 @@ public interface IManufacturerRepository
     /// </summary>
     /// <param name="manufacturer">The manufacturer entity to add.</param>
     void Add(Manufacturer manufacturer);
+
+    /// <summary>
+    /// Deletes a manufacturer from the repository.
+    /// </summary>
+    /// <param name="id">The ID of the manufacturer to delete.</param>
+    void Delete(int id);
 }

@@ -97,5 +97,19 @@ namespace westcoast_cars.web.Controllers
             var manufacturers = JsonSerializer.Deserialize<List<ManufacturerListViewModel>>(json, _options);
             return manufacturers;
         }
+
+        [HttpGet("Delete/{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            using var client = _httpClient.CreateClient();
+            var response = await client.DeleteAsync($"{_baseUrl}/api/v1/manufacturers/{id}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                return RedirectToAction(nameof(Create));
+            }
+
+            return View("Errors");
+        }
     }
 }

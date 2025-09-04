@@ -41,4 +41,13 @@ public class ManufacturerRepository : IManufacturerRepository
     {
         _context.Manufacturers.Add(manufacturer);
     }
+
+    public void Delete(int id)
+    {
+        var manufacturer = _context.Manufacturers.Find(id);
+        if (manufacturer is not null)
+        {
+            _context.Manufacturers.Remove(manufacturer);
+        }
+    }
 }

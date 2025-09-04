@@ -18,9 +18,14 @@
     </form>
 
     <section class="list">
+            <section class="list">
         @foreach (var make in @Model.Manufacturers)
         {
-            <div><span>@make.Id</span>&nbsp;<span>@make.Name</span></div>
+            <div>
+                <span>@make.Id</span>&nbsp;<span>@make.Name</span>
+                <a asp-action="Delete" asp-route-id="@make.Id" class="btn btn-danger">Delete</a>
+            </div>
         }
+    </section>
     </section>
 </section>
