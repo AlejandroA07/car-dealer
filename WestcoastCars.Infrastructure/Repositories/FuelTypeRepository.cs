@@ -41,4 +41,13 @@ public class FuelTypeRepository : IFuelTypeRepository
     {
         _context.FuelTypes.Add(fuelType);
     }
+
+    public void Delete(int id)
+    {
+        var fuelType = _context.FuelTypes.Find(id);
+        if (fuelType is not null)
+        {
+            _context.FuelTypes.Remove(fuelType);
+        }
+    }
 }

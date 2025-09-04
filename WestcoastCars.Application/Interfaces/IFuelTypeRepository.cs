@@ -10,4 +10,5 @@ public interface IFuelTypeRepository
     Task<IReadOnlyList<FuelType>> ListAsync(Expression<Func<FuelType, bool>> expression);
     Task<FuelType?> FindByNameWithVehiclesAsync(string name);
     void Add(FuelType fuelType);
+    void Delete(int id);
 }
