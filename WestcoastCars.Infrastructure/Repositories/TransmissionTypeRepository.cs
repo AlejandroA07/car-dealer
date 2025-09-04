@@ -51,4 +51,13 @@ public class TransmissionTypeRepository : ITransmissionTypeRepository
     {
         _context.TransmissionTypes.Add(transmissionType);
     }
+
+    public void Delete(int id)
+    {
+        var transmissionType = _context.TransmissionTypes.Find(id);
+        if (transmissionType is not null)
+        {
+            _context.TransmissionTypes.Remove(transmissionType);
+        }
+    }
 }

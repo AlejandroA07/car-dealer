@@ -1,0 +1,29 @@
+@model westcoast_cars.web.ViewModels.TransmissionType.TransmissionTypePostViewModel
+<section class="page">
+
+    <h1 class="page-title">Lägg till ny växellådstyp</h1>
+
+    <form asp-action="Create" method="post">
+        <div class="form-control">
+            <label asp-for="Name"></label>
+            <input asp-for="Name" type="text">
+            <span class="error" asp-validation-for="Name"></span>
+        </div>
+        <div class="form-control">
+            <div class="buttons-container">
+                <button class="btn btn-dark">Spara</button>
+                <a asp-action="Index" asp-controller="Admin" class="btn btn-warning">Avbryt</a>
+            </div>
+        </div>
+    </form>
+
+    <section class="list">
+        @foreach (var transmissionType in @Model.TransmissionTypes)
+        {
+            <div>
+                <span>@transmissionType.Id</span>&nbsp;<span>@transmissionType.Name</span>
+                <a asp-action="Delete" asp-route-id="@transmissionType.Id" class="btn btn-danger">Delete</a>
+            </div>
+        }
+    </section>
+</section>

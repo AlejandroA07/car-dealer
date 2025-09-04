@@ -11,4 +11,5 @@ public interface ITransmissionTypeRepository
     Task<TransmissionType?> FindByIdWithVehiclesAsync(int id);
     Task<IReadOnlyList<TransmissionType>> FindByNameWithVehiclesAsync(string name);
     void Add(TransmissionType transmissionType);
+    void Delete(int id);
 }
