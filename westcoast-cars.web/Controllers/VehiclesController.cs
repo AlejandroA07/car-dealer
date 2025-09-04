@@ -21,7 +21,7 @@ public class VehiclesController : Controller
     public VehiclesController(IConfiguration config, IHttpClientFactory httpClient)
     {
         _httpClient = httpClient;
-        _baseUrl = config.GetSection("apiSettings")["baseUrl"];
+        _baseUrl = config["ApiBaseUrl"];
         _options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
     }
 
@@ -29,8 +29,13 @@ public class VehiclesController : Controller
     public async Task<IActionResult> Index()
     {
         using var client = _httpClient.CreateClient();
-        var response = await client.GetAsync($"{_baseUrl}/vehicles");
-        if (!response.IsSuccessStatusCode) return Content("Ops, det gick fel");
+        var response = await client.GetAsync($"{_baseUrl}/api/v1/vehicles/list");
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return View("Errors");
+        }
+
         var json = await response.Content.ReadAsStringAsync();
         var vehicles = JsonSerializer.Deserialize<List<VehicleListViewModel>>(json, _options);
         return View("Index", vehicles);
@@ -40,7 +45,7 @@ public class VehiclesController : Controller
     public async Task<IActionResult> Details(int id)
     {
         using var client = _httpClient.CreateClient();
-        var response = await client.GetAsync($"{_baseUrl}/vehicles/{id}");
+        var response = await client.GetAsync($"{_baseUrl}/api/v1/vehicles/{id}");
         if (!response.IsSuccessStatusCode) return Content("Ops, det gick fel");
         var json = await response.Content.ReadAsStringAsync();
         var vehicle = JsonSerializer.Deserialize<VehicleDetailsViewModel>(json, _options);
@@ -51,7 +56,7 @@ public class VehiclesController : Controller
     public async Task<IActionResult> Delete(int id)
     {
         using var client = _httpClient.CreateClient();
-        var response = await client.PatchAsync($"{_baseUrl}/vehicles/{id}", null);
+        var response = await client.PatchAsync($"{_baseUrl}/api/v1/vehicles/{id}", null);
         if (response.IsSuccessStatusCode)
         {
             return RedirectToAction(nameof(Index));
@@ -63,14 +68,14 @@ public class VehiclesController : Controller
     public async Task<IActionResult> Edit(int id)
     {
         var client = _httpClient.CreateClient();
-        var vehicleResponse = await client.GetAsync($"{_baseUrl}/vehicles/{id}");
+        var vehicleResponse = await client.GetAsync($"{_baseUrl}/api/v1/vehicles/{id}");
         if (!vehicleResponse.IsSuccessStatusCode) return View("Errors");
         var vehicleJson = await vehicleResponse.Content.ReadAsStringAsync();
         var vehicleToEdit = JsonSerializer.Deserialize<VehicleDetailsViewModel>(vehicleJson, _options);
 
-        var manufacturersTask = client.GetStringAsync($"{_baseUrl}/manufacturers");
-        var fuelTypesTask = client.GetStringAsync($"{_baseUrl}/fueltypes");
-        var transmissionsTask = client.GetStringAsync($"{_baseUrl}/transmissiontypes");
+        var manufacturersTask = client.GetStringAsync($"{_baseUrl}/api/v1/manufacturers");
+        var fuelTypesTask = client.GetStringAsync($"{_baseUrl}/api/v1/fueltypes");
+        var transmissionsTask = client.GetStringAsync($"{_baseUrl}/api/v1/transmissionTypes");
         await Task.WhenAll(manufacturersTask, fuelTypesTask, transmissionsTask);
 
         var manufacturers = JsonSerializer.Deserialize<List<SelectListItemDto>>(await manufacturersTask, _options);
@@ -117,7 +122,7 @@ public class VehiclesController : Controller
         };
         var jsonPayload = JsonSerializer.Serialize(updatePayload);
         var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-        var response = await client.PutAsync($"{_baseUrl}/vehicles/{id}", content);
+        var response = await client.PutAsync($"{_baseUrl}/api/v1/vehicles/{id}", content);
         if (response.IsSuccessStatusCode)
         {
             return RedirectToAction(nameof(Index));
@@ -129,9 +134,9 @@ public class VehiclesController : Controller
     public async Task<IActionResult> Create()
     {
         using var client = _httpClient.CreateClient();
-        var manufacturersTask = client.GetStringAsync($"{_baseUrl}/manufacturers");
-        var fuelTypesTask = client.GetStringAsync($"{_baseUrl}/fueltypes");
-        var transmissionsTask = client.GetStringAsync($"{_baseUrl}/transmissiontypes");
+        var manufacturersTask = client.GetStringAsync($"{_baseUrl}/api/v1/manufacturers");
+        var fuelTypesTask = client.GetStringAsync($"{_baseUrl}/api/v1/fueltypes");
+        var transmissionsTask = client.GetStringAsync($"{_baseUrl}/api/v1/transmissionTypes");
         await Task.WhenAll(manufacturersTask, fuelTypesTask, transmissionsTask);
 
         var manufacturers = JsonSerializer.Deserialize<List<SelectListItemDto>>(await manufacturersTask, _options);
@@ -154,7 +159,7 @@ public class VehiclesController : Controller
         using var client = _httpClient.CreateClient();
         var jsonPayload = JsonSerializer.Serialize(vehicle);
         var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-        var response = await client.PostAsync($"{_baseUrl}/vehicles", content);
+        var response = await client.PostAsync($"{_baseUrl}/api/v1/vehicles", content);
         if (response.IsSuccessStatusCode)
         {
             return RedirectToAction(nameof(Index));
