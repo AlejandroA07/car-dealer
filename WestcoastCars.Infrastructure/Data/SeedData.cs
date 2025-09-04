@@ -59,10 +59,10 @@ namespace WestcoastCars.Infrastructure.Data
                     IsSold = dto.IsSold,
                     MakeId = dto.MakeId,
                     FuelTypeId = dto.FuelTypeId,
-                    TransmissionsTypeId = dto.TransmissionsTypeId,
+                    TransmissionTypeId = dto.TransmissionTypeId,
                     Manufacturer = manufacturers[dto.MakeId],
                     FuelType = fuelTypes[dto.FuelTypeId],
-                    TransmissionsType = transmissionTypes[dto.TransmissionsTypeId]
+                    TransmissionType = transmissionTypes[dto.TransmissionTypeId]
                 };
                 vehicles.Add(vehicle);
             }
@@ -112,17 +112,17 @@ namespace WestcoastCars.Infrastructure.Data
         private class VehicleSeedDto
         {
             public int Id { get; set; }
-            public string RegistrationNumber { get; set; }
+            public string RegistrationNumber { get; set; } = string.Empty;
             public int MakeId { get; set; }
-            public string Model { get; set; }
-            public string ModelYear { get; set; }
+            public string Model { get; set; } = string.Empty;
+            public string ModelYear { get; set; } = string.Empty;
             public int FuelTypeId { get; set; }
-            public int TransmissionsTypeId { get; set; }
-            public string ImageUrl { get; set; }
+            public int TransmissionTypeId { get; set; }
+            public string ImageUrl { get; set; } = string.Empty;
             public int Mileage { get; set; }
             public bool IsSold { get; set; }
             public int Value { get; set; }
-            public string Description { get; set; }
+            public string Description { get; set; } = string.Empty;
         }
     }
 }

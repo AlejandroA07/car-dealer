@@ -18,7 +18,7 @@ namespace westcoast_cars.api.Controllers
             _imageBaseUrl = config.GetSection("apiImageUrl").Value;
         }
 
-        [HttpGet]
+        [HttpGet("list")]
         public async Task<IActionResult> ListAll()
         {
             var vehicles = await _unitOfWork.Vehicles.ListAsync(v => v.IsSold == false);
@@ -30,7 +30,7 @@ namespace westcoast_cars.api.Controllers
                 Model = v.Model,
                 ModelYear = v.ModelYear,
                 Mileage = v.Mileage,
-                ImageUrl = _imageBaseUrl + v.ImageUrl ?? "no-car.png"
+                                ImageUrl = v.ImageUrl ?? "/images/no-car.png"
             }).ToList();
 
             return Ok(result);
@@ -52,10 +52,10 @@ namespace westcoast_cars.api.Controllers
                 Modelyear = v.ModelYear,
                 Milage = v.Mileage,
                 FuelType = v.FuelType.Name,
-                Transmission = v.TransmissionsType.Name,
+                Transmission = v.TransmissionType.Name,
                 Value = v.Value,
                 Description = v.Description,
-                ImageUrl = _imageBaseUrl + v.ImageUrl ?? "no-car.png"
+                                ImageUrl = v.ImageUrl ?? "/images/no-car.png"
             };
 
             return Ok(result);
@@ -75,7 +75,7 @@ namespace westcoast_cars.api.Controllers
                 Modelyear = v.ModelYear,
                 Milage = v.Mileage,
                 FuelType = v.FuelType.Name,
-                Transmission = v.TransmissionsType.Name,
+                Transmission = v.TransmissionType.Name,
                 ImageUrl = v.ImageUrl    
             };
 
@@ -108,7 +108,7 @@ namespace westcoast_cars.api.Controllers
                 Model = vehicle.Model,
                 ModelYear = vehicle.ModelYear,
                 Mileage = vehicle.Mileage,
-                TransmissionsType = transmission,
+                TransmissionType = transmission,
                 FuelType = fueltype,
                 Value = vehicle.Value,
                 IsSold = vehicle.IsSold,
@@ -154,7 +154,7 @@ namespace westcoast_cars.api.Controllers
             vehicle.ModelYear = model.ModelYear;
             vehicle.Manufacturer = make;
             vehicle.FuelType = fueltype;
-            vehicle.TransmissionsType = transmission;
+            vehicle.TransmissionType = transmission;
             vehicle.Mileage = model.Mileage;
             vehicle.Description = model.Description;
             vehicle.Value = model.Value;

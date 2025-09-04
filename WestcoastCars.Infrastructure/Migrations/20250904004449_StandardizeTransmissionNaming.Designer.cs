@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WestcoastCars.Infrastructure.Data;
 
@@ -10,9 +11,11 @@ using WestcoastCars.Infrastructure.Data;
 namespace WestcoastCars.Infrastructure.Migrations
 {
     [DbContext(typeof(WestcoastCarsContext))]
-    partial class WestcoastCarsContextModelSnapshot : ModelSnapshot
+    [Migration("20250904004449_StandardizeTransmissionNaming")]
+    partial class StandardizeTransmissionNaming
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

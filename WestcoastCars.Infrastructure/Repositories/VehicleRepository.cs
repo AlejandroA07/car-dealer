@@ -25,7 +25,7 @@ public class VehicleRepository : IVehicleRepository
         return await _context.Vehicles
             .Include(v => v.Manufacturer)
             .Include(v => v.FuelType)
-            .Include(v => v.TransmissionsType)
+            .Include(v => v.TransmissionType)
             .SingleOrDefaultAsync(v => v.Id == id);
     }
 

@@ -22,7 +22,7 @@ public class Vehicle : BaseEntity
     [ForeignKey("FuelTypeId")]
     public required FuelType FuelType { get; set; }
 
-    public int TransmissionsTypeId { get; set; }
-    [ForeignKey("TransmissionsTypeId")]
-    public required TransmissionType TransmissionsType { get; set; }
+    public int TransmissionTypeId { get; set; }
+    [ForeignKey("TransmissionTypeId")]
+    public required TransmissionType TransmissionType { get; set; }
 }
