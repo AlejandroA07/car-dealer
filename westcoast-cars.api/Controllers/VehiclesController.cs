@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Domain.Entities;
 using westcoast_cars.api.ViewModels;
+using Microsoft.Extensions.Logging;
 
 namespace westcoast_cars.api.Controllers
 {
@@ -11,11 +12,13 @@ namespace westcoast_cars.api.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly string _imageBaseUrl;
+        private readonly ILogger<VehiclesController> _logger;
 
-        public VehiclesController(IUnitOfWork unitOfWork, IConfiguration config)
+        public VehiclesController(IUnitOfWork unitOfWork, IConfiguration config, ILogger<VehiclesController> logger)
         {
             _unitOfWork = unitOfWork;
             _imageBaseUrl = config.GetSection("apiImageUrl").Value;
+            _logger = logger;
         }
 
         [HttpGet("list")]
@@ -85,21 +88,41 @@ namespace westcoast_cars.api.Controllers
         [HttpPost]
         public async Task<IActionResult> Add(VehiclePostViewModel vehicle)
         {
-            if (!ModelState.IsValid) return BadRequest("All information är inte med i anropet");
+            _logger.LogInformation("Received request to add a new vehicle.");
+            _logger.LogInformation("Request payload: {@Vehicle}", vehicle);
+
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("ModelState is invalid. Returning BadRequest.");
+                return BadRequest("All information är inte med i anropet");
+            }
 
             if (await _unitOfWork.Vehicles.FindByRegistrationNumberAsync(vehicle.RegistrationNumber) is not null)
             {
+                _logger.LogWarning("Vehicle with registration number {RegNo} already exists.", vehicle.RegistrationNumber);
                 return BadRequest($"Bilen med regnummer {vehicle.RegistrationNumber} finns redan i systemet");
             }
 
             var make = await _unitOfWork.Manufacturers.FindByIdAsync(vehicle.ManufacturerId);
-            if (make is null) return NotFound($"Tillverkare med Id {vehicle.ManufacturerId} hittades inte.");
+            if (make is null)
+            {
+                _logger.LogWarning("Manufacturer with Id {MakeId} not found.", vehicle.ManufacturerId);
+                return NotFound($"Tillverkare med Id {vehicle.ManufacturerId} hittades inte.");
+            }
 
             var fueltype = await _unitOfWork.FuelTypes.FindByIdAsync(vehicle.FuelTypeId);
-            if (fueltype is null) return NotFound($"Bränsletyp med Id {vehicle.FuelTypeId} hittades inte.");
+            if (fueltype is null)
+            {
+                _logger.LogWarning("FuelType with Id {FuelTypeId} not found.", vehicle.FuelTypeId);
+                return NotFound($"Bränsletyp med Id {vehicle.FuelTypeId} hittades inte.");
+            }
 
             var transmission = await _unitOfWork.TransmissionTypes.FindByIdAsync(vehicle.TransmissionTypeId);
-            if (transmission is null) return NotFound($"Växellådstyp med Id {vehicle.TransmissionTypeId} hittades inte.");
+            if (transmission is null)
+            {
+                _logger.LogWarning("TransmissionType with Id {TransmissionTypeId} not found.", vehicle.TransmissionTypeId);
+                return NotFound($"Växellådstyp med Id {vehicle.TransmissionTypeId} hittades inte.");
+            }
 
             var vehicleToAdd = new Vehicle
             {
@@ -120,6 +143,7 @@ namespace westcoast_cars.api.Controllers
 
             if (await _unitOfWork.CompleteAsync() > 0)
             {
+                _logger.LogInformation("Vehicle with registration number {RegNo} created successfully.", vehicle.RegistrationNumber);
                 return CreatedAtAction(nameof(GetById), new { id = vehicleToAdd.Id }, new {
                     Id = vehicleToAdd.Id,
                     RegistrationNumber = vehicleToAdd.RegistrationNumber,
@@ -128,6 +152,7 @@ namespace westcoast_cars.api.Controllers
                 });
             }
 
+            _logger.LogError("Failed to save vehicle with registration number {RegNo} to the database.", vehicle.RegistrationNumber);
             return StatusCode(500, "Internal Server Error");
         }
 

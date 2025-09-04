@@ -88,5 +88,21 @@ namespace westcoast_cars.api.Controllers
 
             return StatusCode(500, "Internal Server Error");
         }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var manufacturer = await _unitOfWork.Manufacturers.FindByIdAsync(id);
+            if (manufacturer is null) return NotFound();
+
+            _unitOfWork.Manufacturers.Delete(id);
+
+            if (await _unitOfWork.CompleteAsync() > 0)
+            {
+                return NoContent();
+            }
+
+            return StatusCode(500, "Internal Server Error");
+        }
     }
 }
