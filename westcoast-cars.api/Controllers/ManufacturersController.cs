@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Domain.Entities;
-using westcoast_cars.api.ViewModels;
+using WestcoastCars.Contracts.DTOs;
 
 namespace westcoast_cars.api.Controllers
 {
@@ -61,7 +61,7 @@ namespace westcoast_cars.api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add(PostViewModel model)
+        public async Task<IActionResult> Add(NamedObjectDto model)
         {
             if (!ModelState.IsValid) return BadRequest("All information är inte med i anropet");
 

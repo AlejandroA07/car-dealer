@@ -1,7 +1,8 @@
+
 using Microsoft.AspNetCore.Mvc;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Domain.Entities;
-using westcoast_cars.api.ViewModels;
+using WestcoastCars.Contracts.DTOs;
 using Microsoft.Extensions.Logging;
 
 namespace westcoast_cars.api.Controllers
@@ -26,14 +27,13 @@ namespace westcoast_cars.api.Controllers
         {
             var vehicles = await _unitOfWork.Vehicles.ListAsync(v => v.IsSold == false);
             
-            var result = vehicles.Select(v => new {
+            var result = vehicles.Select(v => new VehicleSummaryDto{
                 Id = v.Id,
                 Name = $"{v.Manufacturer.Name} {v.Model}",
                 Manufacturer = v.Manufacturer.Name,
                 Model = v.Model,
                 ModelYear = v.ModelYear,
-                Mileage = v.Mileage,
-                                ImageUrl = v.ImageUrl ?? "/images/no-car.png"
+                ImageUrl = v.ImageUrl ?? "/images/no-car.png"
             }).ToList();
 
             return Ok(result);
@@ -46,19 +46,19 @@ namespace westcoast_cars.api.Controllers
 
             if (v is null) return NotFound();
 
-            var result = new {
+            var result = new VehicleDetailsDto{
                 Id = v.Id,
                 RegistrationNumber = v.RegistrationNumber,
                 Name = $"{v.Manufacturer.Name} {v.Model}",
-                Make = v.Manufacturer.Name,
+                Manufacturer = v.Manufacturer.Name,
                 Model = v.Model,
-                Modelyear = v.ModelYear,
-                Milage = v.Mileage,
+                ModelYear = v.ModelYear,
+                Mileage = v.Mileage,
                 FuelType = v.FuelType.Name,
-                Transmission = v.TransmissionType.Name,
+                TransmissionsType = v.TransmissionType.Name,
                 Value = v.Value,
                 Description = v.Description,
-                                ImageUrl = v.ImageUrl ?? "/images/no-car.png"
+                ImageUrl = v.ImageUrl ?? "/images/no-car.png"
             };
 
             return Ok(result);
@@ -86,7 +86,7 @@ namespace westcoast_cars.api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add(VehiclePostViewModel vehicle)
+        public async Task<IActionResult> Add(VehiclePostDto vehicle)
         {
             _logger.LogInformation("Received request to add a new vehicle.");
             _logger.LogInformation("Request payload: {@Vehicle}", vehicle);
@@ -157,7 +157,7 @@ namespace westcoast_cars.api.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateVehicle(int id, VehicleUpdateViewModel model)
+        public async Task<IActionResult> UpdateVehicle(int id, VehicleUpdateDto model)
         {
             if (!ModelState.IsValid) return BadRequest("Felaktig information");
 

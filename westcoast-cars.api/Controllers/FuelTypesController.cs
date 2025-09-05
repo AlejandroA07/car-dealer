@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Domain.Entities;
-using westcoast_cars.api.ViewModels;
+using WestcoastCars.Contracts.DTOs;
 using Microsoft.Extensions.Logging;
 
 namespace westcoast_cars.api.Controllers
@@ -36,7 +36,7 @@ namespace westcoast_cars.api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add(PostViewModel model)
+        public async Task<IActionResult> Add(NamedObjectDto model)
         {
             _logger.LogInformation("Received request to add a new fuel type.");
             _logger.LogInformation("Request payload: {@Model}", model);
