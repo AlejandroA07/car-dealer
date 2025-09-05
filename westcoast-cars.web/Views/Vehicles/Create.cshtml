@@ -1,49 +1,50 @@
-@model westcoast_cars.web.ViewModels.Vehicles.VehiclePostViewModel
+
+@model westcoast_cars.web.ViewModels.Vehicles.VehicleBaseViewModel
 
 <section class="page">
     <h1 class="page-title">Lägg till bil</h1>
     <form asp-action="Create" method="post">
         <div asp-validation-summary="All" class="error"></div>
         <div class="form-control">
-            <label asp-for="RegistrationNumber"></label>
-            <input asp-for="RegistrationNumber" type="text">
-            <span class="error" asp-validation-for="RegistrationNumber"></span>
+            <label asp-for="Vehicle.RegistrationNumber"></label>
+            <input asp-for="Vehicle.RegistrationNumber" type="text">
+            <span class="error" asp-validation-for="Vehicle.RegistrationNumber"></span>
         </div>
 
         <div class="form-control">
-            <label asp-for="ManufacturerId"></label>
-            <select asp-for="ManufacturerId" asp-items="Model.Manufacturers"></select>
-            <span class="error" asp-validation-for="ManufacturerId"></span>
+            <label asp-for="Vehicle.ManufacturerId"></label>
+            <select asp-for="Vehicle.ManufacturerId" asp-items="Model.Manufacturers"></select>
+            <span class="error" asp-validation-for="Vehicle.ManufacturerId"></span>
         </div>
         <div class="form-control">
-            <label asp-for="Model"></label>
-            <input asp-for="Model" type="text">
-            <span class="error" asp-validation-for="Model"></span>
+            <label asp-for="Vehicle.Model"></label>
+            <input asp-for="Vehicle.Model" type="text">
+            <span class="error" asp-validation-for="Vehicle.Model"></span>
         </div>
         <div class="form-control">
-            <label asp-for="ModelYear"></label>
-            <input asp-for="ModelYear" type="text">
-            <span class="error" asp-validation-for="ModelYear"></span>
+            <label asp-for="Vehicle.ModelYear"></label>
+            <input asp-for="Vehicle.ModelYear" type="text">
+            <span class="error" asp-validation-for="Vehicle.ModelYear"></span>
         </div>
         <div class="form-control">
-            <label asp-for="FuelTypeId"></label>
-            <select asp-for="FuelTypeId" asp-items="Model.FuelTypes"></select>
-            <span class="error" asp-validation-for="FuelTypeId"></span>
+            <label asp-for="Vehicle.FuelTypeId"></label>
+            <select asp-for="Vehicle.FuelTypeId" asp-items="Model.FuelTypes"></select>
+            <span class="error" asp-validation-for="Vehicle.FuelTypeId"></span>
         </div>
         <div class="form-control">
-            <label asp-for="TransmissionTypeId"></label>
-            <select asp-for="TransmissionTypeId" asp-items="Model.TransmissionsTypes"></select>
-            <span class="error" asp-validation-for="TransmissionTypeId"></span>
+            <label asp-for="Vehicle.TransmissionTypeId"></label>
+            <select asp-for="Vehicle.TransmissionTypeId" asp-items="Model.TransmissionsTypes"></select>
+            <span class="error" asp-validation-for="Vehicle.TransmissionTypeId"></span>
         </div>
         <div class="form-control">
-            <label asp-for="Mileage"></label>
-            <input asp-for="Mileage" type="text">
-            <span class="error" asp-validation-for="Mileage"></span>
+            <label asp-for="Vehicle.Mileage"></label>
+            <input asp-for="Vehicle.Mileage" type="text">
+            <span class="error" asp-validation-for="Vehicle.Mileage"></span>
         </div>
         <div class="form-control">
-            <label asp-for="Description"></label>
-            <textarea asp-for="Description"></textarea>
-            <span class="error" asp-validation-for="Description"></span>
+            <label asp-for="Vehicle.Description"></label>
+            <textarea asp-for="Vehicle.Description"></textarea>
+            <span class="error" asp-validation-for="Vehicle.Description"></span>
         </div>
         <div class="form-control">
             <div class="buttons-container">
