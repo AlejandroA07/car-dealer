@@ -127,7 +127,7 @@ stylecop.json
 # Fakes
 Generated\/
 
-# FxCop
+# Fakes
 *.Fakes.xml
 
 # CodeMaid
@@ -214,3 +214,6 @@ hotreload.json
 
 # Local database files
 westcoastcars.db
+
+# Data protection keys - should not be in source control
+/dpkeys/

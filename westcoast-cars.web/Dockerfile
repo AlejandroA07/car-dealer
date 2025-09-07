@@ -39,5 +39,9 @@ WORKDIR /app
 # Copy the published build output from the 'build' stage
 COPY --from=build /app/publish .
 
+# Create and set permissions for the data protection keys folder
+RUN mkdir /app/keys
+RUN chown app /app/keys
+
 # Set the entrypoint for the container to run the application
 ENTRYPOINT ["dotnet", "westcoast-cars.web.dll"]

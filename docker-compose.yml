@@ -28,7 +28,7 @@ services:
     depends_on:
       - api
     volumes:
-      - dataprotection_keys:/app/keys
+      - ./dpkeys:/app/keys
 
   # Servicio de la Base de Datos (MySQL)
   db:
@@ -50,4 +50,3 @@ services:
 
 volumes:
   mysql_data:
-  dataprotection_keys:
