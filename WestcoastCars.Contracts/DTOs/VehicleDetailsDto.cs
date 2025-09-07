@@ -15,5 +15,6 @@ namespace WestcoastCars.Contracts.DTOs
         public string Model { get; set; } = string.Empty;
         public string ModelYear { get; set; } = string.Empty;
         public string ImageUrl { get; set; } = string.Empty;
+        public bool IsSold { get; set; }
     }
 }

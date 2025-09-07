@@ -10,11 +10,13 @@ public class VehiclesController : Controller
 {
     private readonly string _baseUrl;
     private readonly JsonSerializerOptions _options;
-    private readonly IHttpClientFactory _httpClient;
+    private readonly HttpClient _httpClient;
+    private readonly ILogger<VehiclesController> _logger;
 
-    public VehiclesController(IConfiguration config, IHttpClientFactory httpClient)
+    public VehiclesController(IConfiguration config, HttpClient httpClient, ILogger<VehiclesController> logger)
     {
         _httpClient = httpClient;
+        _logger = logger;
         _baseUrl = config["ApiBaseUrl"];
         _options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
     }
@@ -22,164 +24,227 @@ public class VehiclesController : Controller
     [HttpGet("list")]
     public async Task<IActionResult> Index()
     {
-        using var client = _httpClient.CreateClient();
-        var response = await client.GetAsync($"{_baseUrl}/api/v1/vehicles/list");
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
+            var response = await _httpClient.GetAsync($"{_baseUrl}/api/v1/vehicles/list");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError($"Error fetching vehicle list: {response.StatusCode}");
+                return View("Errors");
+            }
+
+            var json = await response.Content.ReadAsStringAsync();
+            var vehicles = JsonSerializer.Deserialize<List<VehicleSummaryDto>>(json, _options);
+            return View("Index", vehicles);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in Index");
             return View("Errors");
         }
-
-        var json = await response.Content.ReadAsStringAsync();
-        var vehicles = JsonSerializer.Deserialize<List<VehicleSummaryDto>>(json, _options);
-        return View("Index", vehicles);
     }
 
     [HttpGet("details/{id}")]
     public async Task<IActionResult> Details(int id)
     {
-        using var client = _httpClient.CreateClient();
-        var response = await client.GetAsync($"{_baseUrl}/api/v1/vehicles/{id}");
-        if (!response.IsSuccessStatusCode) return Content("Ops, det gick fel");
-        var json = await response.Content.ReadAsStringAsync();
-        var vehicle = JsonSerializer.Deserialize<VehicleDetailsDto>(json, _options);
-        return View("Details", vehicle);
+        try
+        {
+            var response = await _httpClient.GetAsync($"{_baseUrl}/api/v1/vehicles/{id}");
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError($"Error fetching vehicle {id}: {response.StatusCode}");
+                return Content("Oops, something went wrong");
+            }
+
+            var json = await response.Content.ReadAsStringAsync();
+            var vehicle = JsonSerializer.Deserialize<VehicleDetailsDto>(json, _options);
+            return View("Details", vehicle);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error in Details for ID {id}");
+            return View("Errors");
+        }
     }
 
     [HttpGet("delete/{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        using var client = _httpClient.CreateClient();
-        var response = await client.PatchAsync($"{_baseUrl}/api/v1/vehicles/{id}", null);
-        if (response.IsSuccessStatusCode)
+        try
         {
-            return RedirectToAction(nameof(Index));
+            var response = await _httpClient.PatchAsync($"{_baseUrl}/api/v1/vehicles/{id}", null);
+            if (response.IsSuccessStatusCode)
+            {
+                _logger.LogInformation($"Vehicle {id} deleted successfully");
+                return RedirectToAction(nameof(Index));
+            }
+
+            _logger.LogError($"Error deleting vehicle {id}: {response.StatusCode}");
+            return View("Errors");
         }
-        return View("Errors");
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error in Delete for ID {id}");
+            return View("Errors");
+        }
     }
 
+    // GET: /Vehicles/edit/{id}
     [HttpGet("edit/{id}")]
     public async Task<IActionResult> Edit(int id)
     {
-        var client = _httpClient.CreateClient();
-        var vehicleResponse = await client.GetAsync($"{_baseUrl}/api/v1/vehicles/{id}");
-        if (!vehicleResponse.IsSuccessStatusCode) return View("Errors");
-        var vehicleJson = await vehicleResponse.Content.ReadAsStringAsync();
-        var vehicleToEdit = JsonSerializer.Deserialize<VehicleDetailsDto>(vehicleJson, _options);
-
-        var manufacturersTask = client.GetStringAsync($"{_baseUrl}/api/v1/manufacturers");
-        var fuelTypesTask = client.GetStringAsync($"{_baseUrl}/api/v1/fueltypes");
-        var transmissionsTask = client.GetStringAsync($"{_baseUrl}/api/v1/transmissionTypes");
-        await Task.WhenAll(manufacturersTask, fuelTypesTask, transmissionsTask);
-
-        var manufacturers = JsonSerializer.Deserialize<List<NamedObjectDto>>(await manufacturersTask, _options);
-        var fuelTypes = JsonSerializer.Deserialize<List<NamedObjectDto>>(await fuelTypesTask, _options);
-        var transmissionsTypes = JsonSerializer.Deserialize<List<NamedObjectDto>>(await transmissionsTask, _options);
-
-        var viewModel = new VehicleBaseViewModel
+        try
         {
-            Vehicle = new VehicleDto
+            _logger.LogInformation($"Loading edit form for vehicle {id}");
+
+            var vehicleResponse = await _httpClient.GetAsync($"{_baseUrl}/api/v1/vehicles/{id}");
+            if (!vehicleResponse.IsSuccessStatusCode)
             {
-                Id = vehicleToEdit.Id, // Corrected: Id is now in VehicleDto
-                Model = vehicleToEdit.Model,
-                ModelYear = vehicleToEdit.ModelYear,
-                Mileage = vehicleToEdit.Mileage,
-                Value = vehicleToEdit.Value,
-                Description = vehicleToEdit.Description,
-                ManufacturerId = manufacturers.FirstOrDefault(m => m.Name == vehicleToEdit.Manufacturer)?.Id ?? 0, // Corrected: Get from manufacturers list
-                FuelTypeId = fuelTypes.FirstOrDefault(f => f.Name == vehicleToEdit.FuelType)?.Id ?? 0, // Corrected: Get from fuelTypes list
-                TransmissionTypeId = transmissionsTypes.FirstOrDefault(t => t.Name == vehicleToEdit.TransmissionsType)?.Id ?? 0, // Corrected: Get from transmissionsTypes list
-            },
-            Manufacturers = manufacturers.Select(m => new SelectListItem { Value = m.Id.ToString(), Text = m.Name }).ToList(),
-            FuelTypes = fuelTypes.Select(f => new SelectListItem { Value = f.Id.ToString(), Text = f.Name }).ToList(),
-            TransmissionsTypes = transmissionsTypes.Select(t => new SelectListItem { Value = t.Id.ToString(), Text = t.Name }).ToList()
-        };
-        return View("Edit", viewModel);
+                _logger.LogError($"Error fetching vehicle {id} for editing: {vehicleResponse.StatusCode}");
+                return View("Errors");
+            }
+
+            var vehicleJson = await vehicleResponse.Content.ReadAsStringAsync();
+            var vehicleToEdit = JsonSerializer.Deserialize<VehicleDetailsDto>(vehicleJson, _options);
+
+            var viewModel = new VehicleBaseViewModel
+            {
+                Vehicle = new VehicleDto
+                {
+                    Id = vehicleToEdit.Id,
+                    RegistrationNumber = vehicleToEdit.RegistrationNumber,
+                    Model = vehicleToEdit.Model,
+                    ModelYear = vehicleToEdit.ModelYear,
+                    Mileage = vehicleToEdit.Mileage,
+                    Value = vehicleToEdit.Value,
+                    Description = vehicleToEdit.Description,
+                    IsSold = vehicleToEdit.IsSold,
+                    ImageUrl = vehicleToEdit.ImageUrl
+                }
+            };
+
+            // Load dropdown data
+            await LoadDropdownData(viewModel, vehicleToEdit);
+            
+            return View("Edit", viewModel);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error in Edit GET for ID {id}");
+            return View("Errors");
+        }
     }
 
+    // POST: /Vehicles/edit/{id}
     [HttpPost("edit/{id}")]
-    public async Task<IActionResult> Edit(int id, VehicleBaseViewModel vehicleViewModel)
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(int id, [Bind(Prefix = "Vehicle")] VehicleDto vehicle)
     {
-        if (!ModelState.IsValid) return View(vehicleViewModel);
+        // Manually set the ID from the URL, as it's not part of the form prefix
+        vehicle.Id = id;
+        // Re-validate the model after setting the ID
+        ModelState.Clear();
+        TryValidateModel(vehicle);
 
-        using var client = _httpClient.CreateClient();
+        // Create a view model to pass back to the view in case of error
+        var vehicleViewModel = new VehicleBaseViewModel { Vehicle = vehicle };
 
-        var updateDto = new VehicleUpdateDto
+        try
         {
-            Id = id,
-            Model = vehicleViewModel.Vehicle.Model,
-            ModelYear = vehicleViewModel.Vehicle.ModelYear,
-            Mileage = vehicleViewModel.Vehicle.Mileage,
-            Description = vehicleViewModel.Vehicle.Description,
-            Value = vehicleViewModel.Vehicle.Value,
-            IsSold = vehicleViewModel.Vehicle.IsSold,
-            ImageUrl = vehicleViewModel.Vehicle.ImageUrl,
-            ManufacturerId = vehicleViewModel.Vehicle.ManufacturerId, // Corrected line
-            FuelTypeId = vehicleViewModel.Vehicle.FuelTypeId, // Corrected line
-            TransmissionTypeId = vehicleViewModel.Vehicle.TransmissionTypeId // Corrected line
-        };
+            _logger.LogInformation($"🚗 STARTING UPDATE for vehicle {id}");
+            _logger.LogInformation($"Data received: Model={vehicle?.Model}, RegNo={vehicle?.RegistrationNumber}");
 
-        var jsonPayload = JsonSerializer.Serialize(updateDto);
-        var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning($"Invalid ModelState for vehicle {id}");
+                foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    _logger.LogWarning($"- {error.ErrorMessage}");
+                }
+                await LoadDropdownDataSimple(vehicleViewModel);
+                return View("Edit", vehicleViewModel);
+            }
 
-        var response = await client.PutAsync($"{_baseUrl}/api/v1/vehicles/{id}", content);
+            // VehicleUpdateDto is a superset of VehicleDto, so we can map the properties
+            var updateDto = new VehicleUpdateDto
+            {
+                Id = vehicle.Id,
+                Model = vehicle.Model,
+                ModelYear = vehicle.ModelYear,
+                Mileage = vehicle.Mileage,
+                Description = vehicle.Description,
+                Value = vehicle.Value,
+                IsSold = vehicle.IsSold,
+                ImageUrl = vehicle.ImageUrl,
+                ManufacturerId = vehicle.ManufacturerId,
+                FuelTypeId = vehicle.FuelTypeId,
+                TransmissionTypeId = vehicle.TransmissionTypeId,
+                RegistrationNumber = vehicle.RegistrationNumber
+            };
 
-        if (response.IsSuccessStatusCode)
-        {
-            return RedirectToAction(nameof(Index));
+            var jsonPayload = JsonSerializer.Serialize(updateDto, _options);
+            _logger.LogInformation($"JSON sent to API: {jsonPayload}");
+
+            var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+            var response = await _httpClient.PutAsync($"{_baseUrl}/api/v1/vehicles/{id}", content);
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+            _logger.LogInformation($"API Response - Status: {response.StatusCode}, Content: {responseContent}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                _logger.LogInformation($"✅ Vehicle {id} updated successfully");
+                TempData["SuccessMessage"] = "Vehicle updated successfully";
+                return RedirectToAction(nameof(Index));
+            }
+            else
+            {
+                _logger.LogError($"❌ Error updating vehicle {id}: {response.StatusCode} - {responseContent}");
+                ModelState.AddModelError("", $"Error updating: {response.StatusCode}");
+                await LoadDropdownDataSimple(vehicleViewModel);
+                return View("Edit", vehicleViewModel);
+            }
         }
-
-        // Handle error, maybe repopulate dropdowns and return view
-        return View("Errors");
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"💥 EXCEPTION in Edit POST for ID {id}");
+            ModelState.AddModelError("", "An unexpected error occurred");
+            await LoadDropdownDataSimple(vehicleViewModel);
+            return View("Edit", vehicleViewModel);
+        }
     }
 
     [HttpGet("create")]
     public async Task<IActionResult> Create()
     {
-        using var client = _httpClient.CreateClient();
-        var manufacturersTask = client.GetStringAsync($"{_baseUrl}/api/v1/manufacturers");
-        var fuelTypesTask = client.GetStringAsync($"{_baseUrl}/api/v1/fueltypes");
-        var transmissionsTask = client.GetStringAsync($"{_baseUrl}/api/v1/transmissionTypes");
-        await Task.WhenAll(manufacturersTask, fuelTypesTask, transmissionsTask);
-
-        var manufacturers = JsonSerializer.Deserialize<List<NamedObjectDto>>(await manufacturersTask, _options);
-        var fuelTypes = JsonSerializer.Deserialize<List<NamedObjectDto>>(await fuelTypesTask, _options);
-        var transmissionsTypes = JsonSerializer.Deserialize<List<NamedObjectDto>>(await transmissionsTask, _options);
-
-        var viewModel = new VehicleBaseViewModel
+        try
         {
-            Manufacturers = manufacturers.Select(m => new SelectListItem { Value = m.Id.ToString(), Text = m.Name }).ToList(),
-            FuelTypes = fuelTypes.Select(f => new SelectListItem { Value = f.Id.ToString(), Text = f.Name }).ToList(),
-            TransmissionsTypes = transmissionsTypes.Select(t => new SelectListItem { Value = t.Id.ToString(), Text = t.Name }).ToList()
-        };
-        return View("Create", viewModel);
+            var viewModel = new VehicleBaseViewModel
+            {
+                Vehicle = new VehicleDto() // Initialize with empty object
+            };
+            await LoadDropdownDataSimple(viewModel);
+            return View("Create", viewModel);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in Create GET");
+            return View("Errors");
+        }
     }
 
-    [HttpPost("Create")]
+    [HttpPost("create")]
     public async Task<IActionResult> Create(VehicleBaseViewModel vehicleViewModel)
     {
-        if (!ModelState.IsValid) 
+        try
         {
-            // If model state is invalid, we need to reload the dropdowns before returning the view.
-            using var client = _httpClient.CreateClient();
-            var manufacturersTask = client.GetStringAsync($"{_baseUrl}/api/v1/manufacturers");
-            var fuelTypesTask = client.GetStringAsync($"{_baseUrl}/api/v1/fueltypes");
-            var transmissionsTask = client.GetStringAsync($"{_baseUrl}/api/v1/transmissionTypes");
-            await Task.WhenAll(manufacturersTask, fuelTypesTask, transmissionsTask);
+            if (!ModelState.IsValid)
+            {
+                await LoadDropdownDataSimple(vehicleViewModel);
+                return View("Create", vehicleViewModel);
+            }
 
-            var manufacturers = JsonSerializer.Deserialize<List<NamedObjectDto>>(await manufacturersTask, _options);
-            var fuelTypes = JsonSerializer.Deserialize<List<NamedObjectDto>>(await fuelTypesTask, _options);
-            var transmissionsTypes = JsonSerializer.Deserialize<List<NamedObjectDto>>(await transmissionsTask, _options);
-
-            vehicleViewModel.Manufacturers = manufacturers.Select(m => new SelectListItem { Value = m.Id.ToString(), Text = m.Name }).ToList();
-            vehicleViewModel.FuelTypes = fuelTypes.Select(f => new SelectListItem { Value = f.Id.ToString(), Text = f.Name }).ToList();
-            vehicleViewModel.TransmissionsTypes = transmissionsTypes.Select(t => new SelectListItem { Value = t.Id.ToString(), Text = t.Name }).ToList();
-            
-            return View("Create", vehicleViewModel);
-        }
-
-        using (var client = _httpClient.CreateClient())
-        {
             var postDto = new VehiclePostDto
             {
                 RegistrationNumber = vehicleViewModel.Vehicle.RegistrationNumber,
@@ -195,17 +260,92 @@ public class VehiclesController : Controller
                 ImageUrl = vehicleViewModel.Vehicle.ImageUrl
             };
 
-            var jsonPayload = JsonSerializer.Serialize(postDto);
+            var jsonPayload = JsonSerializer.Serialize(postDto, _options);
             var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-            var response = await client.PostAsync($"{_baseUrl}/api/v1/vehicles", content);
+            var response = await _httpClient.PostAsync($"{_baseUrl}/api/v1/vehicles", content);
 
             if (response.IsSuccessStatusCode)
             {
+                _logger.LogInformation("Vehicle created successfully");
                 return RedirectToAction(nameof(Index));
             }
 
-            ModelState.AddModelError(string.Empty, "An error occurred while creating the vehicle via the API.");
+            var errorContent = await response.Content.ReadAsStringAsync();
+            _logger.LogError($"Error creating vehicle: {response.StatusCode} - {errorContent}");
+            ModelState.AddModelError(string.Empty, "Error creating vehicle");
+
+            await LoadDropdownDataSimple(vehicleViewModel);
             return View("Create", vehicleViewModel);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in Create POST");
+            await LoadDropdownDataSimple(vehicleViewModel);
+            return View("Create", vehicleViewModel);
+        }
+    }
+
+    // 🔧 HELPER METHOD - Load dropdowns with vehicle context
+    private async Task LoadDropdownData(VehicleBaseViewModel viewModel, VehicleDetailsDto vehicleToEdit)
+    {
+        try
+        {
+            var manufacturersTask = _httpClient.GetStringAsync($"{_baseUrl}/api/v1/manufacturers");
+            var fuelTypesTask = _httpClient.GetStringAsync($"{_baseUrl}/api/v1/fueltypes");
+            var transmissionsTask = _httpClient.GetStringAsync($"{_baseUrl}/api/v1/transmissionTypes");
+            
+            await Task.WhenAll(manufacturersTask, fuelTypesTask, transmissionsTask);
+
+            var manufacturers = JsonSerializer.Deserialize<List<NamedObjectDto>>(await manufacturersTask, _options);
+            var fuelTypes = JsonSerializer.Deserialize<List<NamedObjectDto>>(await fuelTypesTask, _options);
+            var transmissionsTypes = JsonSerializer.Deserialize<List<NamedObjectDto>>(await transmissionsTask, _options);
+
+            // Assign correct IDs based on the current vehicle's names
+            viewModel.Vehicle.ManufacturerId = manufacturers.FirstOrDefault(m => 
+                m.Name.Equals(vehicleToEdit.Manufacturer, StringComparison.OrdinalIgnoreCase))?.Id ?? 0;
+            viewModel.Vehicle.FuelTypeId = fuelTypes.FirstOrDefault(f => 
+                f.Name.Equals(vehicleToEdit.FuelType, StringComparison.OrdinalIgnoreCase))?.Id ?? 0;
+            viewModel.Vehicle.TransmissionTypeId = transmissionsTypes.FirstOrDefault(t => 
+                t.Name.Equals(vehicleToEdit.TransmissionsType, StringComparison.OrdinalIgnoreCase))?.Id ?? 0;
+
+            viewModel.Manufacturers = manufacturers.Select(m => new SelectListItem 
+                { Value = m.Id.ToString(), Text = m.Name }).ToList();
+            viewModel.FuelTypes = fuelTypes.Select(f => new SelectListItem 
+                { Value = f.Id.ToString(), Text = f.Name }).ToList();
+            viewModel.TransmissionsTypes = transmissionsTypes.Select(t => new SelectListItem 
+                { Value = t.Id.ToString(), Text = t.Name }).ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error loading dropdowns with context");
+        }
+    }
+
+    // 🔧 HELPER METHOD - Load lists without assigning IDs
+    private async Task LoadDropdownDataSimple(VehicleBaseViewModel viewModel)
+    {
+        try
+        {
+            var manufacturersTask = _httpClient.GetStringAsync($"{_baseUrl}/api/v1/manufacturers");
+            var fuelTypesTask = _httpClient.GetStringAsync($"{_baseUrl}/api/v1/fueltypes");
+            var transmissionsTask = _httpClient.GetStringAsync($"{_baseUrl}/api/v1/transmissionTypes");
+            
+            await Task.WhenAll(manufacturersTask, fuelTypesTask, transmissionsTask);
+
+            var manufacturers = JsonSerializer.Deserialize<List<NamedObjectDto>>(await manufacturersTask, _options);
+            var fuelTypes = JsonSerializer.Deserialize<List<NamedObjectDto>>(await fuelTypesTask, _options);
+            var transmissionsTypes = JsonSerializer.Deserialize<List<NamedObjectDto>>(await transmissionsTask, _options);
+
+            viewModel.Manufacturers = manufacturers.Select(m => new SelectListItem 
+                { Value = m.Id.ToString(), Text = m.Name }).ToList();
+            viewModel.FuelTypes = fuelTypes.Select(f => new SelectListItem 
+                { Value = f.Id.ToString(), Text = f.Name }).ToList();
+            viewModel.TransmissionsTypes = transmissionsTypes.Select(t => new SelectListItem 
+                { Value = t.Id.ToString(), Text = t.Name }).ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error loading simple dropdowns");
         }
     }
 }

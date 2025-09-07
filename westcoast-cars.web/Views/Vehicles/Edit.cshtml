@@ -3,8 +3,13 @@
 
 <section class="page">
     <h1 class="page-title">Uppdatera bil</h1>
-    <form asp-action="Edit" method="post">
+    <form asp-action="Edit" asp-route-id="@Model.Vehicle.Id" method="post">
         <input asp-for="Vehicle.Id" type="hidden">
+        <input asp-for="Vehicle.RegistrationNumber" type="hidden" />
+        <div class="form-control">
+            <label asp-for="Vehicle.RegistrationNumber"></label>
+            <p class="form-control-plaintext">@Model.Vehicle.RegistrationNumber</p>
+        </div>
         <div class="form-control">
             <label asp-for="Vehicle.ManufacturerId"></label>
             <select asp-for="Vehicle.ManufacturerId" asp-items="Model.Manufacturers"></select>
@@ -47,7 +52,7 @@
         </div>
         <div class="form-control">
             <div class="buttons-container">
-                <button class="btn btn-dark">Spara</button>
+                <button type="submit" class="btn btn-dark">Spara</button>
                 <a asp-action="Index" class="btn btn-warning">Avbryt</a>
             </div>
         </div>
