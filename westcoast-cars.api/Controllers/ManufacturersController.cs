@@ -100,50 +100,7 @@ namespace westcoast_cars.api.Controllers
             }
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] NamedObjectDto model)
-        {
-            try
-            {
-                _logger.LogInformation("Attempting to update manufacturer with ID: {Id}", id);
-                if (!ModelState.IsValid)
-                {
-                    _logger.LogWarning("Invalid model state for updating manufacturer.");
-                    return BadRequest(ModelState);
-                }
-
-                var manufacturerToUpdate = await _unitOfWork.Manufacturers.FindByIdAsync(id);
-                if (manufacturerToUpdate is null)
-                {
-                    _logger.LogWarning("Manufacturer with ID {Id} not found for update.", id);
-                    return NotFound($"Manufacturer with ID {id} not found.");
-                }
-
-                var existing = await _unitOfWork.Manufacturers.ListAsync(m => m.Name.ToUpper() == model.Name.ToUpper() && m.Id != id);
-                if (existing.Any())
-                {
-                    _logger.LogWarning("Manufacturer name '{Name}' already exists on another entity.", model.Name);
-                    return Conflict($"Manufacturer name '{model.Name}' already exists.");
-                }
-
-                manufacturerToUpdate.Name = model.Name;
-                _unitOfWork.Manufacturers.Update(manufacturerToUpdate);
-
-                if (await _unitOfWork.CompleteAsync() > 0)
-                {
-                    _logger.LogInformation("Successfully updated manufacturer with ID {Id}", id);
-                    return NoContent();
-                }
-
-                _logger.LogError("Failed to update manufacturer with ID {Id}", id);
-                return StatusCode(500, "Failed to update manufacturer.");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Exception occurred while updating manufacturer with ID: {Id}", id);
-                return StatusCode(500, "Internal Server Error");
-            }
-        }
+        
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)

@@ -100,50 +100,7 @@ namespace westcoast_cars.api.Controllers
             }
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] NamedObjectDto model)
-        {
-            try
-            {
-                _logger.LogInformation("Attempting to update fuel type with ID: {Id}", id);
-                if (!ModelState.IsValid)
-                {
-                    _logger.LogWarning("Invalid model state for updating fuel type.");
-                    return BadRequest(ModelState);
-                }
-
-                var fuelTypeToUpdate = await _unitOfWork.FuelTypes.FindByIdAsync(id);
-                if (fuelTypeToUpdate is null)
-                {
-                    _logger.LogWarning("Fuel type with ID {Id} not found for update.", id);
-                    return NotFound($"Fuel type with ID {id} not found.");
-                }
-
-                var existing = await _unitOfWork.FuelTypes.ListAsync(f => f.Name.ToUpper() == model.Name.ToUpper() && f.Id != id);
-                if (existing.Any())
-                {
-                    _logger.LogWarning("Fuel type name '{Name}' already exists on another entity.", model.Name);
-                    return Conflict($"Fuel type name '{model.Name}' already exists.");
-                }
-
-                fuelTypeToUpdate.Name = model.Name;
-                _unitOfWork.FuelTypes.Update(fuelTypeToUpdate);
-
-                if (await _unitOfWork.CompleteAsync() > 0)
-                {
-                    _logger.LogInformation("Successfully updated fuel type with ID {Id}", id);
-                    return NoContent();
-                }
-
-                _logger.LogError("Failed to update fuel type with ID {Id}", id);
-                return StatusCode(500, "Failed to update fuel type.");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Exception occurred while updating fuel type with ID: {Id}", id);
-                return StatusCode(500, "Internal Server Error");
-            }
-        }
+        
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)

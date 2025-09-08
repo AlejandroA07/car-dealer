@@ -100,50 +100,7 @@ namespace westcoast_cars.api.Controllers
             }
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] NamedObjectDto model)
-        {
-            try
-            {
-                _logger.LogInformation("Attempting to update transmission type with ID: {Id}", id);
-                if (!ModelState.IsValid)
-                {
-                    _logger.LogWarning("Invalid model state for updating transmission type.");
-                    return BadRequest(ModelState);
-                }
-
-                var transmissionTypeToUpdate = await _unitOfWork.TransmissionTypes.FindByIdAsync(id);
-                if (transmissionTypeToUpdate is null)
-                {
-                    _logger.LogWarning("Transmission type with ID {Id} not found for update.", id);
-                    return NotFound($"Transmission type with ID {id} not found.");
-                }
-
-                var existing = await _unitOfWork.TransmissionTypes.ListAsync(t => t.Name.ToUpper() == model.Name.ToUpper() && t.Id != id);
-                if (existing.Any())
-                {
-                    _logger.LogWarning("Transmission type name '{Name}' already exists on another entity.", model.Name);
-                    return Conflict($"Transmission type name '{model.Name}' already exists.");
-                }
-
-                transmissionTypeToUpdate.Name = model.Name;
-                _unitOfWork.TransmissionTypes.Update(transmissionTypeToUpdate);
-
-                if (await _unitOfWork.CompleteAsync() > 0)
-                {
-                    _logger.LogInformation("Successfully updated transmission type with ID {Id}", id);
-                    return NoContent();
-                }
-
-                _logger.LogError("Failed to update transmission type with ID {Id}", id);
-                return StatusCode(500, "Failed to update transmission type.");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Exception occurred while updating transmission type with ID: {Id}", id);
-                return StatusCode(500, "Internal Server Error");
-            }
-        }
+        
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
