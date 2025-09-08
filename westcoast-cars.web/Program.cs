@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.DataProtection;
+using westcoast_cars.web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,10 @@ builder.Services.AddHttpClient("ApiClient", client =>
     client.BaseAddress = new Uri(baseUrl);
 });
 
+builder.Services.AddScoped<IVehicleService, VehicleService>();
+builder.Services.AddScoped<IManufacturerService, ManufacturerService>();
+builder.Services.AddScoped<IFuelTypeService, FuelTypeService>();
+builder.Services.AddScoped<ITransmissionTypeService, TransmissionTypeService>();
 builder.Services.AddControllersWithViews();
 
 // Configure data protection to persist keys.

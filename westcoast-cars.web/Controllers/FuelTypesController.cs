@@ -1,104 +1,92 @@
-using System.Text.Json;
-using System.Text;
 using Microsoft.AspNetCore.Mvc;
+using westcoast_cars.web.Services;
 using westcoast_cars.web.ViewModels.FuelType;
-using System.Collections.Generic;
 
 namespace westcoast_cars.web.Controllers
 {
     [Route("FuelTypes")]
     public class FuelTypesController : Controller
     {
-        private readonly string _baseUrl;
-        private readonly JsonSerializerOptions _options;
-        private readonly IHttpClientFactory _httpClient;
+        private readonly IFuelTypeService _fuelTypeService;
+        private readonly ILogger<FuelTypesController> _logger;
 
-        public FuelTypesController(IConfiguration config, IHttpClientFactory httpClient)
+        public FuelTypesController(IFuelTypeService fuelTypeService, ILogger<FuelTypesController> logger)
         {
-            _httpClient = httpClient;
-            _baseUrl = config["ApiBaseUrl"];
-            _options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            _fuelTypeService = fuelTypeService;
+            _logger = logger;
         }
 
         public async Task<IActionResult> Index()
         {
-            using var client = _httpClient.CreateClient();
-            var response = await client.GetAsync($"{_baseUrl}/api/v1/fueltypes");
-
-            if (!response.IsSuccessStatusCode)
+            try
             {
+                var fuelTypes = await _fuelTypeService.ListAllFuelTypesAsync();
+                return View("Index", fuelTypes);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in Index");
                 return View("Errors");
             }
-
-            var json = await response.Content.ReadAsStringAsync();
-            var fuelTypes = JsonSerializer.Deserialize<List<FuelTypeListViewModel>>(json, _options);
-            return View("Index", fuelTypes);
         }
 
         [HttpGet("Create")]
         public async Task<IActionResult> Create()
         {
-            var fuelTypes = await GetFuelTypesForDropdown();
-
+            var fuelTypes = await _fuelTypeService.ListAllFuelTypesAsync();
             var model = new FuelTypePostViewModel
             {
                 FuelTypes = fuelTypes
             };
-
             return View("Create", model);
         }
 
         [HttpPost("Create")]
         public async Task<IActionResult> Create(FuelTypePostViewModel model)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                model.FuelTypes = await GetFuelTypesForDropdown();
+                if (!ModelState.IsValid)
+                {
+                    model.FuelTypes = await _fuelTypeService.ListAllFuelTypesAsync();
+                    return View(model);
+                }
+
+                var result = await _fuelTypeService.CreateFuelTypeAsync(model);
+
+                if (result)
+                {
+                    return RedirectToAction(nameof(Create));
+                }
+
+                ModelState.AddModelError(string.Empty, "API Error: Could not create fuel type");
+                model.FuelTypes = await _fuelTypeService.ListAllFuelTypesAsync();
                 return View(model);
             }
-
-            using var client = _httpClient.CreateClient();
-
-            var apiPayload = new { Name = model.Name };
-            var jsonPayload = JsonSerializer.Serialize(apiPayload);
-            var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-
-            var response = await client.PostAsync($"{_baseUrl}/api/v1/fueltypes", content);
-
-            if (response.IsSuccessStatusCode)
+            catch (Exception ex)
             {
-                return RedirectToAction(nameof(Create));
+                _logger.LogError(ex, "Error in Create POST");
+                return View("Errors");
             }
-
-            var errorContent = await response.Content.ReadAsStringAsync();
-            ModelState.AddModelError(string.Empty, $"API Error: {errorContent}");
-            model.FuelTypes = await GetFuelTypesForDropdown();
-            return View(model);
-        }
-
-        private async Task<IList<FuelTypeListViewModel>> GetFuelTypesForDropdown()
-        {
-            using var client = _httpClient.CreateClient();
-            var response = await client.GetAsync($"{_baseUrl}/api/v1/fueltypes");
-            response.EnsureSuccessStatusCode();
-
-            var json = await response.Content.ReadAsStringAsync();
-            var fuelTypes = JsonSerializer.Deserialize<List<FuelTypeListViewModel>>(json, _options);
-            return fuelTypes;
         }
 
         [HttpGet("Delete/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            using var client = _httpClient.CreateClient();
-            var response = await client.DeleteAsync($"{_baseUrl}/api/v1/fueltypes/{id}");
-
-            if (response.IsSuccessStatusCode)
+            try
             {
-                return RedirectToAction(nameof(Create));
+                var result = await _fuelTypeService.DeleteFuelTypeAsync(id);
+                if (result)
+                {
+                    return RedirectToAction(nameof(Create));
+                }
+                return View("Errors");
             }
-
-            return View("Errors");
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in Delete");
+                return View("Errors");
+            }
         }
     }
 }

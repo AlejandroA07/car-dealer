@@ -1,115 +1,92 @@
-using System.Text.Json;
-using System.Text;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering; // Needed for SelectListItem
+using westcoast_cars.web.Services;
 using westcoast_cars.web.ViewModels.Manufacturer;
 
 namespace westcoast_cars.web.Controllers
 {
-    [Route("Manufacturer")] // Changed from [controller] to explicit "Manufacturer"
+    [Route("Manufacturer")]
     public class ManufacturerController : Controller
     {
-        private readonly string _baseUrl;
-        private readonly JsonSerializerOptions _options;
-        private readonly IHttpClientFactory _httpClient;
+        private readonly IManufacturerService _manufacturerService;
+        private readonly ILogger<ManufacturerController> _logger;
 
-        // A private helper class for deserializing lists from the API for dropdowns
-        private class SelectListItemDto
+        public ManufacturerController(IManufacturerService manufacturerService, ILogger<ManufacturerController> logger)
         {
-            public int Id { get; set; }
-            public string Name { get; set; }
+            _manufacturerService = manufacturerService;
+            _logger = logger;
         }
 
-        public ManufacturerController(IConfiguration config, IHttpClientFactory httpClient)
-        {
-            _httpClient = httpClient;
-            _baseUrl = config["ApiBaseUrl"];
-            _options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        }
-
-        // This Index action will now list all manufacturers
         public async Task<IActionResult> Index()
         {
-            using var client = _httpClient.CreateClient();
-            var response = await client.GetAsync($"{_baseUrl}/api/v1/manufacturers");
-
-            if (!response.IsSuccessStatusCode)
+            try
             {
-                return View("Errors"); // Assuming an Errors view exists
+                var manufacturers = await _manufacturerService.ListAllManufacturersAsync();
+                return View("Index", manufacturers);
             }
-
-            var json = await response.Content.ReadAsStringAsync();
-            var manufacturers = JsonSerializer.Deserialize<List<ManufacturerListViewModel>>(json, _options);
-            return View("Index", manufacturers);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in Index");
+                return View("Errors");
+            }
         }
 
-        [HttpGet("Create")] // Explicit route for clarity
+        [HttpGet("Create")]
         public async Task<IActionResult> Create()
         {
-            var manufacturers = await GetManufacturersForDropdown();
-
+            var manufacturers = await _manufacturerService.ListAllManufacturersAsync();
             var model = new ManufacturerPostViewModel
             {
                 Manufacturers = manufacturers
             };
-
             return View("Create", model);
         }
 
-        [HttpPost("Create")] // Explicit route for clarity
+        [HttpPost("Create")]
         public async Task<IActionResult> Create(ManufacturerPostViewModel model)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                model.Manufacturers = await GetManufacturersForDropdown();
+                if (!ModelState.IsValid)
+                {
+                    model.Manufacturers = await _manufacturerService.ListAllManufacturersAsync();
+                    return View(model);
+                }
+
+                var result = await _manufacturerService.CreateManufacturerAsync(model);
+
+                if (result)
+                {
+                    return RedirectToAction(nameof(Create));
+                }
+
+                ModelState.AddModelError(string.Empty, "API Error: Could not create manufacturer");
+                model.Manufacturers = await _manufacturerService.ListAllManufacturersAsync();
                 return View(model);
             }
-
-            using var client = _httpClient.CreateClient();
-
-            // The API expects a PostViewModel with a 'Name' property
-            var apiPayload = new { Name = model.Name };
-            var jsonPayload = JsonSerializer.Serialize(apiPayload);
-            var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-
-            var response = await client.PostAsync($"{_baseUrl}/api/v1/manufacturers", content);
-
-            if (response.IsSuccessStatusCode)
+            catch (Exception ex)
             {
-                return RedirectToAction(nameof(Create));
+                _logger.LogError(ex, "Error in Create POST");
+                return View("Errors");
             }
-
-            // Handle API errors
-            var errorContent = await response.Content.ReadAsStringAsync();
-            ModelState.AddModelError(string.Empty, $"API Error: {errorContent}");
-            model.Manufacturers = await GetManufacturersForDropdown();
-            return View(model);
-        }
-
-        // Helper method to fetch manufacturers for dropdowns
-        private async Task<IList<ManufacturerListViewModel>> GetManufacturersForDropdown()
-        {
-            using var client = _httpClient.CreateClient();
-            var response = await client.GetAsync($"{_baseUrl}/api/v1/manufacturers");
-            response.EnsureSuccessStatusCode(); // Throw if not success
-
-            var json = await response.Content.ReadAsStringAsync();
-            var manufacturers = JsonSerializer.Deserialize<List<ManufacturerListViewModel>>(json, _options);
-            return manufacturers;
         }
 
         [HttpGet("Delete/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            using var client = _httpClient.CreateClient();
-            var response = await client.DeleteAsync($"{_baseUrl}/api/v1/manufacturers/{id}");
-
-            if (response.IsSuccessStatusCode)
+            try
             {
-                return RedirectToAction(nameof(Create));
+                var result = await _manufacturerService.DeleteManufacturerAsync(id);
+                if (result)
+                {
+                    return RedirectToAction(nameof(Create));
+                }
+                return View("Errors");
             }
-
-            return View("Errors");
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in Delete");
+                return View("Errors");
+            }
         }
     }
 }
