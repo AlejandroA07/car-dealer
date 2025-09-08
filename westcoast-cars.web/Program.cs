@@ -1,39 +1,32 @@
 using Microsoft.AspNetCore.DataProtection;
 
-// Las sentencias 'using' para EntityFrameworkCore y la carpeta Data han sido eliminadas.
-
 var builder = WebApplication.CreateBuilder(args);
 
-// Añadir servicios al contenedor.
+// Add services to the container.
 
-// Configura el HttpClient para conectarse a la API.
-// Lee "ApiBaseUrl" desde la configuración (provista por docker-compose.yml o appsettings.json).
+// Configure the HttpClient to connect to the API.
+// It reads "ApiBaseUrl" from configuration (provided by docker-compose.yml or appsettings.json).
 builder.Services.AddHttpClient("ApiClient", client =>
 {
     var baseUrl = builder.Configuration["ApiBaseUrl"];
-
-    // Un valor de respaldo por si se ejecuta localmente fuera de Docker.
-    if (string.IsNullOrEmpty(baseUrl))
-    {
-        // Esta URL debe coincidir con la de tu API al ejecutarla localmente.
-        baseUrl = "http://localhost:5001"; 
-    }
-    
     client.BaseAddress = new Uri(baseUrl);
 });
 
 builder.Services.AddControllersWithViews();
 
+// Configure data protection to persist keys.
+// The path /app/keys is used within the Docker container.
+// For local development, you might need to ensure this path is valid or configure a different one.
 builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo("/app/keys"))
     .SetApplicationName("WestcoastCars");
 
 var app = builder.Build();
 
-// Toda la lógica de base de datos y 'seeding' ha sido eliminada.
-// La API es ahora responsable de sus propios datos.
+// Database and seeding logic has been removed.
+// The API is now responsible for its own data.
 
-// Configura el pipeline de peticiones HTTP.
+// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
