@@ -3,11 +3,14 @@ using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Domain.Entities;
 using WestcoastCars.Contracts.DTOs;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace westcoast_cars.api.Controllers
 {
     [ApiController]
-    [Route("api/v1/transmissionTypes")]
+    [Route("api/v1/transmissions")]
     public class TransmissionsController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -22,72 +25,155 @@ namespace westcoast_cars.api.Controllers
         [HttpGet]
         public async Task<IActionResult> ListAll()
         {
-            var transmissionTypes = await _unitOfWork.TransmissionTypes.ListAllAsync();
-            var result = transmissionTypes.Select(t => new { Id = t.Id, Name = t.Name }).ToList();
-            return Ok(result);
+            try
+            {
+                _logger.LogInformation("Retrieving all transmission types");
+                var transmissionTypes = await _unitOfWork.TransmissionTypes.ListAllAsync();
+                var result = transmissionTypes.Select(t => new { Id = t.Id, Name = t.Name }).ToList();
+                _logger.LogInformation("Successfully retrieved {Count} transmission types", result.Count);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving all transmission types");
+                return StatusCode(500, "Internal Server Error");
+            }
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var transmissionType = await _unitOfWork.TransmissionTypes.FindByIdAsync(id);
-            if (transmissionType is null) return NotFound();
-            return Ok(transmissionType);
+            try
+            {
+                _logger.LogInformation("Retrieving transmission type with ID: {Id}", id);
+                var transmissionType = await _unitOfWork.TransmissionTypes.FindByIdAsync(id);
+                if (transmissionType is null)
+                {
+                    _logger.LogWarning("Transmission type with ID {Id} not found", id);
+                    return NotFound($"Transmission type with ID {id} not found");
+                }
+                _logger.LogInformation("Successfully retrieved transmission type with ID {Id}", id);
+                return Ok(transmissionType);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving transmission type with ID: {Id}", id);
+                return StatusCode(500, "Internal Server Error");
+            }
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add(NamedObjectDto model)
+        public async Task<IActionResult> Add([FromBody] NamedObjectDto model)
         {
-            _logger.LogInformation("Received request to add a new transmission type.");
-            _logger.LogInformation("Request payload: {@Model}", model);
-
-            if (!ModelState.IsValid)
+            try
             {
-                _logger.LogWarning("ModelState is invalid. Returning BadRequest.");
-                return BadRequest("All information är inte con en el anropet");
+                _logger.LogInformation("Attempting to add new transmission type: {Name}", model.Name);
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state for new transmission type.");
+                    return BadRequest(ModelState);
+                }
+
+                var existing = await _unitOfWork.TransmissionTypes.ListAsync(t => t.Name.ToUpper() == model.Name.ToUpper());
+                if (existing.Any())
+                {
+                    _logger.LogWarning("Transmission type '{Name}' already exists.", model.Name);
+                    return Conflict($"Transmission type '{model.Name}' already exists.");
+                }
+
+                var transmissionTypeToAdd = new TransmissionType { Name = model.Name };
+                _unitOfWork.TransmissionTypes.Add(transmissionTypeToAdd);
+
+                if (await _unitOfWork.CompleteAsync() > 0)
+                {
+                    _logger.LogInformation("Successfully added new transmission type with ID {Id}", transmissionTypeToAdd.Id);
+                    return CreatedAtAction(nameof(GetById), new { id = transmissionTypeToAdd.Id }, transmissionTypeToAdd);
+                }
+
+                _logger.LogError("Failed to add transmission type '{Name}' to the database.", model.Name);
+                return StatusCode(500, "Failed to save transmission type.");
             }
-
-            var existing = await _unitOfWork.TransmissionTypes.ListAsync(t => t.Name.ToUpper() == model.Name.ToUpper());
-            if (existing.Any())
+            catch (Exception ex)
             {
-                _logger.LogWarning("Transmission type {Name} already exists.", model.Name);
-                return BadRequest($"Transmission type {model.Name} finns redan en el systemet");
+                _logger.LogError(ex, "Exception occurred while adding transmission type: {Name}", model.Name);
+                return StatusCode(500, "Internal Server Error");
             }
+        }
 
-            var modelToAdd = new TransmissionType
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, [FromBody] NamedObjectDto model)
+        {
+            try
             {
-                Name = model.Name
-            };
+                _logger.LogInformation("Attempting to update transmission type with ID: {Id}", id);
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state for updating transmission type.");
+                    return BadRequest(ModelState);
+                }
 
-            _unitOfWork.TransmissionTypes.Add(modelToAdd);
+                var transmissionTypeToUpdate = await _unitOfWork.TransmissionTypes.FindByIdAsync(id);
+                if (transmissionTypeToUpdate is null)
+                {
+                    _logger.LogWarning("Transmission type with ID {Id} not found for update.", id);
+                    return NotFound($"Transmission type with ID {id} not found.");
+                }
 
-            if (await _unitOfWork.CompleteAsync() > 0)
-            {
-                _logger.LogInformation("Transmission type {Name} created successfully.", model.Name);
-                return CreatedAtAction(nameof(GetById), new { id = modelToAdd.Id }, new {
-                    Id = modelToAdd.Id,
-                    Name = modelToAdd.Name
-                });
+                var existing = await _unitOfWork.TransmissionTypes.ListAsync(t => t.Name.ToUpper() == model.Name.ToUpper() && t.Id != id);
+                if (existing.Any())
+                {
+                    _logger.LogWarning("Transmission type name '{Name}' already exists on another entity.", model.Name);
+                    return Conflict($"Transmission type name '{model.Name}' already exists.");
+                }
+
+                transmissionTypeToUpdate.Name = model.Name;
+                _unitOfWork.TransmissionTypes.Update(transmissionTypeToUpdate);
+
+                if (await _unitOfWork.CompleteAsync() > 0)
+                {
+                    _logger.LogInformation("Successfully updated transmission type with ID {Id}", id);
+                    return NoContent();
+                }
+
+                _logger.LogError("Failed to update transmission type with ID {Id}", id);
+                return StatusCode(500, "Failed to update transmission type.");
             }
-
-            _logger.LogError("Failed to save transmission type {Name} to the database.", model.Name);
-            return StatusCode(500, "Internal Server Error");
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Exception occurred while updating transmission type with ID: {Id}", id);
+                return StatusCode(500, "Internal Server Error");
+            }
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var transmissionType = await _unitOfWork.TransmissionTypes.FindByIdAsync(id);
-            if (transmissionType is null) return NotFound();
-
-            _unitOfWork.TransmissionTypes.Delete(id);
-
-            if (await _unitOfWork.CompleteAsync() > 0)
+            try
             {
-                return NoContent();
-            }
+                _logger.LogInformation("Attempting to delete transmission type with ID: {Id}", id);
+                var transmissionTypeToDelete = await _unitOfWork.TransmissionTypes.FindByIdAsync(id);
+                if (transmissionTypeToDelete is null)
+                {
+                    _logger.LogWarning("Transmission type with ID {Id} not found for deletion.", id);
+                    return NotFound($"Transmission type with ID {id} not found.");
+                }
 
-            return StatusCode(500, "Internal Server Error");
+                _unitOfWork.TransmissionTypes.Delete(id);
+
+                if (await _unitOfWork.CompleteAsync() > 0)
+                {
+                    _logger.LogInformation("Successfully deleted transmission type with ID {Id}", id);
+                    return NoContent();
+                }
+
+                _logger.LogError("Failed to delete transmission type with ID {Id}", id);
+                return StatusCode(500, "Failed to delete transmission type.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Exception occurred while deleting transmission type with ID: {Id}", id);
+                return StatusCode(500, "Internal Server Error");
+            }
         }
     }
 }
