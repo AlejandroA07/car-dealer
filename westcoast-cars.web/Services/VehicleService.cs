@@ -165,7 +165,7 @@ namespace westcoast_cars.web.Services
         {
             var manufacturersTask = _httpClient.GetStringAsync($"{_baseUrl}/api/v1/manufacturers");
             var fuelTypesTask = _httpClient.GetStringAsync($"{_baseUrl}/api/v1/fueltypes");
-            var transmissionsTask = _httpClient.GetStringAsync($"{_baseUrl}/api/v1/transmissionTypes");
+            var transmissionsTask = _httpClient.GetStringAsync($"{_baseUrl}/api/v1/transmissions");
             
             await Task.WhenAll(manufacturersTask, fuelTypesTask, transmissionsTask);
 
@@ -186,7 +186,7 @@ namespace westcoast_cars.web.Services
         {
             var manufacturersTask = _httpClient.GetStringAsync($"{_baseUrl}/api/v1/manufacturers");
             var fuelTypesTask = _httpClient.GetStringAsync($"{_baseUrl}/api/v1/fueltypes");
-            var transmissionsTask = _httpClient.GetStringAsync($"{_baseUrl}/api/v1/transmissionTypes");
+            var transmissionsTask = _httpClient.GetStringAsync($"{_baseUrl}/api/v1/transmissions");
             
             await Task.WhenAll(manufacturersTask, fuelTypesTask, transmissionsTask);
 
