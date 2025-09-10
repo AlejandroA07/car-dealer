@@ -9,7 +9,7 @@
 *.user
 *.userosscache
 *.sln.docstates
-*.env
+.env
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
@@ -216,4 +216,4 @@ hotreload.json
 westcoastcars.db
 
 # Data protection keys - should not be in source control
-/dpkeys/
+/dpkeys/.env 

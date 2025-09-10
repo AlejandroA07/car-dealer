@@ -1,6 +1,6 @@
 
 services:
-  # Servicio de la API
+  # Servicio de la API principal
   api:
     build:
       context: .
@@ -15,6 +15,22 @@ services:
       db:
         condition: service_healthy
 
+  # Servicio de Autenticación (Microservicio)
+  auth-api:
+    build:
+      context: .
+      dockerfile: westcoast-cars.auth/Api/Dockerfile
+    ports:
+      - "5003:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=auth-db;Port=3306;Database=westcoast_auth;Uid=root;Pwd=password
+      - JwtSettings__Secret=${JWT_SECRET}
+    depends_on:
+      auth-db:
+        condition: service_healthy
+
   # Servicio del Frontend Web
   web:
     build:
@@ -25,17 +41,18 @@ services:
     environment:
       - ASPNETCORE_URLS=http://+:8080
       - ApiBaseUrl=http://api:8080
+      - AuthApiBaseUrl=http://auth-api:8080
     depends_on:
       - api
+      - auth-api
     volumes:
       - ./dpkeys:/app/keys
 
-  # Servicio de la Base de Datos (MySQL)
+  # Servicio de la Base de Datos principal (MySQL)
   db:
-    image: mysql:8.0 # Usamos una versión específica en lugar de 'latest'
+    image: mysql:8.0
     container_name: westcoast-mysql
     environment:
-      # AVISO: Usa un password seguro en un entorno real, idealmente desde un archivo .env
       - MYSQL_ROOT_PASSWORD=password
       - MYSQL_DATABASE=westcoast_cars_db
     ports:
@@ -48,5 +65,23 @@ services:
       timeout: 5s
       retries: 5
 
+  # Servicio de la Base de Datos de Autenticación (MySQL)
+  auth-db:
+    image: mysql:8.0
+    container_name: westcoast-auth-mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=westcoast_auth
+    ports:
+      - "3307:3306" # Usar un puerto diferente para evitar conflictos
+    volumes:
+      - mysql_auth_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   mysql_data:
+  mysql_auth_data:
