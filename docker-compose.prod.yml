@@ -1,0 +1,41 @@
+# Production-like environment configuration
+# This configuration simulates Docker Secrets by using a local file for the password.
+
+secrets:
+  db_password:
+    file: ./prod_db_password.txt
+
+services:
+  api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+    secrets:
+      - db_password
+
+  auth-api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+    secrets:
+      - db_password
+
+  web:
+    ports:
+      - "5002:8080"
+
+  db:
+    ports: []
+    environment:
+      # The MySQL image can read the password from a file specified by this env var.
+      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_password
+      # Unset the variable that might be inherited from the base compose file.
+      - MYSQL_ROOT_PASSWORD=
+    secrets:
+      - db_password
+
+  auth-db:
+    ports: []
+    environment:
+      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_password
+      - MYSQL_ROOT_PASSWORD=
+    secrets:
+      - db_password
