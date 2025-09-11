@@ -10,6 +10,22 @@ var builder = WebApplication.CreateBuilder(args);
 // Add database support
 builder.Services.AddDbContext<WestcoastCarsContext>(options => {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+    if (builder.Environment.IsProduction())
+    {
+        var passwordFile = "/run/secrets/db_password";
+        if (System.IO.File.Exists(passwordFile))
+        {
+            var password = System.IO.File.ReadAllText(passwordFile).Trim();
+            var csBuilder = new System.Data.Common.DbConnectionStringBuilder
+            {
+                ConnectionString = connectionString
+            };
+            csBuilder["Password"] = password;
+            connectionString = csBuilder.ConnectionString;
+        }
+    }
+    
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
 });
 
