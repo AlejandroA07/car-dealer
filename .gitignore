@@ -221,8 +221,7 @@ westcoastcars.db
 # Local development environment script
 dev-env.cmd
 
-# Project task file
-TASKS.md
+
 
 # Production-like secret files
 prod_db_password.txt
