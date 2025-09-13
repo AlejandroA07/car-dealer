@@ -7,12 +7,16 @@ secrets:
 
 services:
   api:
+    ports:
+      - "5001:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
     secrets:
       - db_password
 
   auth-api:
+    ports:
+      - "5003:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
     secrets:

@@ -10,3 +10,22 @@ This file documents the design patterns applied throughout the westcoast-cars so
 - **Location:** Implemented in `WestcoastCars.Infrastructure/Repositories/UnitOfWork.cs`.
 - **Description:** Maintains a list of objects affected by a business transaction and coordinates the writing out of changes and the resolution of concurrency problems. It helps to manage transactions and ensures data integrity.
 
+## Entity Framework Design-Time DbContext Factory
+
+### Problem
+When using Entity Framework Core tools (`dotnet ef`) in a containerized development environment (Docker), a conflict arises between how the application connects to the database at runtime versus how the tools need to connect at design time.
+
+- **Runtime:** The application runs inside a Docker container and connects to the database using an internal Docker network service name (e.g., `Server=auth-db`).
+- **Design-Time:** The `dotnet ef` tools run on the host machine, outside of Docker. They cannot resolve the Docker service name and thus fail to connect to the database to generate migrations.
+
+### Solution
+The solution is to implement the `IDesignTimeDbContextFactory<T>` interface. This interface is a special hook provided by Entity Framework to specify a separate configuration for design-time operations.
+
+Our implementation, `AuthDbContextFactory`, solves the problem as follows:
+
+1.  **Provides a Host-Accessible Connection String:** It programmatically builds a connection string that works from the host machine, pointing to the database port exposed by Docker to the localhost (e.g., `Server=localhost:3307`).
+
+2.  **Dynamically Locates Configuration:** To get the database password, the factory code dynamically locates the project's root directory by searching upwards from its own location for the `.git` folder. It then reads the `.env` file in the root to get the `MYSQL_PASSWORD`.
+
+### Outcome
+This pattern avoids hardcoding paths or passwords, making the solution portable and secure. It allows developers to use `dotnet ef` tools seamlessly in a Docker-based development workflow without any manual configuration or environment changes.
