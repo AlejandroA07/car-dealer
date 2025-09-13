@@ -4,5 +4,5 @@ namespace WestcoastCars.Auth.Application.Common.Interfaces.Authentication;
 
 public interface IJwtTokenGenerator
 {
-    string GenerateToken(User user);
+    Task<string> GenerateTokenAsync(User user, IEnumerable<string> roles);
 }

@@ -1,6 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.0-preview.7.24406.2" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="9.0.0-preview.7.24406.2" />
     <ProjectReference Include="..\Domain\WestcoastCars.Auth.Domain.csproj" />
     <ProjectReference Include="..\Contracts\WestcoastCars.Auth.Contracts.csproj" />
   </ItemGroup>
