@@ -1,7 +1,7 @@
 namespace WestcoastCars.Auth.Contracts.Auth;
 
 public record AuthenticationResponse(
-    int Id,
+    Guid Id,
     string FirstName,
     string LastName,
     string Email,
