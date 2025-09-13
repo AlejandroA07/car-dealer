@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Domain.Entities;
@@ -22,6 +23,7 @@ namespace westcoast_cars.api.Controllers
         }
 
         [HttpGet("list")]
+        [AllowAnonymous]
         public async Task<IActionResult> ListAll()
         {
             try
@@ -51,6 +53,7 @@ namespace westcoast_cars.api.Controllers
         }
 
         [HttpGet("{id}")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetById(int id)
         {
             try
@@ -93,6 +96,7 @@ namespace westcoast_cars.api.Controllers
         }
 
         [HttpGet("regno/{regNo}")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetByRegNo(string regNo)
         {
             try
@@ -129,6 +133,7 @@ namespace westcoast_cars.api.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin,Salesperson")]
         public async Task<IActionResult> Add(VehiclePostDto vehicle)
         {
             try
@@ -196,6 +201,7 @@ namespace westcoast_cars.api.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin,Salesperson")]
         public async Task<IActionResult> UpdateVehicle(int id, VehicleUpdateDto model)
         {
             try
@@ -268,6 +274,7 @@ namespace westcoast_cars.api.Controllers
         }
 
         [HttpPatch("{id}")]
+        [Authorize(Roles = "Admin,Salesperson")]
         public async Task<IActionResult> MarkAsSold(int id)
         {
             try
@@ -301,6 +308,7 @@ namespace westcoast_cars.api.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             try
