@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 using WestcoastCars.Auth.Application.Common.Interfaces.Authentication;
 using WestcoastCars.Auth.Domain.Entities;
 
@@ -10,15 +11,18 @@ public class AuthService : IAuthService
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
     private readonly UserManager<IdentityUser> _userManager;
     private readonly SignInManager<IdentityUser> _signInManager;
+    private readonly ILogger<AuthService> _logger;
 
     public AuthService(
         IJwtTokenGenerator jwtTokenGenerator, 
         UserManager<IdentityUser> userManager, 
-        SignInManager<IdentityUser> signInManager)
+        SignInManager<IdentityUser> signInManager,
+        ILogger<AuthService> logger)
     {
         _jwtTokenGenerator = jwtTokenGenerator;
         _userManager = userManager;
         _signInManager = signInManager;
+        _logger = logger;
     }
 
     public async Task<AuthenticationResult> LoginAsync(string email, string password)
@@ -26,14 +30,19 @@ public class AuthService : IAuthService
         var user = await _userManager.FindByEmailAsync(email);
         if (user is null)
         {
+            _logger.LogWarning("Login failed: User with email {Email} not found.", email);
             throw new Exception("Invalid credentials");
         }
 
         var result = await _signInManager.CheckPasswordSignInAsync(user, password, false);
         if (!result.Succeeded)
         {
+            _logger.LogError("Login failed: Password check failed for user {Email}. IsLockedOut: {IsLockedOut}, IsNotAllowed: {IsNotAllowed}, RequiresTwoFactor: {RequiresTwoFactor}", 
+                email, result.IsLockedOut, result.IsNotAllowed, result.RequiresTwoFactor);
             throw new Exception("Invalid credentials");
         }
+
+        _logger.LogInformation("User {Email} logged in successfully.", email);
 
         var roles = await _userManager.GetRolesAsync(user);
         var claims = await _userManager.GetClaimsAsync(user);
@@ -95,3 +104,4 @@ public class AuthService : IAuthService
         return new AuthenticationResult(domainUser, token);
     }
 }
+
