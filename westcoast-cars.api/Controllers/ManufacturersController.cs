@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Domain.Entities;
 using WestcoastCars.Contracts.DTOs;
+using WestcoastCars.Api.Exceptions;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
@@ -43,7 +44,7 @@ namespace westcoast_cars.api.Controllers
             if (manufacturer is null)
             {
                 _logger.LogWarning("Manufacturer with ID {Id} not found", id);
-                return NotFound($"Manufacturer with ID {id} not found");
+                throw new NotFoundException($"Manufacturer with ID {id} not found");
             }
             _logger.LogInformation("Successfully retrieved manufacturer with ID {Id}", id);
             return Ok(manufacturer);
@@ -64,7 +65,7 @@ namespace westcoast_cars.api.Controllers
             if (existing.Any())
             {
                 _logger.LogWarning("Manufacturer '{Name}' already exists.", model.Name);
-                return Conflict($"Manufacturer '{model.Name}' already exists.");
+                throw new ConflictException($"Manufacturer '{model.Name}' already exists.");
             }
 
             var manufacturerToAdd = new Manufacturer { Name = model.Name };
@@ -91,7 +92,7 @@ namespace westcoast_cars.api.Controllers
             if (manufacturerToDelete is null)
             {
                 _logger.LogWarning("Manufacturer with ID {Id} not found for deletion.", id);
-                return NotFound($"Manufacturer with ID {id} not found.");
+                throw new NotFoundException($"Manufacturer with ID {id} not found.");
             }
 
             _unitOfWork.Manufacturers.Delete(id);

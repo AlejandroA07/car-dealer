@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Domain.Entities;
 using WestcoastCars.Contracts.DTOs;
+using WestcoastCars.Api.Exceptions;
 using Microsoft.Extensions.Logging;
 
 namespace westcoast_cars.api.Controllers
@@ -55,7 +56,7 @@ namespace westcoast_cars.api.Controllers
             if (v is null) 
             {
                 _logger.LogWarning("Vehicle with ID {Id} not found", id);
-                return NotFound($"Vehicle with ID {id} not found");
+                throw new NotFoundException($"Vehicle with ID {id} not found");
             }
 
             var result = new VehicleDetailsDto
@@ -90,7 +91,7 @@ namespace westcoast_cars.api.Controllers
             if (v is null) 
             {
                 _logger.LogWarning("Vehicle with registration number {RegNo} not found", regNo);
-                return NotFound($"Vehicle with registration number {regNo} not found");
+                throw new NotFoundException($"Vehicle with registration number {regNo} not found");
             }
             
             var result = new {
@@ -126,23 +127,21 @@ namespace westcoast_cars.api.Controllers
             if (await _unitOfWork.Vehicles.FindByRegistrationNumberAsync(vehicle.RegistrationNumber) is not null)
             {
                 _logger.LogWarning("Vehicle with registration {RegNo} already exists", vehicle.RegistrationNumber);
-                return Conflict($"Vehicle with registration number {vehicle.RegistrationNumber} already exists");
+                throw new ConflictException($"Vehicle with registration number {vehicle.RegistrationNumber} already exists");
             }
 
             // Validate related entities
-            var validationResult = await ValidateRelatedEntitiesAsync(vehicle.ManufacturerId, vehicle.FuelTypeId, vehicle.TransmissionTypeId);
-            if (!validationResult.IsValid)
-                return validationResult.ErrorResult;
+            var (manufacturer, fuelType, transmissionType) = await ValidateRelatedEntitiesAsync(vehicle.ManufacturerId, vehicle.FuelTypeId, vehicle.TransmissionTypeId);
 
             var vehicleToAdd = new Vehicle
             {
                 RegistrationNumber = vehicle.RegistrationNumber,
-                Manufacturer = validationResult.Manufacturer,
+                Manufacturer = manufacturer,
                 Model = vehicle.Model,
                 ModelYear = vehicle.ModelYear,
                 Mileage = vehicle.Mileage,
-                TransmissionType = validationResult.TransmissionType,
-                FuelType = validationResult.FuelType,
+                TransmissionType = transmissionType,
+                FuelType = fuelType,
                 Value = vehicle.Value,
                 IsSold = vehicle.IsSold,
                 Description = vehicle.Description,
@@ -186,7 +185,7 @@ namespace westcoast_cars.api.Controllers
             if (vehicle is null) 
             {
                 _logger.LogWarning("Vehicle {Id} not found for update", id);
-                return NotFound($"Vehicle with ID {id} not found");
+                throw new NotFoundException($"Vehicle with ID {id} not found");
             }
 
             // 🔥 VALIDAR REGISTRATION NUMBER SI CAMBIÓ
@@ -197,14 +196,12 @@ namespace westcoast_cars.api.Controllers
                 if (existingVehicle != null && existingVehicle.Id != id)
                 {
                     _logger.LogWarning("Registration number {RegNo} already exists on another vehicle", model.RegistrationNumber);
-                    return Conflict($"Registration number {model.RegistrationNumber} already exists");
+                    throw new ConflictException($"Registration number {model.RegistrationNumber} already exists");
                 }
             }
 
             // Validate related entities
-            var validationResult = await ValidateRelatedEntitiesAsync(model.ManufacturerId, model.FuelTypeId, model.TransmissionTypeId);
-            if (!validationResult.IsValid)
-                return validationResult.ErrorResult;
+            var (manufacturer, fuelType, transmissionType) = await ValidateRelatedEntitiesAsync(model.ManufacturerId, model.FuelTypeId, model.TransmissionTypeId);
 
             // 🔥 UPDATE ALL PROPERTIES INCLUDING REGISTRATION NUMBER
             if (!string.IsNullOrEmpty(model.RegistrationNumber))
@@ -212,9 +209,9 @@ namespace westcoast_cars.api.Controllers
                 
             vehicle.Model = model.Model;
             vehicle.ModelYear = model.ModelYear;
-            vehicle.Manufacturer = validationResult.Manufacturer;
-            vehicle.FuelType = validationResult.FuelType;
-            vehicle.TransmissionType = validationResult.TransmissionType;
+            vehicle.Manufacturer = manufacturer;
+            vehicle.FuelType = fuelType;
+            vehicle.TransmissionType = transmissionType;
             vehicle.Mileage = model.Mileage;
             vehicle.Description = model.Description;
             vehicle.Value = model.Value;
@@ -243,7 +240,7 @@ namespace westcoast_cars.api.Controllers
             if (vehicle is null) 
             {
                 _logger.LogWarning("Vehicle {Id} not found for marking as sold", id);
-                return NotFound($"Vehicle with ID {id} not found");
+                throw new NotFoundException($"Vehicle with ID {id} not found");
             }
 
             vehicle.IsSold = true;
@@ -269,7 +266,7 @@ namespace westcoast_cars.api.Controllers
             if (vehicle is null) 
             {
                 _logger.LogWarning("Vehicle {Id} not found for deletion", id);
-                return NotFound($"Vehicle with ID {id} not found");
+                throw new NotFoundException($"Vehicle with ID {id} not found");
             }
 
             _unitOfWork.Vehicles.Delete(id);
@@ -285,56 +282,27 @@ namespace westcoast_cars.api.Controllers
         }
 
         // 🔧 MÉTODO HELPER PARA VALIDAR ENTIDADES RELACIONADAS
-        private async Task<ValidationResult> ValidateRelatedEntitiesAsync(int manufacturerId, int fuelTypeId, int transmissionTypeId)
+        private async Task<(Manufacturer, FuelType, TransmissionType)> ValidateRelatedEntitiesAsync(int manufacturerId, int fuelTypeId, int transmissionTypeId)
         {
             var manufacturer = await _unitOfWork.Manufacturers.FindByIdAsync(manufacturerId);
             if (manufacturer is null)
             {
-                _logger.LogWarning("Manufacturer {Id} not found", manufacturerId);
-                return ValidationResult.Error(NotFound($"Manufacturer with ID {manufacturerId} not found"));
+                throw new NotFoundException($"Manufacturer with ID {manufacturerId} not found");
             }
 
             var fuelType = await _unitOfWork.FuelTypes.FindByIdAsync(fuelTypeId);
             if (fuelType is null)
             {
-                _logger.LogWarning("FuelType {Id} not found", fuelTypeId);
-                return ValidationResult.Error(NotFound($"Fuel type with ID {fuelTypeId} not found"));
+                throw new NotFoundException($"Fuel type with ID {fuelTypeId} not found");
             }
 
             var transmissionType = await _unitOfWork.TransmissionTypes.FindByIdAsync(transmissionTypeId);
             if (transmissionType is null)
             {
-                _logger.LogWarning("TransmissionType {Id} not found", transmissionTypeId);
-                return ValidationResult.Error(NotFound($"Transmission type with ID {transmissionTypeId} not found"));
+                throw new NotFoundException($"Transmission type with ID {transmissionTypeId} not found");
             }
 
-            return ValidationResult.Success(manufacturer, fuelType, transmissionType);
-        }
-
-        // 🔧 CLASE HELPER PARA RESULTADOS DE VALIDACIÓN
-        private class ValidationResult
-        {
-            public bool IsValid { get; private set; }
-            public IActionResult ErrorResult { get; private set; }
-            public Manufacturer Manufacturer { get; private set; }
-            public FuelType FuelType { get; private set; }
-            public TransmissionType TransmissionType { get; private set; }
-
-            public static ValidationResult Success(Manufacturer manufacturer, FuelType fuelType, TransmissionType transmissionType)
-            {
-                return new ValidationResult 
-                { 
-                    IsValid = true, 
-                    Manufacturer = manufacturer, 
-                    FuelType = fuelType, 
-                    TransmissionType = transmissionType 
-                };
-            }
-
-            public static ValidationResult Error(IActionResult errorResult)
-            {
-                return new ValidationResult { IsValid = false, ErrorResult = errorResult };
-            }
+            return (manufacturer, fuelType, transmissionType);
         }
     }
 }

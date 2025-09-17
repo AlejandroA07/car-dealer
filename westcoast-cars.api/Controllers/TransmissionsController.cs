@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Domain.Entities;
 using WestcoastCars.Contracts.DTOs;
+using WestcoastCars.Api.Exceptions;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
@@ -43,7 +44,7 @@ namespace westcoast_cars.api.Controllers
             if (transmissionType is null)
             {
                 _logger.LogWarning("Transmission type with ID {Id} not found", id);
-                return NotFound($"Transmission type with ID {id} not found");
+                throw new NotFoundException($"Transmission type with ID {id} not found");
             }
             _logger.LogInformation("Successfully retrieved transmission type with ID {Id}", id);
             return Ok(transmissionType);
@@ -64,7 +65,7 @@ namespace westcoast_cars.api.Controllers
             if (existing.Any())
             {
                 _logger.LogWarning("Transmission type '{Name}' already exists.", model.Name);
-                return Conflict($"Transmission type '{model.Name}' already exists.");
+                throw new ConflictException($"Transmission type '{model.Name}' already exists.");
             }
 
             var transmissionTypeToAdd = new TransmissionType { Name = model.Name };
@@ -91,7 +92,7 @@ namespace westcoast_cars.api.Controllers
             if (transmissionTypeToDelete is null)
             {
                 _logger.LogWarning("Transmission type with ID {Id} not found for deletion.", id);
-                return NotFound($"Transmission type with ID {id} not found.");
+                throw new NotFoundException($"Transmission type with ID {id} not found.");
             }
 
             _unitOfWork.TransmissionTypes.Delete(id);

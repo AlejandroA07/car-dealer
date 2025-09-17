@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Domain.Entities;
 using WestcoastCars.Contracts.DTOs;
+using WestcoastCars.Api.Exceptions;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
@@ -43,7 +44,7 @@ namespace westcoast_cars.api.Controllers
             if (fuelType is null)
             {
                 _logger.LogWarning("Fuel type with ID {Id} not found", id);
-                return NotFound($"Fuel type with ID {id} not found");
+                throw new NotFoundException($"Fuel type with ID {id} not found");
             }
             _logger.LogInformation("Successfully retrieved fuel type with ID {Id}", id);
             return Ok(fuelType);
@@ -64,7 +65,7 @@ namespace westcoast_cars.api.Controllers
             if (existing.Any())
             {
                 _logger.LogWarning("Fuel type '{Name}' already exists.", model.Name);
-                return Conflict($"Fuel type '{model.Name}' already exists.");
+                throw new ConflictException($"Fuel type '{model.Name}' already exists.");
             }
 
             var fuelTypeToAdd = new FuelType { Name = model.Name };
@@ -91,7 +92,7 @@ namespace westcoast_cars.api.Controllers
             if (fuelTypeToDelete is null)
             {
                 _logger.LogWarning("Fuel type with ID {Id} not found for deletion.", id);
-                return NotFound($"Fuel type with ID {id} not found.");
+                throw new NotFoundException($"Fuel type with ID {id} not found.");
             }
 
             _unitOfWork.FuelTypes.Delete(id);
