@@ -27,81 +27,57 @@ namespace westcoast_cars.api.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> ListAll()
         {
-            try
-            {
-                _logger.LogInformation("Retrieving all manufacturers");
-                var manufacturers = await _unitOfWork.Manufacturers.ListAllAsync();
-                var result = manufacturers.Select(m => new { Id = m.Id, Name = m.Name }).ToList();
-                _logger.LogInformation("Successfully retrieved {Count} manufacturers", result.Count);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving all manufacturers");
-                return StatusCode(500, "Internal Server Error");
-            }
+            _logger.LogInformation("Retrieving all manufacturers");
+            var manufacturers = await _unitOfWork.Manufacturers.ListAllAsync();
+            var result = manufacturers.Select(m => new { Id = m.Id, Name = m.Name }).ToList();
+            _logger.LogInformation("Successfully retrieved {Count} manufacturers", result.Count);
+            return Ok(result);
         }
 
         [HttpGet("{id}")]
         [AllowAnonymous]
         public async Task<IActionResult> GetById(int id)
         {
-            try
+            _logger.LogInformation("Retrieving manufacturer with ID: {Id}", id);
+            var manufacturer = await _unitOfWork.Manufacturers.FindByIdAsync(id);
+            if (manufacturer is null)
             {
-                _logger.LogInformation("Retrieving manufacturer with ID: {Id}", id);
-                var manufacturer = await _unitOfWork.Manufacturers.FindByIdAsync(id);
-                if (manufacturer is null)
-                {
-                    _logger.LogWarning("Manufacturer with ID {Id} not found", id);
-                    return NotFound($"Manufacturer with ID {id} not found");
-                }
-                _logger.LogInformation("Successfully retrieved manufacturer with ID {Id}", id);
-                return Ok(manufacturer);
+                _logger.LogWarning("Manufacturer with ID {Id} not found", id);
+                return NotFound($"Manufacturer with ID {id} not found");
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving manufacturer with ID: {Id}", id);
-                return StatusCode(500, "Internal Server Error");
-            }
+            _logger.LogInformation("Successfully retrieved manufacturer with ID {Id}", id);
+            return Ok(manufacturer);
         }
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Add([FromBody] NamedObjectDto model)
         {
-            try
+            _logger.LogInformation("Attempting to add new manufacturer: {Name}", model.Name);
+            if (!ModelState.IsValid)
             {
-                _logger.LogInformation("Attempting to add new manufacturer: {Name}", model.Name);
-                if (!ModelState.IsValid)
-                {
-                    _logger.LogWarning("Invalid model state for new manufacturer.");
-                    return BadRequest(ModelState);
-                }
-
-                var existing = await _unitOfWork.Manufacturers.ListAsync(m => m.Name.ToUpper() == model.Name.ToUpper());
-                if (existing.Any())
-                {
-                    _logger.LogWarning("Manufacturer '{Name}' already exists.", model.Name);
-                    return Conflict($"Manufacturer '{model.Name}' already exists.");
-                }
-
-                var manufacturerToAdd = new Manufacturer { Name = model.Name };
-                _unitOfWork.Manufacturers.Add(manufacturerToAdd);
-
-                if (await _unitOfWork.CompleteAsync() > 0)
-                {
-                    _logger.LogInformation("Successfully added new manufacturer with ID {Id}", manufacturerToAdd.Id);
-                    return CreatedAtAction(nameof(GetById), new { id = manufacturerToAdd.Id }, manufacturerToAdd);
-                }
-
-                _logger.LogError("Failed to add manufacturer '{Name}' to the database.", model.Name);
-                return StatusCode(500, "Failed to save manufacturer.");
+                _logger.LogWarning("Invalid model state for new manufacturer.");
+                return BadRequest(ModelState);
             }
-            catch (Exception ex)
+
+            var existing = await _unitOfWork.Manufacturers.ListAsync(m => m.Name.ToUpper() == model.Name.ToUpper());
+            if (existing.Any())
             {
-                _logger.LogError(ex, "Exception occurred while adding manufacturer: {Name}", model.Name);
-                return StatusCode(500, "Internal Server Error");
+                _logger.LogWarning("Manufacturer '{Name}' already exists.", model.Name);
+                return Conflict($"Manufacturer '{model.Name}' already exists.");
             }
+
+            var manufacturerToAdd = new Manufacturer { Name = model.Name };
+            _unitOfWork.Manufacturers.Add(manufacturerToAdd);
+
+            if (await _unitOfWork.CompleteAsync() > 0)
+            {
+                _logger.LogInformation("Successfully added new manufacturer with ID {Id}", manufacturerToAdd.Id);
+                return CreatedAtAction(nameof(GetById), new { id = manufacturerToAdd.Id }, manufacturerToAdd);
+            }
+
+            _logger.LogError("Failed to add manufacturer '{Name}' to the database.", model.Name);
+            return StatusCode(500, "Failed to save manufacturer.");
         }
 
         
@@ -110,32 +86,24 @@ namespace westcoast_cars.api.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
-            try
+            _logger.LogInformation("Attempting to delete manufacturer with ID: {Id}", id);
+            var manufacturerToDelete = await _unitOfWork.Manufacturers.FindByIdAsync(id);
+            if (manufacturerToDelete is null)
             {
-                _logger.LogInformation("Attempting to delete manufacturer with ID: {Id}", id);
-                var manufacturerToDelete = await _unitOfWork.Manufacturers.FindByIdAsync(id);
-                if (manufacturerToDelete is null)
-                {
-                    _logger.LogWarning("Manufacturer with ID {Id} not found for deletion.", id);
-                    return NotFound($"Manufacturer with ID {id} not found.");
-                }
-
-                _unitOfWork.Manufacturers.Delete(id);
-
-                if (await _unitOfWork.CompleteAsync() > 0)
-                {
-                    _logger.LogInformation("Successfully deleted manufacturer with ID {Id}", id);
-                    return NoContent();
-                }
-
-                _logger.LogError("Failed to delete manufacturer with ID {Id}", id);
-                return StatusCode(500, "Failed to delete manufacturer.");
+                _logger.LogWarning("Manufacturer with ID {Id} not found for deletion.", id);
+                return NotFound($"Manufacturer with ID {id} not found.");
             }
-            catch (Exception ex)
+
+            _unitOfWork.Manufacturers.Delete(id);
+
+            if (await _unitOfWork.CompleteAsync() > 0)
             {
-                _logger.LogError(ex, "Exception occurred while deleting manufacturer with ID: {Id}", id);
-                return StatusCode(500, "Internal Server Error");
+                _logger.LogInformation("Successfully deleted manufacturer with ID {Id}", id);
+                return NoContent();
             }
+
+            _logger.LogError("Failed to delete manufacturer with ID {Id}", id);
+            return StatusCode(500, "Failed to delete manufacturer.");
         }
     }
 }
