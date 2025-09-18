@@ -1,3 +1,4 @@
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WestcoastCars.Application.Interfaces;
@@ -29,7 +30,7 @@ namespace westcoast_cars.api.Controllers
         public async Task<IActionResult> ListAll()
         {
             _logger.LogInformation("Retrieving all transmission types");
-            var transmissionTypes = await _unitOfWork.TransmissionTypes.ListAllAsync();
+            var transmissionTypes = await _unitOfWork.Repository<TransmissionType>().GetAllAsync();
             var result = transmissionTypes.Select(t => new { Id = t.Id, Name = t.Name }).ToList();
             _logger.LogInformation("Successfully retrieved {Count} transmission types", result.Count);
             return Ok(result);
@@ -40,7 +41,7 @@ namespace westcoast_cars.api.Controllers
         public async Task<IActionResult> GetById(int id)
         {
             _logger.LogInformation("Retrieving transmission type with ID: {Id}", id);
-            var transmissionType = await _unitOfWork.TransmissionTypes.FindByIdAsync(id);
+            var transmissionType = await _unitOfWork.Repository<TransmissionType>().GetByIdAsync(id);
             if (transmissionType is null)
             {
                 _logger.LogWarning("Transmission type with ID {Id} not found", id);
@@ -61,15 +62,15 @@ namespace westcoast_cars.api.Controllers
                 return BadRequest(ModelState);
             }
 
-            var existing = await _unitOfWork.TransmissionTypes.ListAsync(t => t.Name.ToUpper() == model.Name.ToUpper());
-            if (existing.Any())
+            var existing = await _unitOfWork.Repository<TransmissionType>().FirstOrDefaultAsync(t => t.Name.ToUpper() == model.Name.ToUpper());
+            if (existing != null)
             {
                 _logger.LogWarning("Transmission type '{Name}' already exists.", model.Name);
                 throw new ConflictException($"Transmission type '{model.Name}' already exists.");
             }
 
             var transmissionTypeToAdd = new TransmissionType { Name = model.Name };
-            _unitOfWork.TransmissionTypes.Add(transmissionTypeToAdd);
+            await _unitOfWork.Repository<TransmissionType>().AddAsync(transmissionTypeToAdd);
 
             if (await _unitOfWork.CompleteAsync() > 0)
             {
@@ -88,14 +89,14 @@ namespace westcoast_cars.api.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             _logger.LogInformation("Attempting to delete transmission type with ID: {Id}", id);
-            var transmissionTypeToDelete = await _unitOfWork.TransmissionTypes.FindByIdAsync(id);
+            var transmissionTypeToDelete = await _unitOfWork.Repository<TransmissionType>().GetByIdAsync(id);
             if (transmissionTypeToDelete is null)
             {
                 _logger.LogWarning("Transmission type with ID {Id} not found for deletion.", id);
                 throw new NotFoundException($"Transmission type with ID {id} not found.");
             }
 
-            _unitOfWork.TransmissionTypes.Delete(id);
+            _unitOfWork.Repository<TransmissionType>().Remove(transmissionTypeToDelete);
 
             if (await _unitOfWork.CompleteAsync() > 0)
             {
@@ -108,3 +109,4 @@ namespace westcoast_cars.api.Controllers
         }
     }
 }
+

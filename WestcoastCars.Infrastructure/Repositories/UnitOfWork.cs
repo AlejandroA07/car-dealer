@@ -1,4 +1,7 @@
+
+using System.Collections;
 using WestcoastCars.Application.Interfaces;
+using WestcoastCars.Domain.Entities;
 using WestcoastCars.Infrastructure.Data;
 
 namespace WestcoastCars.Infrastructure.Repositories;
@@ -6,19 +9,28 @@ namespace WestcoastCars.Infrastructure.Repositories;
 public class UnitOfWork : IUnitOfWork
 {
     private readonly WestcoastCarsContext _context;
-
-    public IVehicleRepository Vehicles { get; private set; }
-    public IManufacturerRepository Manufacturers { get; private set; }
-    public IFuelTypeRepository FuelTypes { get; private set; }
-    public ITransmissionTypeRepository TransmissionTypes { get; private set; }
+    private Hashtable _repositories;
 
     public UnitOfWork(WestcoastCarsContext context)
     {
         _context = context;
-        Vehicles = new VehicleRepository(_context);
-        Manufacturers = new ManufacturerRepository(_context);
-        FuelTypes = new FuelTypeRepository(_context);
-        TransmissionTypes = new TransmissionTypeRepository(_context);
+    }
+
+    public IRepository<T> Repository<T>() where T : BaseEntity
+    {
+        if (_repositories == null) _repositories = new Hashtable();
+
+        var type = typeof(T).Name;
+
+        if (!_repositories.ContainsKey(type))
+        {
+            var repositoryType = typeof(Repository<>);
+            var repositoryInstance = Activator.CreateInstance(repositoryType.MakeGenericType(typeof(T)), _context);
+
+            _repositories.Add(type, repositoryInstance);
+        }
+
+        return (IRepository<T>)_repositories[type];
     }
 
     public async Task<int> CompleteAsync()
@@ -31,3 +43,4 @@ public class UnitOfWork : IUnitOfWork
         _context.Dispose();
     }
 }
+

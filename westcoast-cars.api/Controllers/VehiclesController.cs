@@ -1,3 +1,4 @@
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WestcoastCars.Application.Interfaces;
@@ -29,7 +30,7 @@ namespace westcoast_cars.api.Controllers
         {
             _logger.LogInformation("Retrieving list of unsold vehicles");
             
-            var vehicles = await _unitOfWork.Vehicles.ListAsync(v => v.IsSold == false);
+            var vehicles = await _unitOfWork.Repository<Vehicle>().FindAsync(v => v.IsSold == false);
             
             var result = vehicles.Select(v => new VehicleSummaryDto
             {
@@ -51,7 +52,7 @@ namespace westcoast_cars.api.Controllers
         {
             _logger.LogInformation("Retrieving vehicle with ID: {Id}", id);
             
-            var v = await _unitOfWork.Vehicles.FindByIdAsync(id);
+            var v = await _unitOfWork.Repository<Vehicle>().GetByIdAsync(id);
 
             if (v is null) 
             {
@@ -86,7 +87,7 @@ namespace westcoast_cars.api.Controllers
         {
             _logger.LogInformation("Retrieving vehicle with registration number: {RegNo}", regNo);
             
-            var v = await _unitOfWork.Vehicles.FindByRegistrationNumberAsync(regNo);
+            var v = await _unitOfWork.Repository<Vehicle>().FirstOrDefaultAsync(v => v.RegistrationNumber.ToUpper() == regNo.ToUpper());
 
             if (v is null) 
             {
@@ -124,7 +125,7 @@ namespace westcoast_cars.api.Controllers
             }
 
             // Check if vehicle already exists
-            if (await _unitOfWork.Vehicles.FindByRegistrationNumberAsync(vehicle.RegistrationNumber) is not null)
+            if (await _unitOfWork.Repository<Vehicle>().FirstOrDefaultAsync(v => v.RegistrationNumber.ToUpper() == vehicle.RegistrationNumber.ToUpper()) is not null)
             {
                 _logger.LogWarning("Vehicle with registration {RegNo} already exists", vehicle.RegistrationNumber);
                 throw new ConflictException($"Vehicle with registration number {vehicle.RegistrationNumber} already exists");
@@ -148,7 +149,7 @@ namespace westcoast_cars.api.Controllers
                 ImageUrl = string.IsNullOrEmpty(vehicle.ImageUrl) ? "no-car.png" : vehicle.ImageUrl
             };
 
-            _unitOfWork.Vehicles.Add(vehicleToAdd);
+            await _unitOfWork.Repository<Vehicle>().AddAsync(vehicleToAdd);
 
             if (await _unitOfWork.CompleteAsync() > 0)
             {
@@ -181,7 +182,7 @@ namespace westcoast_cars.api.Controllers
                 return BadRequest(ModelState);
             }
 
-            var vehicle = await _unitOfWork.Vehicles.FindByIdAsync(id);
+            var vehicle = await _unitOfWork.Repository<Vehicle>().GetByIdAsync(id);
             if (vehicle is null) 
             {
                 _logger.LogWarning("Vehicle {Id} not found for update", id);
@@ -192,7 +193,7 @@ namespace westcoast_cars.api.Controllers
             if (!string.IsNullOrEmpty(model.RegistrationNumber) && 
                 model.RegistrationNumber != vehicle.RegistrationNumber)
             {
-                var existingVehicle = await _unitOfWork.Vehicles.FindByRegistrationNumberAsync(model.RegistrationNumber);
+                var existingVehicle = await _unitOfWork.Repository<Vehicle>().FirstOrDefaultAsync(v => v.RegistrationNumber.ToUpper() == model.RegistrationNumber.ToUpper());
                 if (existingVehicle != null && existingVehicle.Id != id)
                 {
                     _logger.LogWarning("Registration number {RegNo} already exists on another vehicle", model.RegistrationNumber);
@@ -218,7 +219,7 @@ namespace westcoast_cars.api.Controllers
             vehicle.IsSold = model.IsSold;
             vehicle.ImageUrl = string.IsNullOrEmpty(model.ImageUrl) ? "no-car.png" : model.ImageUrl;
 
-            _unitOfWork.Vehicles.Update(vehicle);
+            _unitOfWork.Repository<Vehicle>().Update(vehicle);
 
             if (await _unitOfWork.CompleteAsync() > 0)
             {
@@ -236,7 +237,7 @@ namespace westcoast_cars.api.Controllers
         {
             _logger.LogInformation("Marking vehicle {Id} as sold", id);
             
-            var vehicle = await _unitOfWork.Vehicles.FindByIdAsync(id);
+            var vehicle = await _unitOfWork.Repository<Vehicle>().GetByIdAsync(id);
             if (vehicle is null) 
             {
                 _logger.LogWarning("Vehicle {Id} not found for marking as sold", id);
@@ -244,7 +245,7 @@ namespace westcoast_cars.api.Controllers
             }
 
             vehicle.IsSold = true;
-            _unitOfWork.Vehicles.Update(vehicle);
+            _unitOfWork.Repository<Vehicle>().Update(vehicle);
 
             if (await _unitOfWork.CompleteAsync() > 0)
             {
@@ -262,14 +263,14 @@ namespace westcoast_cars.api.Controllers
         {
             _logger.LogInformation("Deleting vehicle {Id}", id);
             
-            var vehicle = await _unitOfWork.Vehicles.FindByIdAsync(id);
+            var vehicle = await _unitOfWork.Repository<Vehicle>().GetByIdAsync(id);
             if (vehicle is null) 
             {
                 _logger.LogWarning("Vehicle {Id} not found for deletion", id);
                 throw new NotFoundException($"Vehicle with ID {id} not found");
             }
 
-            _unitOfWork.Vehicles.Delete(id);
+            _unitOfWork.Repository<Vehicle>().Remove(vehicle);
 
             if (await _unitOfWork.CompleteAsync() > 0)
             {
@@ -284,19 +285,19 @@ namespace westcoast_cars.api.Controllers
         // 🔧 MÉTODO HELPER PARA VALIDAR ENTIDADES RELACIONADAS
         private async Task<(Manufacturer, FuelType, TransmissionType)> ValidateRelatedEntitiesAsync(int manufacturerId, int fuelTypeId, int transmissionTypeId)
         {
-            var manufacturer = await _unitOfWork.Manufacturers.FindByIdAsync(manufacturerId);
+            var manufacturer = await _unitOfWork.Repository<Manufacturer>().GetByIdAsync(manufacturerId);
             if (manufacturer is null)
             {
                 throw new NotFoundException($"Manufacturer with ID {manufacturerId} not found");
             }
 
-            var fuelType = await _unitOfWork.FuelTypes.FindByIdAsync(fuelTypeId);
+            var fuelType = await _unitOfWork.Repository<FuelType>().GetByIdAsync(fuelTypeId);
             if (fuelType is null)
             {
                 throw new NotFoundException($"Fuel type with ID {fuelTypeId} not found");
             }
 
-            var transmissionType = await _unitOfWork.TransmissionTypes.FindByIdAsync(transmissionTypeId);
+            var transmissionType = await _unitOfWork.Repository<TransmissionType>().GetByIdAsync(transmissionTypeId);
             if (transmissionType is null)
             {
                 throw new NotFoundException($"Transmission type with ID {transmissionTypeId} not found");

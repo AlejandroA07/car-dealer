@@ -1,3 +1,4 @@
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WestcoastCars.Application.Interfaces;
@@ -29,7 +30,7 @@ namespace westcoast_cars.api.Controllers
         public async Task<IActionResult> ListAll()
         {
             _logger.LogInformation("Retrieving all manufacturers");
-            var manufacturers = await _unitOfWork.Manufacturers.ListAllAsync();
+            var manufacturers = await _unitOfWork.Repository<Manufacturer>().GetAllAsync();
             var result = manufacturers.Select(m => new { Id = m.Id, Name = m.Name }).ToList();
             _logger.LogInformation("Successfully retrieved {Count} manufacturers", result.Count);
             return Ok(result);
@@ -40,7 +41,7 @@ namespace westcoast_cars.api.Controllers
         public async Task<IActionResult> GetById(int id)
         {
             _logger.LogInformation("Retrieving manufacturer with ID: {Id}", id);
-            var manufacturer = await _unitOfWork.Manufacturers.FindByIdAsync(id);
+            var manufacturer = await _unitOfWork.Repository<Manufacturer>().GetByIdAsync(id);
             if (manufacturer is null)
             {
                 _logger.LogWarning("Manufacturer with ID {Id} not found", id);
@@ -61,15 +62,15 @@ namespace westcoast_cars.api.Controllers
                 return BadRequest(ModelState);
             }
 
-            var existing = await _unitOfWork.Manufacturers.ListAsync(m => m.Name.ToUpper() == model.Name.ToUpper());
-            if (existing.Any())
+            var existing = await _unitOfWork.Repository<Manufacturer>().FirstOrDefaultAsync(m => m.Name.ToUpper() == model.Name.ToUpper());
+            if (existing != null)
             {
                 _logger.LogWarning("Manufacturer '{Name}' already exists.", model.Name);
                 throw new ConflictException($"Manufacturer '{model.Name}' already exists.");
             }
 
             var manufacturerToAdd = new Manufacturer { Name = model.Name };
-            _unitOfWork.Manufacturers.Add(manufacturerToAdd);
+            await _unitOfWork.Repository<Manufacturer>().AddAsync(manufacturerToAdd);
 
             if (await _unitOfWork.CompleteAsync() > 0)
             {
@@ -88,14 +89,14 @@ namespace westcoast_cars.api.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             _logger.LogInformation("Attempting to delete manufacturer with ID: {Id}", id);
-            var manufacturerToDelete = await _unitOfWork.Manufacturers.FindByIdAsync(id);
+            var manufacturerToDelete = await _unitOfWork.Repository<Manufacturer>().GetByIdAsync(id);
             if (manufacturerToDelete is null)
             {
                 _logger.LogWarning("Manufacturer with ID {Id} not found for deletion.", id);
                 throw new NotFoundException($"Manufacturer with ID {id} not found.");
             }
 
-            _unitOfWork.Manufacturers.Delete(id);
+            _unitOfWork.Repository<Manufacturer>().Remove(manufacturerToDelete);
 
             if (await _unitOfWork.CompleteAsync() > 0)
             {

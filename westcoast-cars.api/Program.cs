@@ -8,33 +8,12 @@ using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Infrastructure.Data;
 using WestcoastCars.Infrastructure.Repositories;
 
+using WestcoastCars.Infrastructure;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-// Add database support
-builder.Services.AddDbContext<WestcoastCarsContext>(options => {
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
-    if (builder.Environment.IsProduction())
-    {
-        var passwordFile = "/run/secrets/db_password";
-        if (System.IO.File.Exists(passwordFile))
-        {
-            var password = System.IO.File.ReadAllText(passwordFile).Trim();
-            var csBuilder = new System.Data.Common.DbConnectionStringBuilder
-            {
-                ConnectionString = connectionString
-            };
-            csBuilder["Password"] = password;
-            connectionString = csBuilder.ConnectionString;
-        }
-    }
-    
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
-});
-
-// Register Unit of Work for dependency injection
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 {

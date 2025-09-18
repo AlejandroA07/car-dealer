@@ -1,3 +1,4 @@
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WestcoastCars.Application.Interfaces;
@@ -29,7 +30,7 @@ namespace westcoast_cars.api.Controllers
         public async Task<IActionResult> ListAll()
         {
             _logger.LogInformation("Retrieving all fuel types");
-            var fuelTypes = await _unitOfWork.FuelTypes.ListAllAsync();
+            var fuelTypes = await _unitOfWork.Repository<FuelType>().GetAllAsync();
             var result = fuelTypes.Select(f => new { Id = f.Id, Name = f.Name }).ToList();
             _logger.LogInformation("Successfully retrieved {Count} fuel types", result.Count);
             return Ok(result);
@@ -40,7 +41,7 @@ namespace westcoast_cars.api.Controllers
         public async Task<IActionResult> GetById(int id)
         {
             _logger.LogInformation("Retrieving fuel type with ID: {Id}", id);
-            var fuelType = await _unitOfWork.FuelTypes.FindByIdAsync(id);
+            var fuelType = await _unitOfWork.Repository<FuelType>().GetByIdAsync(id);
             if (fuelType is null)
             {
                 _logger.LogWarning("Fuel type with ID {Id} not found", id);
@@ -61,15 +62,15 @@ namespace westcoast_cars.api.Controllers
                 return BadRequest(ModelState);
             }
 
-            var existing = await _unitOfWork.FuelTypes.ListAsync(f => f.Name.ToUpper() == model.Name.ToUpper());
-            if (existing.Any())
+            var existing = await _unitOfWork.Repository<FuelType>().FirstOrDefaultAsync(f => f.Name.ToUpper() == model.Name.ToUpper());
+            if (existing != null)
             {
                 _logger.LogWarning("Fuel type '{Name}' already exists.", model.Name);
                 throw new ConflictException($"Fuel type '{model.Name}' already exists.");
             }
 
             var fuelTypeToAdd = new FuelType { Name = model.Name };
-            _unitOfWork.FuelTypes.Add(fuelTypeToAdd);
+            await _unitOfWork.Repository<FuelType>().AddAsync(fuelTypeToAdd);
 
             if (await _unitOfWork.CompleteAsync() > 0)
             {
@@ -88,14 +89,14 @@ namespace westcoast_cars.api.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             _logger.LogInformation("Attempting to delete fuel type with ID: {Id}", id);
-            var fuelTypeToDelete = await _unitOfWork.FuelTypes.FindByIdAsync(id);
+            var fuelTypeToDelete = await _unitOfWork.Repository<FuelType>().GetByIdAsync(id);
             if (fuelTypeToDelete is null)
             {
                 _logger.LogWarning("Fuel type with ID {Id} not found for deletion.", id);
                 throw new NotFoundException($"Fuel type with ID {id} not found.");
             }
 
-            _unitOfWork.FuelTypes.Delete(id);
+            _unitOfWork.Repository<FuelType>().Remove(fuelTypeToDelete);
 
             if (await _unitOfWork.CompleteAsync() > 0)
             {
@@ -108,3 +109,4 @@ namespace westcoast_cars.api.Controllers
         }
     }
 }
+

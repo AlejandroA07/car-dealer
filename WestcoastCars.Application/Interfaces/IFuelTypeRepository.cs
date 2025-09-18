@@ -1,14 +1,10 @@
-using System.Linq.Expressions;
+
 using WestcoastCars.Domain.Entities;
 
 namespace WestcoastCars.Application.Interfaces;
 
-public interface IFuelTypeRepository
+public interface IFuelTypeRepository : IRepository<FuelType>
 {
-    Task<FuelType?> FindByIdAsync(int id);
-    Task<IReadOnlyList<FuelType>> ListAllAsync();
-    Task<IReadOnlyList<FuelType>> ListAsync(Expression<Func<FuelType, bool>> expression);
     Task<FuelType?> FindByNameWithVehiclesAsync(string name);
-    void Add(FuelType fuelType);
-    void Delete(int id);
 }
+
