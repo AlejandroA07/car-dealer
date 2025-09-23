@@ -2,13 +2,21 @@
 
 This file documents the design patterns applied throughout the westcoast-cars solution.
 
-## Repository Pattern
-- **Location:** Implemented in `WestcoastCars.Infrastructure/Repositories`.
-- **Description:** Abstracts the data layer, making our application independent of the data source implementation. It mediates between the domain and data mapping layers using a collection-like interface for accessing domain objects.
+## Repository and Unit of Work Patterns
 
-## Unit of Work Pattern
-- **Location:** Implemented in `WestcoastCars.Infrastructure/Repositories/UnitOfWork.cs`.
-- **Description:** Maintains a list of objects affected by a business transaction and coordinates the writing out of changes and the resolution of concurrency problems. It helps to manage transactions and ensures data integrity.
+- **Location:**
+  - Interfaces: `WestcoastCars.Application/Interfaces`
+  - Implementations: `WestcoastCars.Infrastructure/Repositories`
+
+- **Description:**
+  These patterns work together to abstract the data layer, making our application independent of the data source implementation.
+
+  - The **Repository Pattern** mediates between the domain and data mapping layers using a collection-like interface for accessing domain objects (e.g., `IRepository<T>`, `IVehicleRepository`).
+
+  - The **Unit of Work Pattern** (`IUnitOfWork`) maintains a list of objects affected by a single business transaction and coordinates the writing of changes to the database, ensuring data integrity.
+
+- **Implementation Details & Refinements:**
+  The initial generic implementation was refined to solve limitations in accessing specific data-loading methods. The `IUnitOfWork` interface now exposes properties for each specific repository (e.g., `IVehicleRepository VehicleRepository { get; }`). This allows services and controllers to call specialized methods (like `GetAllAsync()` on `VehicleRepository` which eager-loads related entities), preventing runtime errors and making data access more explicit and robust.
 
 ## Entity Framework Design-Time DbContext Factory
 
