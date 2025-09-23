@@ -125,4 +125,45 @@ public class VehiclesControllerTests
         var vehicleCount = await _context.Vehicles.CountAsync();
         Assert.Equal(2, vehicleCount);
     }
+
+    [Fact]
+    public async Task UpdateVehicle_ShouldModifyVehicle_WhenDataIsValid()
+    {
+        // Arrange
+        var existingVehicleId = 1;
+        var updatedDescription = "This description has been updated.";
+        var vehicleUpdateDto = new VehicleUpdateDto
+        {
+            Id = existingVehicleId,
+            Description = updatedDescription,
+            Model = "V60",
+            ModelYear = "2020",
+            ManufacturerId = 1,
+            FuelTypeId = 1,
+            TransmissionTypeId = 1
+        };
+
+        // Act
+        var result = await _controller.UpdateVehicle(existingVehicleId, vehicleUpdateDto);
+
+        // Assert
+        Assert.IsType<NoContentResult>(result);
+        var updatedVehicle = await _context.Vehicles.FindAsync(existingVehicleId);
+        Assert.Equal(updatedDescription, updatedVehicle.Description);
+    }
+
+    [Fact]
+    public async Task Delete_ShouldRemoveVehicle_WhenIdExists()
+    {
+        // Arrange
+        var existingVehicleId = 1;
+
+        // Act
+        var result = await _controller.Delete(existingVehicleId);
+
+        // Assert
+        Assert.IsType<NoContentResult>(result);
+        var vehicleCount = await _context.Vehicles.CountAsync();
+        Assert.Equal(0, vehicleCount);
+    }
 }
