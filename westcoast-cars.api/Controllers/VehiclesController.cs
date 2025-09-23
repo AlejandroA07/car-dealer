@@ -30,7 +30,7 @@ namespace westcoast_cars.api.Controllers
         {
             _logger.LogInformation("Retrieving list of unsold vehicles");
             
-            var vehicles = await _unitOfWork.Repository<Vehicle>().FindAsync(v => v.IsSold == false);
+            var vehicles = await _unitOfWork.VehicleRepository.GetAllAsync();
             
             var result = vehicles.Select(v => new VehicleSummaryDto
             {

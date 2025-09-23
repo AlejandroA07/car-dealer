@@ -10,10 +10,18 @@ public class UnitOfWork : IUnitOfWork
 {
     private readonly WestcoastCarsContext _context;
     private Hashtable _repositories;
+    public IVehicleRepository VehicleRepository { get; }
+    public IManufacturerRepository ManufacturerRepository { get; }
+    public IFuelTypeRepository FuelTypeRepository { get; }
+    public ITransmissionTypeRepository TransmissionTypeRepository { get; }
 
     public UnitOfWork(WestcoastCarsContext context)
     {
         _context = context;
+        VehicleRepository = new VehicleRepository(context);
+        ManufacturerRepository = new ManufacturerRepository(context);
+        FuelTypeRepository = new FuelTypeRepository(context);
+        TransmissionTypeRepository = new TransmissionTypeRepository(context);
     }
 
     public IRepository<T> Repository<T>() where T : BaseEntity
