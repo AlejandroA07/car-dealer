@@ -31,7 +31,7 @@ namespace westcoast_cars.api.Controllers
         {
             _logger.LogInformation("Retrieving all manufacturers");
             var manufacturers = await _unitOfWork.Repository<Manufacturer>().GetAllAsync();
-            var result = manufacturers.Select(m => new { Id = m.Id, Name = m.Name }).ToList();
+            var result = manufacturers.Select(m => new NamedObjectDto { Id = m.Id, Name = m.Name }).ToList();
             _logger.LogInformation("Successfully retrieved {Count} manufacturers", result.Count);
             return Ok(result);
         }
