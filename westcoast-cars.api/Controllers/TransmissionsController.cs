@@ -31,7 +31,7 @@ namespace westcoast_cars.api.Controllers
         {
             _logger.LogInformation("Retrieving all transmission types");
             var transmissionTypes = await _unitOfWork.Repository<TransmissionType>().GetAllAsync();
-            var result = transmissionTypes.Select(t => new { Id = t.Id, Name = t.Name }).ToList();
+            var result = transmissionTypes.Select(t => new NamedObjectDto { Id = t.Id, Name = t.Name }).ToList();
             _logger.LogInformation("Successfully retrieved {Count} transmission types", result.Count);
             return Ok(result);
         }

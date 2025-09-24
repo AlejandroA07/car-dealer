@@ -31,7 +31,7 @@ namespace westcoast_cars.api.Controllers
         {
             _logger.LogInformation("Retrieving all fuel types");
             var fuelTypes = await _unitOfWork.Repository<FuelType>().GetAllAsync();
-            var result = fuelTypes.Select(f => new { Id = f.Id, Name = f.Name }).ToList();
+            var result = fuelTypes.Select(f => new NamedObjectDto { Id = f.Id, Name = f.Name }).ToList();
             _logger.LogInformation("Successfully retrieved {Count} fuel types", result.Count);
             return Ok(result);
         }
