@@ -13,6 +13,7 @@ COPY ["westcoast-cars.auth/Application/WestcoastCars.Auth.Application.csproj", "
 COPY ["westcoast-cars.auth/Domain/WestcoastCars.Auth.Domain.csproj", "westcoast-cars.auth/Domain/"]
 COPY ["westcoast-cars.auth/Infrastructure/WestcoastCars.Auth.Infrastructure.csproj", "westcoast-cars.auth/Infrastructure/"]
 COPY ["westcoast-cars.auth/Contracts/WestcoastCars.Auth.Contracts.csproj", "westcoast-cars.auth/Contracts/"]
+COPY ["westcoast-cars.auth/WestcoastCars.Auth.Tests/WestcoastCars.Auth.Tests.csproj", "westcoast-cars.auth/WestcoastCars.Auth.Tests/"]
 
 # Restore dependencies for the entire solution
 RUN dotnet restore "westcoast-cars.auth/WestcoastCars.Auth.sln"

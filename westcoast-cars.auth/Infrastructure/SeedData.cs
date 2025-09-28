@@ -41,10 +41,10 @@ namespace WestcoastCars.Auth.Infrastructure
                     EmailConfirmed = true
                 };
 
-                var adminPassword = GetPasswordFromEnvFile("ADMIN_PASSWORD");
+                var adminPassword = configuration["ADMIN_PASSWORD"];
                 if (string.IsNullOrEmpty(adminPassword))
                 {
-                    logger.LogError("ADMIN_PASSWORD not found in .env file. Cannot seed admin user.");
+                    logger.LogError("ADMIN_PASSWORD not found in configuration. Cannot seed admin user.");
                     return;
                 }
 
@@ -70,35 +70,6 @@ namespace WestcoastCars.Auth.Infrastructure
             {
                 logger.LogInformation("Admin user already exists. No action taken.");
             }
-        }
-        private static string GetPasswordFromEnvFile(string key)
-        {
-            var directory = new DirectoryInfo(AppContext.BaseDirectory);
-            // Traverse up to find the repository root (where the .git directory is)
-            while (directory != null && !directory.GetDirectories(".git").Any())
-            {
-                directory = directory.Parent;
-            }
-
-            if (directory is null)
-            {
-                return null;
-            }
-
-            var envFilePath = Path.Combine(directory.FullName, ".env");
-
-            if (!File.Exists(envFilePath))
-            {
-                return null;
-            }
-
-            var passwordLine = File.ReadLines(envFilePath).FirstOrDefault(line => line.Trim().StartsWith($"{key}="));
-            if (string.IsNullOrEmpty(passwordLine))
-            {
-                return null;
-            }
-
-            return passwordLine.Split('=').Last().Trim();
         }
     }
 }

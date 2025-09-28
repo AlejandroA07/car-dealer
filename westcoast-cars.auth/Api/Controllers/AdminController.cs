@@ -1,12 +1,14 @@
-
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using WestcoastCars.Auth.Application.Services;
 using WestcoastCars.Auth.Contracts.Admin;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace WestcoastCars.Auth.Api.Controllers
 {
     [ApiController]
     [Route("api/admin")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class AdminController : ControllerBase
     {
         private readonly IAdminService _adminService;
@@ -29,12 +31,10 @@ namespace WestcoastCars.Auth.Api.Controllers
                     request.Role
                 );
 
-                // In a real application, you might return a more specific DTO or just a success message
                 return Ok(new { Message = "User created successfully", UserId = authResult.User.Id });
             }
             catch (Exception ex)
             {
-                // In a real application, you would handle specific exceptions and return appropriate status codes
                 return BadRequest(new { message = ex.Message });
             }
         }

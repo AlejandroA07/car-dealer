@@ -15,6 +15,7 @@ COPY WestcoastCars.Application/WestcoastCars.Application.csproj WestcoastCars.Ap
 COPY WestcoastCars.Contracts/WestcoastCars.Contracts.csproj WestcoastCars.Contracts/
 COPY WestcoastCars.Domain/WestcoastCars.Domain.csproj WestcoastCars.Domain/
 COPY WestcoastCars.Infrastructure/WestcoastCars.Infrastructure.csproj WestcoastCars.Infrastructure/
+COPY westcoast-cars.api.tests/westcoast-cars.api.tests.csproj westcoast-cars.api.tests/
 
 # Restore dependencies for the entire solution
 RUN dotnet restore "westcoast-cars.api/westcoast-cars.api.sln"
@@ -39,4 +40,4 @@ WORKDIR /app
 COPY --from=build /app/publish .
 
 # Set the entrypoint for the container to run the application
-ENTRYPOINT ["dotnet", "westcoast-cars.api.dll"]
+ENTRYPOINT ["sh", "-c", "sleep 5 && dotnet westcoast-cars.api.dll"]
