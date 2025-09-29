@@ -97,15 +97,21 @@ namespace westcoast_cars.api.Controllers
                 throw new NotFoundException($"Vehicle with registration number {regNo} not found");
             }
             
-            var result = new {
+            var result = new VehicleDetailsDto
+            {
                 Id = v.Id,
                 RegistrationNumber = v.RegistrationNumber,
                 Name = $"{v.Manufacturer.Name} {v.Model}",
-                Modelyear = v.ModelYear,
-                Milage = v.Mileage,
+                Manufacturer = v.Manufacturer.Name,
+                Model = v.Model,
+                ModelYear = v.ModelYear,
+                Mileage = v.Mileage,
                 FuelType = v.FuelType.Name,
-                Transmission = v.TransmissionType.Name,
-                ImageUrl = v.ImageUrl    
+                TransmissionsType = v.TransmissionType.Name,
+                Value = v.Value,
+                Description = v.Description,
+                ImageUrl = v.ImageUrl ?? DefaultCarImagePath,
+                IsSold = v.IsSold
             };
 
             _logger.LogInformation("Successfully retrieved vehicle by registration number {RegNo}", regNo);
