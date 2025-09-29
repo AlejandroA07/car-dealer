@@ -13,6 +13,9 @@ namespace westcoast_cars.api.Controllers
     [Route("api/v1/vehicles")]
     public class VehiclesController : ControllerBase
     {
+        private const string DefaultCarImageName = "no-car.png";
+        private const string DefaultCarImagePath = "/images/no-car.png";
+
         private readonly IUnitOfWork _unitOfWork;
         private readonly string _imageBaseUrl;
         private readonly ILogger<VehiclesController> _logger;
@@ -38,8 +41,7 @@ namespace westcoast_cars.api.Controllers
                 Name = $"{v.Manufacturer.Name} {v.Model}",
                 Manufacturer = v.Manufacturer.Name,
                 Model = v.Model,
-                ModelYear = v.ModelYear,
-                ImageUrl = v.ImageUrl ?? "/images/no-car.png"
+                ImageUrl = v.ImageUrl ?? DefaultCarImagePath
             }).ToList();
 
             _logger.LogInformation("Successfully retrieved {Count} vehicles", result.Count);
@@ -73,7 +75,7 @@ namespace westcoast_cars.api.Controllers
                 TransmissionsType = v.TransmissionType.Name,
                 Value = v.Value,
                 Description = v.Description,
-                ImageUrl = v.ImageUrl ?? "/images/no-car.png",
+                ImageUrl = v.ImageUrl ?? DefaultCarImagePath,
                 IsSold = v.IsSold
             };
 
@@ -146,7 +148,7 @@ namespace westcoast_cars.api.Controllers
                 Value = vehicle.Value,
                 IsSold = vehicle.IsSold,
                 Description = vehicle.Description,
-                ImageUrl = string.IsNullOrEmpty(vehicle.ImageUrl) ? "no-car.png" : vehicle.ImageUrl
+                ImageUrl = string.IsNullOrEmpty(vehicle.ImageUrl) ? DefaultCarImageName : vehicle.ImageUrl
             };
 
             await _unitOfWork.Repository<Vehicle>().AddAsync(vehicleToAdd);
@@ -217,7 +219,7 @@ namespace westcoast_cars.api.Controllers
             vehicle.Description = model.Description;
             vehicle.Value = model.Value;
             vehicle.IsSold = model.IsSold;
-            vehicle.ImageUrl = string.IsNullOrEmpty(model.ImageUrl) ? "no-car.png" : model.ImageUrl;
+            vehicle.ImageUrl = string.IsNullOrEmpty(model.ImageUrl) ? DefaultCarImageName : model.ImageUrl;
 
             _unitOfWork.Repository<Vehicle>().Update(vehicle);
 
