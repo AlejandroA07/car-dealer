@@ -197,7 +197,7 @@ namespace westcoast_cars.api.Controllers
                 throw new NotFoundException($"Vehicle with ID {id} not found");
             }
 
-            // 🔥 VALIDAR REGISTRATION NUMBER SI CAMBIÓ
+            // Validate registration number if it has changed
             if (!string.IsNullOrEmpty(model.RegistrationNumber) && 
                 model.RegistrationNumber != vehicle.RegistrationNumber)
             {
@@ -212,7 +212,7 @@ namespace westcoast_cars.api.Controllers
             // Validate related entities
             var (manufacturer, fuelType, transmissionType) = await ValidateRelatedEntitiesAsync(model.ManufacturerId, model.FuelTypeId, model.TransmissionTypeId);
 
-            // 🔥 UPDATE ALL PROPERTIES INCLUDING REGISTRATION NUMBER
+            // Update all properties including registration number
             if (!string.IsNullOrEmpty(model.RegistrationNumber))
                 vehicle.RegistrationNumber = model.RegistrationNumber;
                 
@@ -290,7 +290,7 @@ namespace westcoast_cars.api.Controllers
             return StatusCode(500, "Failed to delete vehicle");
         }
 
-        // 🔧 MÉTODO HELPER PARA VALIDAR ENTIDADES RELACIONADAS
+        // Helper method to validate related entities
         private async Task<(Manufacturer, FuelType, TransmissionType)> ValidateRelatedEntitiesAsync(int manufacturerId, int fuelTypeId, int transmissionTypeId)
         {
             var manufacturer = await _unitOfWork.Repository<Manufacturer>().GetByIdAsync(manufacturerId);

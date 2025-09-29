@@ -29,7 +29,7 @@ namespace WestcoastCars.Auth.Tests
             // Arrange
             var request = new RegisterRequest("John", "Doe", "john.doe@example.com", "Password123!");
             var authResult = new AuthenticationResult(
-                new User { Id = Guid.NewGuid(), FirstName = "John", LastName = "Doe", Email = "john.doe@example.com", PasswordHash = "hashedpassword" },
+                new User { Id = Guid.NewGuid(), FirstName = "John", LastName = "Doe", Email = "john.doe@example.com" },
                 "some-jwt-token"
             );
             _authServiceMock.Setup(s => s.RegisterAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
@@ -71,7 +71,7 @@ namespace WestcoastCars.Auth.Tests
             // Arrange
             var request = new LoginRequest("john.doe@example.com", "Password123!");
             var authResult = new AuthenticationResult(
-                new User { Id = Guid.NewGuid(), FirstName = "John", LastName = "Doe", Email = "john.doe@example.com", PasswordHash = "hashedpassword" },
+                new User { Id = Guid.NewGuid(), FirstName = "John", LastName = "Doe", Email = "john.doe@example.com" },
                 "some-jwt-token"
             );
             _authServiceMock.Setup(s => s.LoginAsync(It.IsAny<string>(), It.IsAny<string>()))
