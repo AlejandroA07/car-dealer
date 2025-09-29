@@ -57,10 +57,10 @@ namespace WestcoastCars.Infrastructure.Data
                     Value = dto.Value,
                     Description = dto.Description,
                     IsSold = dto.IsSold,
-                    MakeId = dto.MakeId,
+                    ManufacturerId = dto.ManufacturerId,
                     FuelTypeId = dto.FuelTypeId,
                     TransmissionTypeId = dto.TransmissionTypeId,
-                    Manufacturer = manufacturers[dto.MakeId],
+                    Manufacturer = manufacturers[dto.ManufacturerId],
                     FuelType = fuelTypes[dto.FuelTypeId],
                     TransmissionType = transmissionTypes[dto.TransmissionTypeId]
                 };
@@ -113,7 +113,7 @@ namespace WestcoastCars.Infrastructure.Data
         {
             public int Id { get; set; }
             public string RegistrationNumber { get; set; } = string.Empty;
-            public int MakeId { get; set; }
+            public int ManufacturerId { get; set; }
             public string Model { get; set; } = string.Empty;
             public string ModelYear { get; set; } = string.Empty;
             public int FuelTypeId { get; set; }

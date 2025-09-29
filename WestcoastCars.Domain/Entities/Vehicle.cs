@@ -13,9 +13,9 @@ public class Vehicle : BaseEntity
     public required string Description { get; set; }
     public bool IsSold { get; set; }
     // Navigation property...
-    public int MakeId { get; set; }
+    public int ManufacturerId { get; set; }
     // Composition...
-    [ForeignKey("MakeId")]
+    [ForeignKey("ManufacturerId")]
     public required Manufacturer Manufacturer { get; set; }
 
     public int FuelTypeId { get; set; }
