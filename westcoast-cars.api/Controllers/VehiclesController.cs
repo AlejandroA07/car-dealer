@@ -54,7 +54,7 @@ namespace westcoast_cars.api.Controllers
         {
             _logger.LogInformation("Retrieving vehicle with ID: {Id}", id);
             
-            var v = await _unitOfWork.Repository<Vehicle>().GetByIdAsync(id);
+            var v = await _unitOfWork.VehicleRepository.GetByIdAsync(id);
 
             if (v is null) 
             {
