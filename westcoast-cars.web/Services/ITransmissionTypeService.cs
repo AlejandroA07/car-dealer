@@ -1,6 +1,6 @@
 using westcoast_cars.web.ViewModels.TransmissionType;
 
-namespace westcoast_cars.web.Services
+namespace westcoast-cars.web.Services
 {
     public interface ITransmissionTypeService
     {
