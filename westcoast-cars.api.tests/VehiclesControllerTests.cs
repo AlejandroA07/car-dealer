@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
-using westcoast_cars.api.Controllers;
+using WestcoastCars.Api.Controllers;
 using WestcoastCars.Contracts.DTOs;
 using WestcoastCars.Domain.Entities;
 using WestcoastCars.Infrastructure.Data;

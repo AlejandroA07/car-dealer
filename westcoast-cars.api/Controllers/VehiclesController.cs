@@ -7,7 +7,7 @@ using WestcoastCars.Contracts.DTOs;
 using WestcoastCars.Api.Exceptions;
 using Microsoft.Extensions.Logging;
 
-namespace westcoast_cars.api.Controllers
+namespace WestcoastCars.Api.Controllers
 {
     [ApiController]
     [Route("api/v1/vehicles")]

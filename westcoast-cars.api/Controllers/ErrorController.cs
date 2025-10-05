@@ -7,7 +7,7 @@ using WestcoastCars.Api.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
-namespace westcoast_cars.api.Controllers
+namespace WestcoastCars.Api.Controllers
 {
     [ApiController]
     [ApiExplorerSettings(IgnoreApi = true)]

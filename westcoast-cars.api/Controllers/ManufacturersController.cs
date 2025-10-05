@@ -10,7 +10,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace westcoast_cars.api.Controllers
+namespace WestcoastCars.Api.Controllers
 {
     [ApiController]
     [Route("api/v1/manufacturers")]
@@ -48,24 +48,31 @@ namespace westcoast_cars.api.Controllers
                 throw new NotFoundException($"Manufacturer with ID {id} not found");
             }
             _logger.LogInformation("Successfully retrieved manufacturer with ID {Id}", id);
-            return Ok(manufacturer);
+            var result = new NamedObjectDto { Id = manufacturer.Id, Name = manufacturer.Name };
+            return Ok(result);
         }
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Add([FromBody] NamedObjectDto model)
         {
-            _logger.LogInformation("Attempting to add new manufacturer: {Name}", model.Name);
+            _logger.LogDebug("Attempting to add new manufacturer: {Name}", model?.Name);
+            if (model is null)
+            {
+                _logger.LogInformation("Request body is null.");
+                return BadRequest("Request body cannot be null.");
+            }
+
             if (!ModelState.IsValid)
             {
-                _logger.LogWarning("Invalid model state for new manufacturer.");
+                _logger.LogInformation("Invalid model state for new manufacturer.");
                 return BadRequest(ModelState);
             }
 
             var existing = await _unitOfWork.Repository<Manufacturer>().FirstOrDefaultAsync(m => m.Name.ToUpper() == model.Name.ToUpper());
             if (existing != null)
             {
-                _logger.LogWarning("Manufacturer '{Name}' already exists.", model.Name);
+                _logger.LogInformation("Manufacturer '{Name}' already exists.", model.Name);
                 throw new ConflictException($"Manufacturer '{model.Name}' already exists.");
             }
 
@@ -75,7 +82,7 @@ namespace westcoast_cars.api.Controllers
             if (await _unitOfWork.CompleteAsync() > 0)
             {
                 _logger.LogInformation("Successfully added new manufacturer with ID {Id}", manufacturerToAdd.Id);
-                return CreatedAtAction(nameof(GetById), new { id = manufacturerToAdd.Id }, manufacturerToAdd);
+                return CreatedAtAction(nameof(GetById), new { id = manufacturerToAdd.Id }, new NamedObjectDto { Id = manufacturerToAdd.Id, Name = manufacturerToAdd.Name });
             }
 
             _logger.LogError("Failed to add manufacturer '{Name}' to the database.", model.Name);
@@ -84,15 +91,65 @@ namespace westcoast_cars.api.Controllers
 
         
 
+        [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Update(int id, [FromBody] NamedObjectDto model)
+        {
+            _logger.LogDebug("Attempting to update manufacturer with ID: {Id}", id);
+            if (model is null)
+            {
+                _logger.LogInformation("Request body is null.");
+                return BadRequest("Request body cannot be null.");
+            }
+
+            if (id != model.Id)
+            {
+                _logger.LogInformation("Mismatched ID in request body for manufacturer update.");
+                return BadRequest("ID mismatch");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                _logger.LogInformation("Invalid model state for manufacturer update.");
+                return BadRequest(ModelState);
+            }
+
+            var manufacturerToUpdate = await _unitOfWork.Repository<Manufacturer>().GetByIdAsync(id);
+            if (manufacturerToUpdate is null)
+            {
+                _logger.LogInformation("Manufacturer with ID {Id} not found for update.", id);
+                throw new NotFoundException($"Manufacturer with ID {id} not found.");
+            }
+
+            var existing = await _unitOfWork.Repository<Manufacturer>().FirstOrDefaultAsync(m => m.Name.ToUpper() == model.Name.ToUpper() && m.Id != id);
+            if (existing != null)
+            {
+                _logger.LogInformation("Manufacturer name '{Name}' already exists.", model.Name);
+                throw new ConflictException($"A manufacturer with the name '{model.Name}' already exists.");
+            }
+
+            manufacturerToUpdate.Name = model.Name;
+            _unitOfWork.Repository<Manufacturer>().Update(manufacturerToUpdate);
+
+            if (await _unitOfWork.CompleteAsync() > 0)
+            {
+                _logger.LogInformation("Successfully updated manufacturer with ID {Id}", id);
+                return NoContent();
+            }
+
+            _logger.LogError("Failed to update manufacturer with ID {Id}", id);
+            return StatusCode(500, "Failed to update manufacturer.");
+        }
+
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
-            _logger.LogInformation("Attempting to delete manufacturer with ID: {Id}", id);
+            _logger.LogDebug("Attempting to delete manufacturer with ID: {Id}", id);
             var manufacturerToDelete = await _unitOfWork.Repository<Manufacturer>().GetByIdAsync(id);
             if (manufacturerToDelete is null)
             {
-                _logger.LogWarning("Manufacturer with ID {Id} not found for deletion.", id);
+                _logger.LogInformation("Manufacturer with ID {Id} not found for deletion.", id);
                 throw new NotFoundException($"Manufacturer with ID {id} not found.");
             }
 
