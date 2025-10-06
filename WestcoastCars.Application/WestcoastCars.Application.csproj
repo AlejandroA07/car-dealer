@@ -2,6 +2,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\WestcoastCars.Domain\WestcoastCars.Domain.csproj" />
+    <ProjectReference Include="..\WestcoastCars.Contracts\WestcoastCars.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="12.0.1" />
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
+    <PackageReference Include="MediatR" Version="11.1.0" />
   </ItemGroup>
 
   <PropertyGroup>

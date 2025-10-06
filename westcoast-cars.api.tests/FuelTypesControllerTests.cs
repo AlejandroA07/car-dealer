@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
 using WestcoastCars.Contracts.DTOs;
-using WestcoastCars.Api.Exceptions;
+using WestcoastCars.Application.Exceptions;
 
 namespace westcoast_cars.api.tests
 {

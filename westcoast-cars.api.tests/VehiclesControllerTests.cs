@@ -9,7 +9,7 @@ using WestcoastCars.Contracts.DTOs;
 using WestcoastCars.Domain.Entities;
 using WestcoastCars.Infrastructure.Data;
 using WestcoastCars.Infrastructure.Repositories;
-using WestcoastCars.Api.Exceptions;
+using WestcoastCars.Application.Exceptions;
 
 namespace westcoast_cars.api.tests;
 

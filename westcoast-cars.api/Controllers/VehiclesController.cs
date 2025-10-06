@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Domain.Entities;
 using WestcoastCars.Contracts.DTOs;
-using WestcoastCars.Api.Exceptions;
+using WestcoastCars.Application.Exceptions;
 using Microsoft.Extensions.Logging;
 
 namespace WestcoastCars.Api.Controllers

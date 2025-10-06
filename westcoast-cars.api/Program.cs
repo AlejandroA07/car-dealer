@@ -1,3 +1,4 @@
+using MediatR;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +15,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddInfrastructure(builder.Configuration);
+
+// Add MediatR and AutoMapper
+builder.Services.AddAutoMapper(typeof(WestcoastCars.Application.Mappings.MappingProfile).Assembly);
+builder.Services.AddMediatR(typeof(WestcoastCars.Application.Features.Manufacturers.Queries.ListAll.ListAllManufacturersQuery).Assembly);
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 {

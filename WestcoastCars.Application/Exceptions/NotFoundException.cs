@@ -1,6 +1,6 @@
 using System;
 
-namespace WestcoastCars.Api.Exceptions
+namespace WestcoastCars.Application.Exceptions
 {
     public class NotFoundException : Exception
     {

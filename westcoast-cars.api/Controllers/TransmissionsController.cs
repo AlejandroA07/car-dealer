@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Domain.Entities;
 using WestcoastCars.Contracts.DTOs;
-using WestcoastCars.Api.Exceptions;
+using WestcoastCars.Application.Exceptions;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
@@ -69,7 +69,7 @@ namespace WestcoastCars.Api.Controllers
                 return BadRequest(ModelState);
             }
 
-            var existing = await _unitOfWork.Repository<TransmissionType>().FirstOrDefaultAsync(t => t.Name.ToUpper() == model.Name.ToUpper());
+            var existing = await _unitOfWork.Repository<TransmissionType>().FirstOrDefaultAsync(t => t.Name.Equals(model.Name, StringComparison.OrdinalIgnoreCase));
             if (existing != null)
             {
                 _logger.LogInformation("Transmission type '{Name}' already exists.", model.Name);
@@ -119,7 +119,7 @@ namespace WestcoastCars.Api.Controllers
                 throw new NotFoundException($"Transmission type with ID {id} not found.");
             }
 
-            var existing = await _unitOfWork.Repository<TransmissionType>().FirstOrDefaultAsync(t => t.Name.ToUpper() == model.Name.ToUpper() && t.Id != id);
+            var existing = await _unitOfWork.Repository<TransmissionType>().FirstOrDefaultAsync(t => t.Name.Equals(model.Name, StringComparison.OrdinalIgnoreCase) && t.Id != id);
             if (existing != null)
             {
                 _logger.LogInformation("Transmission type name '{Name}' already exists.", model.Name);

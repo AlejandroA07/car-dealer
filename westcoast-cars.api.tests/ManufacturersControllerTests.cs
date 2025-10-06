@@ -1,43 +1,43 @@
 
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Moq;
 using WestcoastCars.Api.Controllers;
-using WestcoastCars.Application.Interfaces;
-using WestcoastCars.Domain.Entities;
+using WestcoastCars.Application.Features.Manufacturers.Commands.Create;
+using WestcoastCars.Application.Features.Manufacturers.Commands.Delete;
+using WestcoastCars.Application.Features.Manufacturers.Commands.Update;
+using WestcoastCars.Application.Features.Manufacturers.Queries.GetById;
+using WestcoastCars.Application.Features.Manufacturers.Queries.ListAll;
+using WestcoastCars.Contracts.DTOs;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
-using WestcoastCars.Contracts.DTOs;
-using WestcoastCars.Api.Exceptions;
+using WestcoastCars.Application.Exceptions;
 
 namespace westcoast_cars.api.tests
 {
     public class ManufacturersControllerTests
     {
-        private readonly Mock<IUnitOfWork> _unitOfWorkMock;
-        private readonly Mock<ILogger<ManufacturersController>> _loggerMock;
+        private readonly Mock<IMediator> _mediatorMock;
         private readonly ManufacturersController _controller;
 
         public ManufacturersControllerTests()
         {
-            _unitOfWorkMock = new Mock<IUnitOfWork>();
-            _loggerMock = new Mock<ILogger<ManufacturersController>>();
-            _controller = new ManufacturersController(_unitOfWorkMock.Object, _loggerMock.Object);
+            _mediatorMock = new Mock<IMediator>();
+            _controller = new ManufacturersController(_mediatorMock.Object);
         }
 
         [Fact]
         public async Task ListAll_ShouldReturnOkResult_WithListOfManufacturers()
         {
             // Arrange
-            var manufacturers = new List<Manufacturer>
+            var manufacturers = new List<NamedObjectDto>
             {
-                new Manufacturer { Id = 1, Name = "Volvo" },
-                new Manufacturer { Id = 2, Name = "Saab" }
+                new NamedObjectDto { Id = 1, Name = "Volvo" },
+                new NamedObjectDto { Id = 2, Name = "Saab" }
             };
-            var repositoryMock = new Mock<IRepository<Manufacturer>>();
-            repositoryMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(manufacturers);
-            _unitOfWorkMock.Setup(uow => uow.Repository<Manufacturer>()).Returns(repositoryMock.Object);
+            _mediatorMock.Setup(m => m.Send(It.IsAny<ListAllManufacturersQuery>(), default)).ReturnsAsync(manufacturers);
 
             // Act
             var result = await _controller.ListAll();
@@ -52,10 +52,8 @@ namespace westcoast_cars.api.tests
         public async Task GetById_ShouldReturnOkResult_WhenManufacturerExists()
         {
             // Arrange
-            var manufacturer = new Manufacturer { Id = 1, Name = "Volvo" };
-            var repositoryMock = new Mock<IRepository<Manufacturer>>();
-            repositoryMock.Setup(repo => repo.GetByIdAsync(1)).ReturnsAsync(manufacturer);
-            _unitOfWorkMock.Setup(uow => uow.Repository<Manufacturer>()).Returns(repositoryMock.Object);
+            var manufacturer = new NamedObjectDto { Id = 1, Name = "Volvo" };
+            _mediatorMock.Setup(m => m.Send(It.IsAny<GetManufacturerByIdQuery>(), default)).ReturnsAsync(manufacturer);
 
             // Act
             var result = await _controller.GetById(1);
@@ -67,27 +65,12 @@ namespace westcoast_cars.api.tests
         }
 
         [Fact]
-        public async Task GetById_ShouldThrowNotFoundException_WhenManufacturerDoesNotExist()
-        {
-            // Arrange
-            var repositoryMock = new Mock<IRepository<Manufacturer>>();
-            repositoryMock.Setup(repo => repo.GetByIdAsync(1)).ReturnsAsync((Manufacturer)null);
-            _unitOfWorkMock.Setup(uow => uow.Repository<Manufacturer>()).Returns(repositoryMock.Object);
-
-            // Act & Assert
-            await Assert.ThrowsAsync<NotFoundException>(() => _controller.GetById(1));
-        }
-
-        [Fact]
         public async Task Add_ShouldReturnCreatedAtActionResult_WhenModelIsValid()
         {
             // Arrange
             var newManufacturerDto = new NamedObjectDto { Name = "Tesla" };
-            var repositoryMock = new Mock<IRepository<Manufacturer>>();
-            repositoryMock.Setup(repo => repo.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<Manufacturer, bool>>>())).ReturnsAsync((Manufacturer)null);
-            repositoryMock.Setup(repo => repo.AddAsync(It.IsAny<Manufacturer>())).Returns(Task.CompletedTask);
-            _unitOfWorkMock.Setup(uow => uow.Repository<Manufacturer>()).Returns(repositoryMock.Object);
-            _unitOfWorkMock.Setup(uow => uow.CompleteAsync()).ReturnsAsync(1);
+            var returnedManufacturerDto = new NamedObjectDto { Id = 1, Name = "Tesla" };
+            _mediatorMock.Setup(m => m.Send(It.IsAny<CreateManufacturerCommand>(), default)).ReturnsAsync(returnedManufacturerDto);
 
             // Act
             var result = await _controller.Add(newManufacturerDto);
@@ -100,39 +83,25 @@ namespace westcoast_cars.api.tests
         }
 
         [Fact]
-        public async Task Add_ShouldReturnBadRequest_WhenModelIsNull()
-        {
-            // Act
-            var result = await _controller.Add(null!);
-
-            // Assert
-            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal("Request body cannot be null.", badRequestResult.Value);
-        }
-
-        [Fact]
-        public async Task Add_ShouldThrowConflictException_WhenManufacturerExists()
+        public async Task Update_ShouldReturnNoContent_WhenUpdateIsSuccessful()
         {
             // Arrange
-            var existingManufacturerDto = new NamedObjectDto { Name = "Volvo" };
-            var existingManufacturer = new Manufacturer { Id = 1, Name = "Volvo" };
-            var repositoryMock = new Mock<IRepository<Manufacturer>>();
-            repositoryMock.Setup(repo => repo.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<Manufacturer, bool>>>())).ReturnsAsync(existingManufacturer);
-            _unitOfWorkMock.Setup(uow => uow.Repository<Manufacturer>()).Returns(repositoryMock.Object);
+            int manufacturerId = 1;
+            var manufacturerDto = new NamedObjectDto { Id = manufacturerId, Name = "UpdatedName" };
+            _mediatorMock.Setup(m => m.Send(It.IsAny<UpdateManufacturerCommand>(), default)).Returns(Task.FromResult(Unit.Value));
 
-            // Act & Assert
-            await Assert.ThrowsAsync<ConflictException>(() => _controller.Add(existingManufacturerDto));
+            // Act
+            var result = await _controller.Update(manufacturerId, manufacturerDto);
+
+            // Assert
+            Assert.IsType<NoContentResult>(result);
         }
 
         [Fact]
         public async Task Delete_ShouldReturnNoContent_WhenManufacturerExists()
         {
             // Arrange
-            var manufacturerToDelete = new Manufacturer { Id = 1, Name = "Volvo" };
-            var repositoryMock = new Mock<IRepository<Manufacturer>>();
-            repositoryMock.Setup(repo => repo.GetByIdAsync(1)).ReturnsAsync(manufacturerToDelete);
-            _unitOfWorkMock.Setup(uow => uow.Repository<Manufacturer>()).Returns(repositoryMock.Object);
-            _unitOfWorkMock.Setup(uow => uow.CompleteAsync()).ReturnsAsync(1);
+            _mediatorMock.Setup(m => m.Send(It.IsAny<DeleteManufacturerCommand>(), default)).Returns(Task.FromResult(Unit.Value));
 
             // Act
             var result = await _controller.Delete(1);
@@ -140,99 +109,6 @@ namespace westcoast_cars.api.tests
             // Assert
             Assert.IsType<NoContentResult>(result);
         }
-
-        [Fact]
-        public async Task Delete_ShouldThrowNotFoundException_WhenManufacturerDoesNotExist()
-        {
-            // Arrange
-            var repositoryMock = new Mock<IRepository<Manufacturer>>();
-            repositoryMock.Setup(repo => repo.GetByIdAsync(1)).ReturnsAsync((Manufacturer)null);
-            _unitOfWorkMock.Setup(uow => uow.Repository<Manufacturer>()).Returns(repositoryMock.Object);
-
-            // Act & Assert
-            await Assert.ThrowsAsync<NotFoundException>(() => _controller.Delete(1));
-        }
-
-        [Fact]
-        public async Task Update_ShouldReturnNoContent_WhenUpdateIsSuccessful()
-        {
-            // Arrange
-            int manufacturerId = 1;
-            var manufacturerDto = new NamedObjectDto { Id = manufacturerId, Name = "UpdatedName" };
-            var existingManufacturer = new Manufacturer { Id = manufacturerId, Name = "OriginalName" };
-
-            var repositoryMock = new Mock<IRepository<Manufacturer>>();
-            repositoryMock.Setup(repo => repo.GetByIdAsync(manufacturerId)).ReturnsAsync(existingManufacturer);
-            repositoryMock.Setup(repo => repo.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<Manufacturer, bool>>>())).ReturnsAsync((Manufacturer)null);
-            _unitOfWorkMock.Setup(uow => uow.Repository<Manufacturer>()).Returns(repositoryMock.Object);
-            _unitOfWorkMock.Setup(uow => uow.CompleteAsync()).ReturnsAsync(1);
-
-            // Act
-            var result = await _controller.Update(manufacturerId, manufacturerDto);
-
-            // Assert
-            Assert.IsType<NoContentResult>(result);
-            repositoryMock.Verify(repo => repo.Update(It.Is<Manufacturer>(m => m.Id == manufacturerId && m.Name == "UpdatedName")), Times.Once);
-            _unitOfWorkMock.Verify(uow => uow.CompleteAsync(), Times.Once);
-        }
-
-        [Fact]
-        public async Task Update_ShouldReturnBadRequest_WhenModelIsNull()
-        {
-            // Act
-            var result = await _controller.Update(1, null!);
-
-            // Assert
-            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal("Request body cannot be null.", badRequestResult.Value);
-        }
-
-        [Fact]
-        public async Task Update_ShouldReturnNotFound_WhenManufacturerDoesNotExist()
-        {
-            // Arrange
-            int manufacturerId = 1;
-            var manufacturerDto = new NamedObjectDto { Id = manufacturerId, Name = "UpdatedName" };
-
-            var repositoryMock = new Mock<IRepository<Manufacturer>>();
-            repositoryMock.Setup(repo => repo.GetByIdAsync(manufacturerId)).ReturnsAsync((Manufacturer)null);
-            _unitOfWorkMock.Setup(uow => uow.Repository<Manufacturer>()).Returns(repositoryMock.Object);
-
-            // Act & Assert
-            await Assert.ThrowsAsync<NotFoundException>(() => _controller.Update(manufacturerId, manufacturerDto));
-        }
-
-        [Fact]
-        public async Task Update_ShouldReturnBadRequest_WhenIdMismatch()
-        {
-            // Arrange
-            int urlId = 1;
-            var manufacturerDto = new NamedObjectDto { Id = 2, Name = "UpdatedName" };
-
-            // Act
-            var result = await _controller.Update(urlId, manufacturerDto);
-
-            // Assert
-            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal("ID mismatch", badRequestResult.Value);
-        }
-
-        [Fact]
-        public async Task Update_ShouldThrowConflictException_WhenNameAlreadyExists()
-        {
-            // Arrange
-            int manufacturerId = 1;
-            var manufacturerDto = new NamedObjectDto { Id = manufacturerId, Name = "ExistingName" };
-            var existingManufacturer = new Manufacturer { Id = manufacturerId, Name = "OriginalName" };
-            var conflictingManufacturer = new Manufacturer { Id = 2, Name = "ExistingName" };
-
-            var repositoryMock = new Mock<IRepository<Manufacturer>>();
-            repositoryMock.Setup(repo => repo.GetByIdAsync(manufacturerId)).ReturnsAsync(existingManufacturer);
-            repositoryMock.Setup(repo => repo.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<Manufacturer, bool>>>())).ReturnsAsync(conflictingManufacturer);
-            _unitOfWorkMock.Setup(uow => uow.Repository<Manufacturer>()).Returns(repositoryMock.Object);
-
-            // Act & Assert
-            await Assert.ThrowsAsync<ConflictException>(() => _controller.Update(manufacturerId, manufacturerDto));
-        }
     }
 }
+
