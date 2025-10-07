@@ -23,7 +23,10 @@ namespace WestcoastCars.Application.Features.Manufacturers.Queries.ListAll
 
         public async Task<IEnumerable<NamedObjectDto>> Handle(ListAllManufacturersQuery request, CancellationToken cancellationToken)
         {
-            var manufacturers = await _unitOfWork.Repository<Manufacturer>().GetAllAsync();
+            var repository = _unitOfWork.Repository<Manufacturer>();
+            if (repository is null) throw new InvalidOperationException("Repository for Manufacturer is not available.");
+
+            var manufacturers = await repository.GetAllAsync();
             var result = _mapper.Map<IEnumerable<NamedObjectDto>>(manufacturers);
             return result;
         }

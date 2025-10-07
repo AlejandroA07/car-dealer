@@ -19,14 +19,17 @@ namespace WestcoastCars.Application.Features.Manufacturers.Commands.Delete
 
         public async Task<Unit> Handle(DeleteManufacturerCommand request, CancellationToken cancellationToken)
         {
-            var manufacturerToDelete = await _unitOfWork.Repository<Manufacturer>().GetByIdAsync(request.Id);
+            var repository = _unitOfWork.Repository<Manufacturer>();
+            if (repository is null) throw new InvalidOperationException("Repository for Manufacturer is not available.");
+
+            var manufacturerToDelete = await repository.GetByIdAsync(request.Id);
 
             if (manufacturerToDelete is null)
             {
                 throw new NotFoundException($"Manufacturer with id '{request.Id}' not found.");
             }
 
-            _unitOfWork.Repository<Manufacturer>().Remove(manufacturerToDelete);
+            repository.Remove(manufacturerToDelete!);
 
             await _unitOfWork.CompleteAsync();
 

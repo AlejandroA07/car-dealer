@@ -9,7 +9,7 @@ public interface IUnitOfWork : IDisposable
     IManufacturerRepository ManufacturerRepository { get; }
     IFuelTypeRepository FuelTypeRepository { get; }
     ITransmissionTypeRepository TransmissionTypeRepository { get; }
-    IRepository<T> Repository<T>() where T : BaseEntity;
+    IRepository<T>? Repository<T>() where T : BaseEntity;
     Task<int> CompleteAsync();
 }
 

@@ -15,7 +15,7 @@ public class Repository<T> : IRepository<T> where T : class
         _context = context;
     }
 
-    public async Task<T> GetByIdAsync(int id)
+    public async Task<T?> GetByIdAsync(int id)
     {
         return await _context.Set<T>().FindAsync(id);
     }
@@ -55,7 +55,7 @@ public class Repository<T> : IRepository<T> where T : class
         _context.Set<T>().Update(entity);
     }
 
-    public async Task<T> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate)
+    public async Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate)
     {
         return await _context.Set<T>().FirstOrDefaultAsync(predicate);
     }

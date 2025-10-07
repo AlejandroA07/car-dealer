@@ -18,16 +18,15 @@ public class UnitOfWork : IUnitOfWork
     public UnitOfWork(WestcoastCarsContext context)
     {
         _context = context;
+        _repositories = new Hashtable();
         VehicleRepository = new VehicleRepository(context);
         ManufacturerRepository = new ManufacturerRepository(context);
         FuelTypeRepository = new FuelTypeRepository(context);
         TransmissionTypeRepository = new TransmissionTypeRepository(context);
     }
 
-    public IRepository<T> Repository<T>() where T : BaseEntity
+    public IRepository<T>? Repository<T>() where T : BaseEntity
     {
-        if (_repositories == null) _repositories = new Hashtable();
-
         var type = typeof(T).Name;
 
         if (!_repositories.ContainsKey(type))
@@ -35,10 +34,10 @@ public class UnitOfWork : IUnitOfWork
             var repositoryType = typeof(Repository<>);
             var repositoryInstance = Activator.CreateInstance(repositoryType.MakeGenericType(typeof(T)), _context);
 
-            _repositories.Add(type, repositoryInstance);
+            if (repositoryInstance != null) _repositories.Add(type, repositoryInstance);
         }
 
-        return (IRepository<T>)_repositories[type];
+        return (IRepository<T>?)_repositories[type];
     }
 
     public async Task<int> CompleteAsync()

@@ -9,7 +9,7 @@ using WestcoastCars.Application.Exceptions;
 
 namespace WestcoastCars.Application.Features.Manufacturers.Commands.Create
 {
-    public class CreateManufacturerCommandHandler : IRequestHandler<CreateManufacturerCommand, NamedObjectDto>
+    public class CreateManufacturerCommandHandler : IRequestHandler<CreateManufacturerCommand, NamedObjectDto?>
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
@@ -20,20 +20,24 @@ namespace WestcoastCars.Application.Features.Manufacturers.Commands.Create
             _mapper = mapper;
         }
 
-        public async Task<NamedObjectDto> Handle(CreateManufacturerCommand request, CancellationToken cancellationToken)
+        public async Task<NamedObjectDto?> Handle(CreateManufacturerCommand request, CancellationToken cancellationToken)
         {
-            var existing = await _unitOfWork.Repository<Manufacturer>().FirstOrDefaultAsync(m => m.Name.Equals(request.Name, System.StringComparison.OrdinalIgnoreCase));
+            var repository = _unitOfWork.Repository<Manufacturer>();
+            if (repository is null) throw new InvalidOperationException("Repository for Manufacturer is not available.");
+
+            var existing = await repository.FirstOrDefaultAsync(m => m.Name.Equals(request.Name, System.StringComparison.OrdinalIgnoreCase));
             if (existing != null)
             {
                 throw new ConflictException($"Manufacturer with name '{request.Name}' already exists.");
             }
 
             var manufacturerToAdd = new Manufacturer { Name = request.Name };
-            await _unitOfWork.Repository<Manufacturer>().AddAsync(manufacturerToAdd);
+            if (repository is null) throw new InvalidOperationException("Repository for Manufacturer is not available.");
+            await repository.AddAsync(manufacturerToAdd!);
 
             if (await _unitOfWork.CompleteAsync() > 0)
             {
-                return _mapper.Map<NamedObjectDto>(manufacturerToAdd);
+                return _mapper.Map<NamedObjectDto>(manufacturerToAdd!);
             }
 
             return null;
