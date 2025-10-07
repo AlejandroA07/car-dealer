@@ -149,6 +149,7 @@ public class VehiclesControllerTests
         // Assert
         Assert.IsType<NoContentResult>(result);
         var updatedVehicle = await _context.Vehicles.FindAsync(existingVehicleId);
+        Assert.NotNull(updatedVehicle);
         Assert.Equal(updatedDescription, updatedVehicle.Description);
     }
 

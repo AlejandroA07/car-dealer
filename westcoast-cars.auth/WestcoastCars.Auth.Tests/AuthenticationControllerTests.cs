@@ -58,6 +58,7 @@ namespace WestcoastCars.Auth.Tests
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.NotNull(badRequestResult.Value);
             var errorResponse = badRequestResult.Value;
             var messageProperty = errorResponse.GetType().GetProperty("message");
             Assert.NotNull(messageProperty);
@@ -100,6 +101,7 @@ namespace WestcoastCars.Auth.Tests
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.NotNull(badRequestResult.Value);
             var errorResponse = badRequestResult.Value;
             var messageProperty = errorResponse.GetType().GetProperty("message");
             Assert.NotNull(messageProperty);

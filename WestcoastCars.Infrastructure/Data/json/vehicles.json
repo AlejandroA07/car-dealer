@@ -2,7 +2,7 @@
   {
     "id": 1,
     "registrationNumber": "ABC123",
-    "makeId": 53,
+    "manufacturerId": 53,
     "model": "Corvette",
     "modelYear": "2015",
     "fuelTypeId": 2,
@@ -16,7 +16,7 @@
   {
     "id": 2,
     "registrationNumber": "DEF345",
-    "makeId": 13,
+    "manufacturerId": 13,
     "model": "Mustang",
     "modelYear": "2017",
     "fuelTypeId": 2,
@@ -30,7 +30,7 @@
   {
     "id": 3,
     "registrationNumber": "GHI678",
-    "makeId": 46,
+    "manufacturerId": 46,
     "model": "Alpine",
     "modelYear": "1967",
     "fuelTypeId": 2,
@@ -44,7 +44,7 @@
   {
     "id": 4,
     "registrationNumber": "JKL901",
-    "makeId": 8,
+    "manufacturerId": 8,
     "model": "S500",
     "modelYear": "2019",
     "fuelTypeId": 2,
@@ -58,7 +58,7 @@
   {
     "id": 5,
     "registrationNumber": "MNO902",
-    "makeId": 8,
+    "manufacturerId": 8,
     "model": "AMG",
     "modelYear": "2014",
     "fuelTypeId": 2,
@@ -72,7 +72,7 @@
   {
     "id": 6,
     "registrationNumber": "PGQ123",
-    "makeId": 6,
+    "manufacturerId": 6,
     "model": "A6",
     "modelYear": "2013",
     "fuelTypeId": 2,
@@ -86,7 +86,7 @@
   {
     "id": 7,
     "registrationNumber": "RST456",
-    "makeId": 2,
+    "manufacturerId": 2,
     "model": "V60",
     "modelYear": "2013",
     "fuelTypeId": 2,
@@ -100,7 +100,7 @@
   {
     "id": 8,
     "registrationNumber": "UVX789",
-    "makeId": 2,
+    "manufacturerId": 2,
     "model": "XC40",
     "modelYear": "2013",
     "fuelTypeId": 2,
@@ -114,7 +114,7 @@
   {
     "id": 9,
     "registrationNumber": "YZA012",
-    "makeId": 2,
+    "manufacturerId": 2,
     "model": "V40",
     "modelYear": "2013",
     "fuelTypeId": 2,
@@ -128,7 +128,7 @@
   {
     "id": 10,
     "registrationNumber": "BAC013",
-    "makeId": 6,
+    "manufacturerId": 6,
     "model": "A6",
     "modelYear": "2018",
     "fuelTypeId": 2,
@@ -142,7 +142,7 @@
   {
     "id": 11,
     "registrationNumber": "BCA103",
-    "makeId": 65,
+    "manufacturerId": 65,
     "model": "458",
     "modelYear": "2013",
     "fuelTypeId": 2,
@@ -156,7 +156,7 @@
   {
     "id": 12,
     "registrationNumber": "CEZ420",
-    "makeId": 77,
+    "manufacturerId": 77,
     "model": "Aventador",
     "modelYear": "2013",
     "fuelTypeId": 2,
@@ -170,7 +170,7 @@
   {
     "id": 13,
     "registrationNumber": "EGH956",
-    "makeId": 53,
+    "manufacturerId": 53,
     "model": "Impala",
     "modelYear": "1958",
     "fuelTypeId": 2,
@@ -184,7 +184,7 @@
   {
     "id": 14,
     "registrationNumber": "HFY666",
-    "makeId": 11,
+    "manufacturerId": 11,
     "model": "Tiguan",
     "modelYear": "2016",
     "fuelTypeId": 2,
@@ -198,7 +198,7 @@
   {
     "id": 15,
     "registrationNumber": "ZCS469",
-    "makeId": 2,
+    "manufacturerId": 2,
     "model": "V60",
     "modelYear": "2020",
     "fuelTypeId": 2,

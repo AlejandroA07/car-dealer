@@ -11,6 +11,8 @@ using WestcoastCars.Infrastructure.Repositories;
 
 using WestcoastCars.Infrastructure;
 
+DotNetEnv.Env.Load(Path.Combine(Directory.GetCurrentDirectory(), "..", ".env"));
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.

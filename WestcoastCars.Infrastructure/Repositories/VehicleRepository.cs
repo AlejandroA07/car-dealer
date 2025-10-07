@@ -17,7 +17,7 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
             .SingleOrDefaultAsync(v => v.RegistrationNumber.ToUpper() == regNo.ToUpper());
     }
 
-    public new async Task<Vehicle> GetByIdAsync(int id)
+    public new async Task<Vehicle?> GetByIdAsync(int id)
     {
         return await _context.Vehicles
             .Include(v => v.Manufacturer)

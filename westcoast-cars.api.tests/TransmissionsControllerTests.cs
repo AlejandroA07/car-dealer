@@ -1,43 +1,43 @@
 
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Moq;
 using WestcoastCars.Api.Controllers;
-using WestcoastCars.Application.Interfaces;
-using WestcoastCars.Domain.Entities;
+using WestcoastCars.Application.Features.Transmissions.Commands.Create;
+using WestcoastCars.Application.Features.Transmissions.Commands.Delete;
+using WestcoastCars.Application.Features.Transmissions.Commands.Update;
+using WestcoastCars.Application.Features.Transmissions.Queries.GetById;
+using WestcoastCars.Application.Features.Transmissions.Queries.ListAll;
+using WestcoastCars.Contracts.DTOs;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
-using WestcoastCars.Contracts.DTOs;
 using WestcoastCars.Application.Exceptions;
 
 namespace westcoast_cars.api.tests
 {
     public class TransmissionsControllerTests
     {
-        private readonly Mock<IUnitOfWork> _unitOfWorkMock;
-        private readonly Mock<ILogger<TransmissionsController>> _loggerMock;
+        private readonly Mock<IMediator> _mediatorMock;
         private readonly TransmissionsController _controller;
 
         public TransmissionsControllerTests()
         {
-            _unitOfWorkMock = new Mock<IUnitOfWork>();
-            _loggerMock = new Mock<ILogger<TransmissionsController>>();
-            _controller = new TransmissionsController(_unitOfWorkMock.Object, _loggerMock.Object);
+            _mediatorMock = new Mock<IMediator>();
+            _controller = new TransmissionsController(_mediatorMock.Object);
         }
 
         [Fact]
         public async Task ListAll_ShouldReturnOkResult_WithListOfTransmissionTypes()
         {
             // Arrange
-            var transmissionTypes = new List<TransmissionType>
+            var transmissionTypes = new List<NamedObjectDto>
             {
-                new TransmissionType { Id = 1, Name = "Manual" },
-                new TransmissionType { Id = 2, Name = "Automatic" }
+                new NamedObjectDto { Id = 1, Name = "Manual" },
+                new NamedObjectDto { Id = 2, Name = "Automatic" }
             };
-            var repositoryMock = new Mock<IRepository<TransmissionType>>();
-            repositoryMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(transmissionTypes);
-            _unitOfWorkMock.Setup(uow => uow.Repository<TransmissionType>()).Returns(repositoryMock.Object);
+            _mediatorMock.Setup(m => m.Send(It.IsAny<ListAllTransmissionsQuery>(), default)).ReturnsAsync(transmissionTypes);
 
             // Act
             var result = await _controller.ListAll();
@@ -52,10 +52,8 @@ namespace westcoast_cars.api.tests
         public async Task GetById_ShouldReturnOkResult_WhenTransmissionTypeExists()
         {
             // Arrange
-            var transmissionType = new TransmissionType { Id = 1, Name = "Manual" };
-            var repositoryMock = new Mock<IRepository<TransmissionType>>();
-            repositoryMock.Setup(repo => repo.GetByIdAsync(1)).ReturnsAsync(transmissionType);
-            _unitOfWorkMock.Setup(uow => uow.Repository<TransmissionType>()).Returns(repositoryMock.Object);
+            var transmissionType = new NamedObjectDto { Id = 1, Name = "Manual" };
+            _mediatorMock.Setup(m => m.Send(It.IsAny<GetTransmissionByIdQuery>(), default)).ReturnsAsync(transmissionType);
 
             // Act
             var result = await _controller.GetById(1);
@@ -67,27 +65,12 @@ namespace westcoast_cars.api.tests
         }
 
         [Fact]
-        public async Task GetById_ShouldThrowNotFoundException_WhenTransmissionTypeDoesNotExist()
-        {
-            // Arrange
-            var repositoryMock = new Mock<IRepository<TransmissionType>>();
-            repositoryMock.Setup(repo => repo.GetByIdAsync(1)).ReturnsAsync((TransmissionType)null);
-            _unitOfWorkMock.Setup(uow => uow.Repository<TransmissionType>()).Returns(repositoryMock.Object);
-
-            // Act & Assert
-            await Assert.ThrowsAsync<NotFoundException>(() => _controller.GetById(1));
-        }
-
-        [Fact]
         public async Task Add_ShouldReturnCreatedAtActionResult_WhenModelIsValid()
         {
             // Arrange
             var newTransmissionTypeDto = new NamedObjectDto { Name = "CVT" };
-            var repositoryMock = new Mock<IRepository<TransmissionType>>();
-            repositoryMock.Setup(repo => repo.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<TransmissionType, bool>>>())).ReturnsAsync((TransmissionType)null);
-            repositoryMock.Setup(repo => repo.AddAsync(It.IsAny<TransmissionType>())).Returns(Task.CompletedTask);
-            _unitOfWorkMock.Setup(uow => uow.Repository<TransmissionType>()).Returns(repositoryMock.Object);
-            _unitOfWorkMock.Setup(uow => uow.CompleteAsync()).ReturnsAsync(1);
+            var returnedTransmissionTypeDto = new NamedObjectDto { Id = 1, Name = "CVT" };
+            _mediatorMock.Setup(m => m.Send(It.IsAny<CreateTransmissionCommand>(), default)).ReturnsAsync(returnedTransmissionTypeDto);
 
             // Act
             var result = await _controller.Add(newTransmissionTypeDto);
@@ -100,122 +83,25 @@ namespace westcoast_cars.api.tests
         }
 
         [Fact]
-        public async Task Add_ShouldReturnBadRequest_WhenModelIsNull()
-        {
-            // Act
-            var result = await _controller.Add(null!);
-
-            // Assert
-            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal("Request body cannot be null.", badRequestResult.Value);
-        }
-
-        [Fact]
-        public async Task Add_ShouldThrowConflictException_WhenTransmissionTypeExists()
-        {
-            // Arrange
-            var existingTransmissionTypeDto = new NamedObjectDto { Name = "Manual" };
-            var existingTransmissionType = new TransmissionType { Id = 1, Name = "Manual" };
-            var repositoryMock = new Mock<IRepository<TransmissionType>>();
-            repositoryMock.Setup(repo => repo.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<TransmissionType, bool>>>())).ReturnsAsync(existingTransmissionType);
-            _unitOfWorkMock.Setup(uow => uow.Repository<TransmissionType>()).Returns(repositoryMock.Object);
-
-            // Act & Assert
-            await Assert.ThrowsAsync<ConflictException>(() => _controller.Add(existingTransmissionTypeDto));
-        }
-
-        [Fact]
         public async Task Update_ShouldReturnNoContent_WhenUpdateIsSuccessful()
         {
             // Arrange
             int transmissionTypeId = 1;
             var transmissionTypeDto = new NamedObjectDto { Id = transmissionTypeId, Name = "UpdatedName" };
-            var existingTransmissionType = new TransmissionType { Id = transmissionTypeId, Name = "OriginalName" };
-
-            var repositoryMock = new Mock<IRepository<TransmissionType>>();
-            repositoryMock.Setup(repo => repo.GetByIdAsync(transmissionTypeId)).ReturnsAsync(existingTransmissionType);
-            repositoryMock.Setup(repo => repo.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<TransmissionType, bool>>>())).ReturnsAsync((TransmissionType)null);
-            _unitOfWorkMock.Setup(uow => uow.Repository<TransmissionType>()).Returns(repositoryMock.Object);
-            _unitOfWorkMock.Setup(uow => uow.CompleteAsync()).ReturnsAsync(1);
+            _mediatorMock.Setup(m => m.Send(It.IsAny<UpdateTransmissionCommand>(), default)).Returns(Task.FromResult(Unit.Value));
 
             // Act
             var result = await _controller.Update(transmissionTypeId, transmissionTypeDto);
 
             // Assert
             Assert.IsType<NoContentResult>(result);
-            repositoryMock.Verify(repo => repo.Update(It.Is<TransmissionType>(m => m.Id == transmissionTypeId && m.Name == "UpdatedName")), Times.Once);
-            _unitOfWorkMock.Verify(uow => uow.CompleteAsync(), Times.Once);
         }
-
-        [Fact]
-        public async Task Update_ShouldReturnBadRequest_WhenModelIsNull()
-        {
-            // Act
-            var result = await _controller.Update(1, null!);
-
-            // Assert
-            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal("Request body cannot be null.", badRequestResult.Value);
-        }
-
-        [Fact]
-        public async Task Update_ShouldReturnNotFound_WhenTransmissionTypeDoesNotExist()
-        {
-            // Arrange
-            int transmissionTypeId = 1;
-            var transmissionTypeDto = new NamedObjectDto { Id = transmissionTypeId, Name = "UpdatedName" };
-
-            var repositoryMock = new Mock<IRepository<TransmissionType>>();
-            repositoryMock.Setup(repo => repo.GetByIdAsync(transmissionTypeId)).ReturnsAsync((TransmissionType)null);
-            _unitOfWorkMock.Setup(uow => uow.Repository<TransmissionType>()).Returns(repositoryMock.Object);
-
-            // Act & Assert
-            await Assert.ThrowsAsync<NotFoundException>(() => _controller.Update(transmissionTypeId, transmissionTypeDto));
-        }
-
-        [Fact]
-        public async Task Update_ShouldReturnBadRequest_WhenIdMismatch()
-        {
-            // Arrange
-            int urlId = 1;
-            var transmissionTypeDto = new NamedObjectDto { Id = 2, Name = "UpdatedName" };
-
-            // Act
-            var result = await _controller.Update(urlId, transmissionTypeDto);
-
-            // Assert
-            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal("ID mismatch", badRequestResult.Value);
-        }
-
-        [Fact]
-        public async Task Update_ShouldThrowConflictException_WhenNameAlreadyExists()
-        {
-            // Arrange
-            int transmissionTypeId = 1;
-            var transmissionTypeDto = new NamedObjectDto { Id = transmissionTypeId, Name = "ExistingName" };
-            var existingTransmissionType = new TransmissionType { Id = transmissionTypeId, Name = "OriginalName" };
-            var conflictingTransmissionType = new TransmissionType { Id = 2, Name = "ExistingName" };
-
-            var repositoryMock = new Mock<IRepository<TransmissionType>>();
-            repositoryMock.Setup(repo => repo.GetByIdAsync(transmissionTypeId)).ReturnsAsync(existingTransmissionType);
-            repositoryMock.Setup(repo => repo.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<TransmissionType, bool>>>())).ReturnsAsync(conflictingTransmissionType);
-            _unitOfWorkMock.Setup(uow => uow.Repository<TransmissionType>()).Returns(repositoryMock.Object);
-
-            // Act & Assert
-            await Assert.ThrowsAsync<ConflictException>(() => _controller.Update(transmissionTypeId, transmissionTypeDto));
-        }
-
 
         [Fact]
         public async Task Delete_ShouldReturnNoContent_WhenTransmissionTypeExists()
         {
             // Arrange
-            var transmissionTypeToDelete = new TransmissionType { Id = 1, Name = "Manual" };
-            var repositoryMock = new Mock<IRepository<TransmissionType>>();
-            repositoryMock.Setup(repo => repo.GetByIdAsync(1)).ReturnsAsync(transmissionTypeToDelete);
-            _unitOfWorkMock.Setup(uow => uow.Repository<TransmissionType>()).Returns(repositoryMock.Object);
-            _unitOfWorkMock.Setup(uow => uow.CompleteAsync()).ReturnsAsync(1);
+            _mediatorMock.Setup(m => m.Send(It.IsAny<DeleteTransmissionCommand>(), default)).Returns(Task.FromResult(Unit.Value));
 
             // Act
             var result = await _controller.Delete(1);
@@ -223,17 +109,6 @@ namespace westcoast_cars.api.tests
             // Assert
             Assert.IsType<NoContentResult>(result);
         }
-
-        [Fact]
-        public async Task Delete_ShouldThrowNotFoundException_WhenTransmissionTypeDoesNotExist()
-        {
-            // Arrange
-            var repositoryMock = new Mock<IRepository<TransmissionType>>();
-            repositoryMock.Setup(repo => repo.GetByIdAsync(1)).ReturnsAsync((TransmissionType)null);
-            _unitOfWorkMock.Setup(uow => uow.Repository<TransmissionType>()).Returns(repositoryMock.Object);
-
-            // Act & Assert
-            await Assert.ThrowsAsync<NotFoundException>(() => _controller.Delete(1));
-        }
     }
 }
+

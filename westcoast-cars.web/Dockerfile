@@ -6,20 +6,32 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Copy project and solution files first to leverage Docker layer caching.
-# Docker will only re-run 'dotnet restore' if these files change.
-# Note: We use the API's solution file as it contains all project references.
-COPY westcoast-cars.api/westcoast-cars.api.sln westcoast-cars.api/
-COPY westcoast-cars.api/westcoast-cars.api.csproj westcoast-cars.api/
-COPY westcoast-cars.web/westcoast-cars.web.csproj westcoast-cars.web/
-COPY WestcoastCars.Application/WestcoastCars.Application.csproj WestcoastCars.Application/
-COPY WestcoastCars.Contracts/WestcoastCars.Contracts.csproj WestcoastCars.Contracts/
-COPY WestcoastCars.Domain/WestcoastCars.Domain.csproj WestcoastCars.Domain/
-COPY WestcoastCars.Infrastructure/WestcoastCars.Infrastructure.csproj WestcoastCars.Infrastructure/
-COPY westcoast-cars.api.tests/westcoast-cars.api.tests.csproj westcoast-cars.api.tests/
+# Copy the solution file and all project files
+COPY ["westcoast-cars.sln", "."]
+
+# API projects
+COPY ["westcoast-cars.api/westcoast-cars.api.csproj", "westcoast-cars.api/"]
+COPY ["westcoast-cars.api.tests/westcoast-cars.api.tests.csproj", "westcoast-cars.api.tests/"]
+
+# Auth projects
+COPY ["westcoast-cars.auth/Api/WestcoastCars.Auth.Api.csproj", "westcoast-cars.auth/Api/"]
+COPY ["westcoast-cars.auth/Application/WestcoastCars.Auth.Application.csproj", "westcoast-cars.auth/Application/"]
+COPY ["westcoast-cars.auth/Contracts/WestcoastCars.Auth.Contracts.csproj", "westcoast-cars.auth/Contracts/"]
+COPY ["westcoast-cars.auth/Domain/WestcoastCars.Auth.Domain.csproj", "westcoast-cars.auth/Domain/"]
+COPY ["westcoast-cars.auth/Infrastructure/WestcoastCars.Auth.Infrastructure.csproj", "westcoast-cars.auth/Infrastructure/"]
+COPY ["westcoast-cars.auth/WestcoastCars.Auth.Tests/WestcoastCars.Auth.Tests.csproj", "westcoast-cars.auth/WestcoastCars.Auth.Tests/"]
+
+# Web project
+COPY ["westcoast-cars.web/westcoast-cars.web.csproj", "westcoast-cars.web/"]
+
+# Core projects
+COPY ["WestcoastCars.Application/WestcoastCars.Application.csproj", "WestcoastCars.Application/"]
+COPY ["WestcoastCars.Contracts/WestcoastCars.Contracts.csproj", "WestcoastCars.Contracts/"]
+COPY ["WestcoastCars.Domain/WestcoastCars.Domain.csproj", "WestcoastCars.Domain/"]
+COPY ["WestcoastCars.Infrastructure/WestcoastCars.Infrastructure.csproj", "WestcoastCars.Infrastructure/"]
 
 # Restore dependencies for the entire solution
-RUN dotnet restore "westcoast-cars.api/westcoast-cars.api.sln"
+RUN dotnet restore "westcoast-cars.sln"
 
 # Copy the rest of the source code into the container
 COPY . .

@@ -15,7 +15,9 @@ namespace WestcoastCars.Infrastructure.Data
 
             if (context.Manufacturers.Any()) return;
 
-            var json = System.IO.File.ReadAllText("Data/json/manufacturer.json");
+            var baseDir = AppContext.BaseDirectory;
+            var path = Path.Combine(baseDir, "Data", "json", "manufacturer.json");
+            var json = System.IO.File.ReadAllText(path);
             var manufacturers = JsonSerializer.Deserialize<List<Manufacturer>>(json, options);
 
             if (manufacturers is not null && manufacturers.Count > 0)
@@ -34,7 +36,9 @@ namespace WestcoastCars.Infrastructure.Data
 
             if (context.Vehicles.Any()) return;
 
-            var json = System.IO.File.ReadAllText("Data/json/vehicles.json");
+            var baseDir = AppContext.BaseDirectory;
+            var path = Path.Combine(baseDir, "Data", "json", "vehicles.json");
+            var json = System.IO.File.ReadAllText(path);
             var vehicleDtos = JsonSerializer.Deserialize<List<VehicleSeedDto>>(json, options);
 
             if (vehicleDtos is null || !vehicleDtos.Any()) return;
@@ -80,7 +84,9 @@ namespace WestcoastCars.Infrastructure.Data
 
             if (context.FuelTypes.Any()) return;
 
-            var json = System.IO.File.ReadAllText("Data/json/fuelTypes.json");
+            var baseDir = AppContext.BaseDirectory;
+            var path = Path.Combine(baseDir, "Data", "json", "fuelTypes.json");
+            var json = System.IO.File.ReadAllText(path);
             var fueltypes = JsonSerializer.Deserialize<List<FuelType>>(json, options);
 
             if (fueltypes is not null && fueltypes.Count > 0)
@@ -99,7 +105,9 @@ namespace WestcoastCars.Infrastructure.Data
 
             if (context.TransmissionTypes.Any()) return;
 
-            var json = System.IO.File.ReadAllText("Data/json/transmissionTypes.json");
+            var baseDir = AppContext.BaseDirectory;
+            var path = Path.Combine(baseDir, "Data", "json", "transmissionTypes.json");
+            var json = System.IO.File.ReadAllText(path);
             var transmissions = JsonSerializer.Deserialize<List<TransmissionType>>(json, options);
 
             if (transmissions is not null && transmissions.Count > 0)
