@@ -5,5 +5,18 @@
         <li><a asp-action="Index" asp-controller="Vehicles">Våra bilar</a></li>
         <li><a href="#">Boka Service</a></li>
         <li><a asp-action="Index" asp-controller="Admin"><i class="fa-solid fa-plus"></i></a></li>
+        @if (User.Identity.IsAuthenticated)
+        {
+            <li><span class="text-white">Welcome, @User.Identity.Name!</span></li>
+            <li>
+                <form asp-controller="Auth" asp-action="Logout" method="post" id="logoutForm">
+                    <button type="submit" class="btn btn-link nav-link text-white">Logout</button>
+                </form>
+            </li>
+        }
+        else
+        {
+            <li><a asp-controller="Auth" asp-action="Login" class="nav-link text-white">Login</a></li>
+        }
     </ul>
 </nav>

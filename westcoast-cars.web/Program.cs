@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.DataProtection;
 using westcoast_cars.web.Services;
+using westcoast_cars.web.Handlers; // Added
+using Microsoft.AspNetCore.Authentication; // Added
+using Microsoft.AspNetCore.Authentication.Cookies; // Added
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,13 +14,45 @@ builder.Services.AddHttpClient("ApiClient", client =>
 {
     var baseUrl = builder.Configuration["ApiBaseUrl"];
     client.BaseAddress = new Uri(baseUrl);
-});
+})
+.AddHttpMessageHandler<AuthHandler>(); // Add AuthHandler to the HttpClient pipeline
+
+        // Configure the HttpClient for the Auth API.
+        builder.Services.AddHttpClient("AuthApiClient", client =>
+        {
+            var authApiBaseUrl = builder.Configuration["AuthApiBaseUrl"];
+            client.BaseAddress = new Uri(authApiBaseUrl);
+        });
+
+        // Register AuthService and inject the named HttpClient
+        builder.Services.AddScoped<AuthService>(sp =>
+        {
+            var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
+            var httpClient = httpClientFactory.CreateClient("AuthApiClient");
+            var configuration = sp.GetRequiredService<IConfiguration>();
+            var logger = sp.GetRequiredService<ILogger<AuthService>>();
+            return new AuthService(httpClient, configuration, logger);
+        });
 
 builder.Services.AddScoped<IVehicleService, VehicleService>();
 builder.Services.AddScoped<IManufacturerService, ManufacturerService>();
 builder.Services.AddScoped<IFuelTypeService, FuelTypeService>();
 builder.Services.AddScoped<ITransmissionTypeService, TransmissionTypeService>();
+
+builder.Services.AddHttpContextAccessor(); // Register IHttpContextAccessor
+builder.Services.AddTransient<AuthHandler>(); // Register AuthHandler
+
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/auth/login";
+        options.LogoutPath = "/auth/logout";
+        options.AccessDeniedPath = "/auth/accessdenied";
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
+        options.SlidingExpiration = true;
+    });
 
 // Configure data protection to persist keys.
 // The path /app/keys is used within the Docker container.
@@ -43,6 +78,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication(); // Enable authentication middleware
 app.UseAuthorization();
 
 app.MapControllerRoute(

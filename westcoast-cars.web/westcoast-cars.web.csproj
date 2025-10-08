@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\WestcoastCars.Contracts\WestcoastCars.Contracts.csproj" />
+    <ProjectReference Include="..\westcoast-cars.auth\Contracts\WestcoastCars.Auth.Contracts.csproj" />
   </ItemGroup>
 
 </Project>
