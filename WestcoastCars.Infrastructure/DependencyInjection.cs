@@ -29,7 +29,9 @@ public static class DependencyInjection
 
         services.AddDbContext<WestcoastCarsContext>(options =>
             options.UseMySql(connectionString,
-                new MySqlServerVersion(new Version(8, 0, 21))));
+                new MySqlServerVersion(new Version(8, 0, 21)),
+                mySqlOptions => mySqlOptions.EnableStringComparisonTranslations()
+            ));
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IVehicleRepository, VehicleRepository>();

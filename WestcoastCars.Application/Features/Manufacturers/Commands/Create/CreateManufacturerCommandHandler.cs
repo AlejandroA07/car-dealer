@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Contracts.DTOs;
 using WestcoastCars.Domain.Entities;
+using WestcoastCars.Domain.Events.Manufacturers;
 using WestcoastCars.Application.Exceptions;
 
 namespace WestcoastCars.Application.Features.Manufacturers.Commands.Create
@@ -32,6 +33,9 @@ namespace WestcoastCars.Application.Features.Manufacturers.Commands.Create
             }
 
             var manufacturerToAdd = new Manufacturer { Name = request.Name };
+
+            manufacturerToAdd.AddDomainEvent(new ManufacturerCreatedEvent(manufacturerToAdd));
+
             if (repository is null) throw new InvalidOperationException("Repository for Manufacturer is not available.");
             await repository.AddAsync(manufacturerToAdd!);
 
