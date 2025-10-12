@@ -18,55 +18,40 @@ public class AuthenticationController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterRequest request)
     {
-        try
-        {
-            var authResult = await _authService.RegisterAsync(
-                request.FirstName,
-                request.LastName,
-                request.Email,
-                request.Password
-            );
+        var authResult = await _authService.RegisterAsync(
+            request.FirstName,
+            request.LastName,
+            request.Email,
+            request.Password
+        );
 
-            var response = new AuthenticationResponse(
-                authResult.User.Id,
-                authResult.User.FirstName,
-                authResult.User.LastName,
-                authResult.User.Email,
-                authResult.Token
-            );
+        var response = new AuthenticationResponse(
+            authResult.User.Id,
+            authResult.User.FirstName,
+            authResult.User.LastName,
+            authResult.User.Email,
+            authResult.Token
+        );
 
-            return Ok(response);
-        }
-        catch (Exception ex)
-        {
-            // In a real application, you would handle specific exceptions and return appropriate status codes
-            return BadRequest(new { message = ex.Message });
-        }
+        return Ok(response);
     }
 
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginRequest request)
     {
-        try
-        {
-            var authResult = await _authService.LoginAsync(
-                request.Email,
-                request.Password
-            );
+        var authResult = await _authService.LoginAsync(
+            request.Email,
+            request.Password
+        );
 
-            var response = new AuthenticationResponse(
-                authResult.User.Id,
-                authResult.User.FirstName,
-                authResult.User.LastName,
-                authResult.User.Email,
-                authResult.Token
-            );
+        var response = new AuthenticationResponse(
+            authResult.User.Id,
+            authResult.User.FirstName,
+            authResult.User.LastName,
+            authResult.User.Email,
+            authResult.Token
+        );
 
-            return Ok(response);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        return Ok(response);
     }
 }

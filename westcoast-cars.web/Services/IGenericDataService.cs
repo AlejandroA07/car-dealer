@@ -1,13 +1,8 @@
+namespace westcoast_cars.web.Services;
 
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
-namespace westcoast_cars.web.Services
+public interface IGenericDataService<TList, TPost> where TList : class where TPost : class
 {
-    public interface IGenericDataService<TListViewModel, TPostViewModel>
-    {
-        Task<IList<TListViewModel>> ListAllAsync();
-        Task<bool> CreateAsync(TPostViewModel model);
-        Task<bool> DeleteAsync(int id);
-    }
+    Task<IList<TList>> ListAllAsync();
+    Task<bool> CreateAsync(TPost model);
+    Task<bool> DeleteAsync(int id);
 }

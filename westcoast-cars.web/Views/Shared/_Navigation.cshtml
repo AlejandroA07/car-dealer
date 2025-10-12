@@ -4,7 +4,10 @@
         <li><a asp-action="Index" asp-controller="Home">Start</a></li>
         <li><a asp-action="Index" asp-controller="Vehicles">Våra bilar</a></li>
         <li><a href="#">Boka Service</a></li>
-        <li><a asp-action="Index" asp-controller="Admin"><i class="fa-solid fa-plus"></i></a></li>
+        @if (User.IsInRole("Admin") || User.IsInRole("Salesperson"))
+        {
+            <li><a asp-action="Index" asp-controller="Admin"><i class="fa-solid fa-plus"></i></a></li>
+        }
         @if (User.Identity.IsAuthenticated)
         {
             <li><span class="text-white">Welcome, @User.Identity.Name!</span></li>
