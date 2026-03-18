@@ -8,7 +8,7 @@ public class GenericDataService<TList, TPost> : IGenericDataService<TList, TPost
     where TPost : class
 {
     private readonly HttpClient _httpClient;
-    private readonly ILogger<GenericDataService<TList, TPost>> _logger;
+    private readonly ILogger _logger;
     private readonly string _baseUrl;
     private readonly string _endpoint;
     private readonly JsonSerializerOptions _options;

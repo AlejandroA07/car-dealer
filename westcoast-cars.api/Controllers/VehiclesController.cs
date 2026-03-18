@@ -1,10 +1,15 @@
 
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WestcoastCars.Application.Interfaces;
-using WestcoastCars.Domain.Entities;
 using WestcoastCars.Contracts.DTOs;
-using WestcoastCars.Application.Exceptions;
+using WestcoastCars.Application.Features.Vehicles.Queries.ListAll;
+using WestcoastCars.Application.Features.Vehicles.Queries.GetById;
+using WestcoastCars.Application.Features.Vehicles.Queries.GetByRegNo;
+using WestcoastCars.Application.Features.Vehicles.Commands.Create;
+using WestcoastCars.Application.Features.Vehicles.Commands.Update;
+using WestcoastCars.Application.Features.Vehicles.Commands.Delete;
+using WestcoastCars.Application.Features.Vehicles.Commands.MarkAsSold;
 using Microsoft.Extensions.Logging;
 
 namespace WestcoastCars.Api.Controllers
@@ -13,17 +18,12 @@ namespace WestcoastCars.Api.Controllers
     [Route("api/v1/vehicles")]
     public class VehiclesController : ControllerBase
     {
-        private const string DefaultCarImageName = "no-car.png";
-        private const string DefaultCarImagePath = "/images/no-car.png";
-
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly string _imageBaseUrl;
+        private readonly IMediator _mediator;
         private readonly ILogger<VehiclesController> _logger;
 
-        public VehiclesController(IUnitOfWork unitOfWork, IConfiguration config, ILogger<VehiclesController> logger)
+        public VehiclesController(IMediator mediator, ILogger<VehiclesController> logger)
         {
-            _unitOfWork = unitOfWork;
-            _imageBaseUrl = config.GetSection("apiImageUrl").Value;
+            _mediator = mediator;
             _logger = logger;
         }
 
@@ -31,20 +31,8 @@ namespace WestcoastCars.Api.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> ListAll()
         {
-            _logger.LogInformation("Retrieving list of unsold vehicles");
-            
-            var vehicles = await _unitOfWork.VehicleRepository.GetAllAsync();
-            
-            var result = vehicles.Select(v => new VehicleSummaryDto
-            {
-                Id = v.Id,
-                Name = $"{v.Manufacturer.Name} {v.Model}",
-                Manufacturer = v.Manufacturer.Name,
-                Model = v.Model,
-                ImageUrl = v.ImageUrl ?? DefaultCarImagePath
-            }).ToList();
-
-            _logger.LogInformation("Successfully retrieved {Count} vehicles", result.Count);
+            _logger.LogInformation("Retrieving list of unsold vehicles via MediatR");
+            var result = await _mediator.Send(new ListAllVehiclesQuery());
             return Ok(result);
         }
 
@@ -52,34 +40,8 @@ namespace WestcoastCars.Api.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> GetById(int id)
         {
-            _logger.LogInformation("Retrieving vehicle with ID: {Id}", id);
-            
-            var v = await _unitOfWork.VehicleRepository.GetByIdAsync(id);
-
-            if (v is null) 
-            {
-                _logger.LogWarning("Vehicle with ID {Id} not found", id);
-                throw new NotFoundException($"Vehicle with ID {id} not found");
-            }
-
-            var result = new VehicleDetailsDto
-            {
-                Id = v.Id,
-                RegistrationNumber = v.RegistrationNumber,
-                Name = $"{v.Manufacturer.Name} {v.Model}",
-                Manufacturer = v.Manufacturer.Name,
-                Model = v.Model,
-                ModelYear = v.ModelYear,
-                Mileage = v.Mileage,
-                FuelType = v.FuelType.Name,
-                TransmissionsType = v.TransmissionType.Name,
-                Value = v.Value,
-                Description = v.Description,
-                ImageUrl = v.ImageUrl ?? DefaultCarImagePath,
-                IsSold = v.IsSold
-            };
-
-            _logger.LogInformation("Successfully retrieved vehicle {Id}", id);
+            _logger.LogInformation("Retrieving vehicle with ID: {Id} via MediatR", id);
+            var result = await _mediator.Send(new GetVehicleByIdQuery { Id = id });
             return Ok(result);
         }
 
@@ -87,231 +49,52 @@ namespace WestcoastCars.Api.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> GetByRegNo(string regNo)
         {
-            _logger.LogInformation("Retrieving vehicle with registration number: {RegNo}", regNo);
-            
-            var v = await _unitOfWork.Repository<Vehicle>().FirstOrDefaultAsync(v => v.RegistrationNumber.ToUpper() == regNo.ToUpper());
-
-            if (v is null) 
-            {
-                _logger.LogWarning("Vehicle with registration number {RegNo} not found", regNo);
-                throw new NotFoundException($"Vehicle with registration number {regNo} not found");
-            }
-            
-            var result = new VehicleDetailsDto
-            {
-                Id = v.Id,
-                RegistrationNumber = v.RegistrationNumber,
-                Name = $"{v.Manufacturer.Name} {v.Model}",
-                Manufacturer = v.Manufacturer.Name,
-                Model = v.Model,
-                ModelYear = v.ModelYear,
-                Mileage = v.Mileage,
-                FuelType = v.FuelType.Name,
-                TransmissionsType = v.TransmissionType.Name,
-                Value = v.Value,
-                Description = v.Description,
-                ImageUrl = v.ImageUrl ?? DefaultCarImagePath,
-                IsSold = v.IsSold
-            };
-
-            _logger.LogInformation("Successfully retrieved vehicle by registration number {RegNo}", regNo);
+            _logger.LogInformation("Retrieving vehicle with registration number: {RegNo} via MediatR", regNo);
+            var result = await _mediator.Send(new GetVehicleByRegNoQuery { RegistrationNumber = regNo });
             return Ok(result);
         }
 
         [HttpPost]
         [Authorize(Roles = "Admin,Salesperson")]
-        public async Task<IActionResult> Add(VehiclePostDto vehicle)
+        public async Task<IActionResult> Add(CreateVehicleCommand command)
         {
-            _logger.LogInformation("🚗 Creating new vehicle with registration: {RegNo}", vehicle.RegistrationNumber);
-            _logger.LogInformation("Vehicle data: {@Vehicle}", vehicle);
-
-            if (!ModelState.IsValid)
-            {
-                _logger.LogWarning("ModelState invalid for vehicle creation: {Errors}", 
-                    ModelState.SelectMany(x => x.Value.Errors.Select(e => e.ErrorMessage)));
-                return BadRequest(ModelState);
-            }
-
-            // Check if vehicle already exists
-            if (await _unitOfWork.Repository<Vehicle>().FirstOrDefaultAsync(v => v.RegistrationNumber.ToUpper() == vehicle.RegistrationNumber.ToUpper()) is not null)
-            {
-                _logger.LogWarning("Vehicle with registration {RegNo} already exists", vehicle.RegistrationNumber);
-                throw new ConflictException($"Vehicle with registration number {vehicle.RegistrationNumber} already exists");
-            }
-
-            // Validate related entities
-            var (manufacturer, fuelType, transmissionType) = await ValidateRelatedEntitiesAsync(vehicle.ManufacturerId, vehicle.FuelTypeId, vehicle.TransmissionTypeId);
-
-            var vehicleToAdd = new Vehicle
-            {
-                RegistrationNumber = vehicle.RegistrationNumber,
-                Manufacturer = manufacturer,
-                Model = vehicle.Model,
-                ModelYear = vehicle.ModelYear,
-                Mileage = vehicle.Mileage,
-                TransmissionType = transmissionType,
-                FuelType = fuelType,
-                Value = vehicle.Value,
-                IsSold = vehicle.IsSold,
-                Description = vehicle.Description,
-                ImageUrl = string.IsNullOrEmpty(vehicle.ImageUrl) ? DefaultCarImageName : vehicle.ImageUrl
-            };
-
-            await _unitOfWork.Repository<Vehicle>().AddAsync(vehicleToAdd);
-
-            if (await _unitOfWork.CompleteAsync() > 0)
-            {
-                _logger.LogInformation("✅ Vehicle {RegNo} created successfully with ID {Id}", 
-                    vehicle.RegistrationNumber, vehicleToAdd.Id);
-                
-                return CreatedAtAction(nameof(GetById), new { id = vehicleToAdd.Id }, new {
-                    Id = vehicleToAdd.Id,
-                    RegistrationNumber = vehicleToAdd.RegistrationNumber,
-                    Model = vehicleToAdd.Model,
-                    ModelYear = vehicleToAdd.ModelYear
-                });
-            }
-
-            _logger.LogError("❌ Failed to save vehicle {RegNo} to database", vehicle.RegistrationNumber);
-            return StatusCode(500, "Failed to create vehicle");
+            _logger.LogInformation("🚗 Creating new vehicle with registration: {RegNo} via MediatR", command.RegistrationNumber);
+            var id = await _mediator.Send(command);
+            var result = await _mediator.Send(new GetVehicleByIdQuery { Id = id });
+            return CreatedAtAction(nameof(GetById), new { id = id }, result);
         }
 
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin,Salesperson")]
-        public async Task<IActionResult> UpdateVehicle(int id, VehicleUpdateDto model)
+        public async Task<IActionResult> UpdateVehicle(int id, UpdateVehicleCommand command)
         {
-            _logger.LogInformation("🔄 Updating vehicle {Id}", id);
-            _logger.LogInformation("Update data: {@Model}", model);
-
-            if (!ModelState.IsValid) 
+            if (id != command.Id)
             {
-                _logger.LogWarning("ModelState invalid for vehicle update: {Errors}", 
-                    ModelState.SelectMany(x => x.Value.Errors.Select(e => e.ErrorMessage)));
-                return BadRequest(ModelState);
+                _logger.LogWarning("ID mismatch for vehicle update: {Id} vs {CommandId}", id, command.Id);
+                return BadRequest("ID mismatch");
             }
 
-            var vehicle = await _unitOfWork.Repository<Vehicle>().GetByIdAsync(id);
-            if (vehicle is null) 
-            {
-                _logger.LogWarning("Vehicle {Id} not found for update", id);
-                throw new NotFoundException($"Vehicle with ID {id} not found");
-            }
-
-            // Validate registration number if it has changed
-            if (!string.IsNullOrEmpty(model.RegistrationNumber) && 
-                model.RegistrationNumber != vehicle.RegistrationNumber)
-            {
-                var existingVehicle = await _unitOfWork.Repository<Vehicle>().FirstOrDefaultAsync(v => v.RegistrationNumber.ToUpper() == model.RegistrationNumber.ToUpper());
-                if (existingVehicle != null && existingVehicle.Id != id)
-                {
-                    _logger.LogWarning("Registration number {RegNo} already exists on another vehicle", model.RegistrationNumber);
-                    throw new ConflictException($"Registration number {model.RegistrationNumber} already exists");
-                }
-            }
-
-            // Validate related entities
-            var (manufacturer, fuelType, transmissionType) = await ValidateRelatedEntitiesAsync(model.ManufacturerId, model.FuelTypeId, model.TransmissionTypeId);
-
-            // Update all properties including registration number
-            if (!string.IsNullOrEmpty(model.RegistrationNumber))
-                vehicle.RegistrationNumber = model.RegistrationNumber;
-                
-            vehicle.Model = model.Model;
-            vehicle.ModelYear = model.ModelYear;
-            vehicle.Manufacturer = manufacturer;
-            vehicle.FuelType = fuelType;
-            vehicle.TransmissionType = transmissionType;
-            vehicle.Mileage = model.Mileage;
-            vehicle.Description = model.Description;
-            vehicle.Value = model.Value;
-            vehicle.IsSold = model.IsSold;
-            vehicle.ImageUrl = string.IsNullOrEmpty(model.ImageUrl) ? DefaultCarImageName : model.ImageUrl;
-
-            _unitOfWork.Repository<Vehicle>().Update(vehicle);
-
-            if (await _unitOfWork.CompleteAsync() > 0)
-            {
-                _logger.LogInformation("✅ Vehicle {Id} updated successfully", id);
-                return NoContent();
-            }
-
-            _logger.LogError("❌ Failed to update vehicle {Id}", id);
-            return StatusCode(500, "Failed to update vehicle");
+            _logger.LogInformation("🔄 Updating vehicle {Id} via MediatR", id);
+            await _mediator.Send(command);
+            return NoContent();
         }
 
         [HttpPatch("{id}")]
         [Authorize(Roles = "Admin,Salesperson")]
         public async Task<IActionResult> MarkAsSold(int id)
         {
-            _logger.LogInformation("Marking vehicle {Id} as sold", id);
-            
-            var vehicle = await _unitOfWork.Repository<Vehicle>().GetByIdAsync(id);
-            if (vehicle is null) 
-            {
-                _logger.LogWarning("Vehicle {Id} not found for marking as sold", id);
-                throw new NotFoundException($"Vehicle with ID {id} not found");
-            }
-
-            vehicle.IsSold = true;
-            _unitOfWork.Repository<Vehicle>().Update(vehicle);
-
-            if (await _unitOfWork.CompleteAsync() > 0)
-            {
-                _logger.LogInformation("✅ Vehicle {Id} marked as sold successfully", id);
-                return NoContent();
-            }
-
-            _logger.LogError("❌ Failed to mark vehicle {Id} as sold", id);
-            return StatusCode(500, "Failed to mark vehicle as sold");
+            _logger.LogInformation("Marking vehicle {Id} as sold via MediatR", id);
+            await _mediator.Send(new MarkAsSoldCommand { Id = id });
+            return NoContent();
         }
 
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
-            _logger.LogInformation("Deleting vehicle {Id}", id);
-            
-            var vehicle = await _unitOfWork.Repository<Vehicle>().GetByIdAsync(id);
-            if (vehicle is null) 
-            {
-                _logger.LogWarning("Vehicle {Id} not found for deletion", id);
-                throw new NotFoundException($"Vehicle with ID {id} not found");
-            }
-
-            _unitOfWork.Repository<Vehicle>().Remove(vehicle);
-
-            if (await _unitOfWork.CompleteAsync() > 0)
-            {
-                _logger.LogInformation("✅ Vehicle {Id} deleted successfully", id);
-                return NoContent();
-            }
-
-            _logger.LogError("❌ Failed to delete vehicle {Id}", id);
-            return StatusCode(500, "Failed to delete vehicle");
-        }
-
-        // Helper method to validate related entities
-        private async Task<(Manufacturer, FuelType, TransmissionType)> ValidateRelatedEntitiesAsync(int manufacturerId, int fuelTypeId, int transmissionTypeId)
-        {
-            var manufacturer = await _unitOfWork.Repository<Manufacturer>().GetByIdAsync(manufacturerId);
-            if (manufacturer is null)
-            {
-                throw new NotFoundException($"Manufacturer with ID {manufacturerId} not found");
-            }
-
-            var fuelType = await _unitOfWork.Repository<FuelType>().GetByIdAsync(fuelTypeId);
-            if (fuelType is null)
-            {
-                throw new NotFoundException($"Fuel type with ID {fuelTypeId} not found");
-            }
-
-            var transmissionType = await _unitOfWork.Repository<TransmissionType>().GetByIdAsync(transmissionTypeId);
-            if (transmissionType is null)
-            {
-                throw new NotFoundException($"Transmission type with ID {transmissionTypeId} not found");
-            }
-
-            return (manufacturer, fuelType, transmissionType);
+            _logger.LogInformation("Deleting vehicle {Id} via MediatR", id);
+            await _mediator.Send(new DeleteVehicleCommand { Id = id });
+            return NoContent();
         }
     }
 }

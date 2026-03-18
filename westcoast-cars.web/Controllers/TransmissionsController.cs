@@ -20,7 +20,7 @@ namespace westcoast_cars.web.Controllers
         {
             try
             {
-                var transmissionTypes = await _transmissionTypeService.ListAllTransmissionTypesAsync();
+                var transmissionTypes = await _transmissionTypeService.ListAllAsync();
                 return View("Index", transmissionTypes);
             }
             catch (Exception ex)
@@ -33,7 +33,7 @@ namespace westcoast_cars.web.Controllers
         [HttpGet("Create")]
         public async Task<IActionResult> Create()
         {
-            var transmissionTypes = await _transmissionTypeService.ListAllTransmissionTypesAsync();
+            var transmissionTypes = await _transmissionTypeService.ListAllAsync();
             var model = new TransmissionTypePostViewModel
             {
                 TransmissionTypes = transmissionTypes
@@ -48,11 +48,11 @@ namespace westcoast_cars.web.Controllers
             {
                 if (!ModelState.IsValid)
                 {
-                    model.TransmissionTypes = await _transmissionTypeService.ListAllTransmissionTypesAsync();
+                    model.TransmissionTypes = await _transmissionTypeService.ListAllAsync();
                     return View(model);
                 }
 
-                var result = await _transmissionTypeService.CreateTransmissionTypeAsync(model);
+                var result = await _transmissionTypeService.CreateAsync(model);
 
                 if (result)
                 {
@@ -60,7 +60,7 @@ namespace westcoast_cars.web.Controllers
                 }
 
                 ModelState.AddModelError(string.Empty, "API Error: Could not create transmission type");
-                model.TransmissionTypes = await _transmissionTypeService.ListAllTransmissionTypesAsync();
+                model.TransmissionTypes = await _transmissionTypeService.ListAllAsync();
                 return View(model);
             }
             catch (Exception ex)
@@ -75,7 +75,7 @@ namespace westcoast_cars.web.Controllers
         {
             try
             {
-                var result = await _transmissionTypeService.DeleteTransmissionTypeAsync(id);
+                var result = await _transmissionTypeService.DeleteAsync(id);
                 if (result)
                 {
                     return RedirectToAction(nameof(Create));

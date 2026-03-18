@@ -20,7 +20,7 @@ namespace westcoast_cars.web.Controllers
         {
             try
             {
-                var fuelTypes = await _fuelTypeService.ListAllFuelTypesAsync();
+                var fuelTypes = await _fuelTypeService.ListAllAsync();
                 return View("Index", fuelTypes);
             }
             catch (Exception ex)
@@ -33,7 +33,7 @@ namespace westcoast_cars.web.Controllers
         [HttpGet("Create")]
         public async Task<IActionResult> Create()
         {
-            var fuelTypes = await _fuelTypeService.ListAllFuelTypesAsync();
+            var fuelTypes = await _fuelTypeService.ListAllAsync();
             var model = new FuelTypePostViewModel
             {
                 FuelTypes = fuelTypes
@@ -48,11 +48,11 @@ namespace westcoast_cars.web.Controllers
             {
                 if (!ModelState.IsValid)
                 {
-                    model.FuelTypes = await _fuelTypeService.ListAllFuelTypesAsync();
+                    model.FuelTypes = await _fuelTypeService.ListAllAsync();
                     return View(model);
                 }
 
-                var result = await _fuelTypeService.CreateFuelTypeAsync(model);
+                var result = await _fuelTypeService.CreateAsync(model);
 
                 if (result)
                 {
@@ -60,7 +60,7 @@ namespace westcoast_cars.web.Controllers
                 }
 
                 ModelState.AddModelError(string.Empty, "API Error: Could not create fuel type");
-                model.FuelTypes = await _fuelTypeService.ListAllFuelTypesAsync();
+                model.FuelTypes = await _fuelTypeService.ListAllAsync();
                 return View(model);
             }
             catch (Exception ex)
@@ -75,7 +75,7 @@ namespace westcoast_cars.web.Controllers
         {
             try
             {
-                var result = await _fuelTypeService.DeleteFuelTypeAsync(id);
+                var result = await _fuelTypeService.DeleteAsync(id);
                 if (result)
                 {
                     return RedirectToAction(nameof(Create));

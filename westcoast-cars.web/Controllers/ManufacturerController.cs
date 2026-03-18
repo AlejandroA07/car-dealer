@@ -20,7 +20,7 @@ namespace westcoast_cars.web.Controllers
         {
             try
             {
-                var manufacturers = await _manufacturerService.ListAllManufacturersAsync();
+                var manufacturers = await _manufacturerService.ListAllAsync();
                 return View("Index", manufacturers);
             }
             catch (Exception ex)
@@ -33,7 +33,7 @@ namespace westcoast_cars.web.Controllers
         [HttpGet("Create")]
         public async Task<IActionResult> Create()
         {
-            var manufacturers = await _manufacturerService.ListAllManufacturersAsync();
+            var manufacturers = await _manufacturerService.ListAllAsync();
             var model = new ManufacturerPostViewModel
             {
                 Manufacturers = manufacturers
@@ -48,11 +48,11 @@ namespace westcoast_cars.web.Controllers
             {
                 if (!ModelState.IsValid)
                 {
-                    model.Manufacturers = await _manufacturerService.ListAllManufacturersAsync();
+                    model.Manufacturers = await _manufacturerService.ListAllAsync();
                     return View(model);
                 }
 
-                var result = await _manufacturerService.CreateManufacturerAsync(model);
+                var result = await _manufacturerService.CreateAsync(model);
 
                 if (result)
                 {
@@ -60,7 +60,7 @@ namespace westcoast_cars.web.Controllers
                 }
 
                 ModelState.AddModelError(string.Empty, "API Error: Could not create manufacturer");
-                model.Manufacturers = await _manufacturerService.ListAllManufacturersAsync();
+                model.Manufacturers = await _manufacturerService.ListAllAsync();
                 return View(model);
             }
             catch (Exception ex)
@@ -75,7 +75,7 @@ namespace westcoast_cars.web.Controllers
         {
             try
             {
-                var result = await _manufacturerService.DeleteManufacturerAsync(id);
+                var result = await _manufacturerService.DeleteAsync(id);
                 if (result)
                 {
                     return RedirectToAction(nameof(Create));

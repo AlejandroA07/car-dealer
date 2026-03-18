@@ -14,6 +14,9 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
     public async Task<Vehicle?> FindByRegistrationNumberAsync(string regNo)
     {
         return await _context.Vehicles
+            .Include(v => v.Manufacturer)
+            .Include(v => v.FuelType)
+            .Include(v => v.TransmissionType)
             .SingleOrDefaultAsync(v => v.RegistrationNumber.ToUpper() == regNo.ToUpper());
     }
 
@@ -30,6 +33,8 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
     {
         return await _context.Vehicles
             .Include(v => v.Manufacturer)
+            .Include(v => v.FuelType)
+            .Include(v => v.TransmissionType)
             .ToListAsync();
     }
 }
