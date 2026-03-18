@@ -1,170 +1,145 @@
 
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using WestcoastCars.Api.Controllers;
+using WestcoastCars.Application.Features.Vehicles.Commands.Create;
+using WestcoastCars.Application.Features.Vehicles.Commands.Delete;
+using WestcoastCars.Application.Features.Vehicles.Commands.MarkAsSold;
+using WestcoastCars.Application.Features.Vehicles.Commands.Update;
+using WestcoastCars.Application.Features.Vehicles.Queries.GetById;
+using WestcoastCars.Application.Features.Vehicles.Queries.GetByRegNo;
+using WestcoastCars.Application.Features.Vehicles.Queries.ListAll;
 using WestcoastCars.Contracts.DTOs;
-using WestcoastCars.Domain.Entities;
-using WestcoastCars.Infrastructure.Data;
-using WestcoastCars.Infrastructure.Repositories;
-using WestcoastCars.Application.Exceptions;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Xunit;
 
 namespace westcoast_cars.api.tests;
 
 public class VehiclesControllerTests
 {
-    private readonly DbContextOptions<WestcoastCarsContext> _options;
-    private readonly WestcoastCarsContext _context;
-    private readonly UnitOfWork _unitOfWork;
+    private readonly Mock<IMediator> _mediatorMock;
+    private readonly Mock<ILogger<VehiclesController>> _loggerMock;
     private readonly VehiclesController _controller;
 
     public VehiclesControllerTests()
     {
-        _options = new DbContextOptionsBuilder<WestcoastCarsContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-            .Options;
-
-        _context = new WestcoastCarsContext(_options);
-        _unitOfWork = new UnitOfWork(_context);
-
-        var mockConfiguration = new Mock<IConfiguration>();
-        mockConfiguration.Setup(c => c.GetSection(It.IsAny<string>()).Value).Returns("http://test.com");
-
-        var mockLogger = new Mock<ILogger<VehiclesController>>();
-
-        _controller = new VehiclesController(_unitOfWork, mockConfiguration.Object, mockLogger.Object);
-
-        // Seed the database
-        var manufacturer = new Manufacturer { Name = "Volvo" };
-        var fuelType = new FuelType { Name = "Petrol" };
-        var transmissionType = new TransmissionType { Name = "Automatic" };
-
-        _context.Manufacturers.Add(manufacturer);
-        _context.FuelTypes.Add(fuelType);
-        _context.TransmissionTypes.Add(transmissionType);
-
-        _context.Vehicles.Add(new Vehicle
-        {
-            RegistrationNumber = "TEST123",
-            Model = "V60",
-            ModelYear = "2020",
-            Mileage = 1000,
-            ImageUrl = "/images/no-car.png",
-            Description = "A test car",
-            Manufacturer = manufacturer,
-            FuelType = fuelType,
-            TransmissionType = transmissionType
-        });
-        _context.SaveChanges();
+        _mediatorMock = new Mock<IMediator>();
+        _loggerMock = new Mock<ILogger<VehiclesController>>();
+        _controller = new VehiclesController(_mediatorMock.Object, _loggerMock.Object);
     }
 
     [Fact]
     public async Task ListAll_ShouldReturnOkAndListOfVehicles()
     {
         // Arrange
+        var vehicles = new List<VehicleSummaryDto>
+        {
+            new VehicleSummaryDto { Id = 1, Name = "Volvo V60" }
+        };
+        _mediatorMock.Setup(m => m.Send(It.IsAny<ListAllVehiclesQuery>(), default)).ReturnsAsync(vehicles);
 
         // Act
         var result = await _controller.ListAll();
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var vehicles = Assert.IsAssignableFrom<IEnumerable<VehicleSummaryDto>>(okResult.Value);
-        Assert.Single(vehicles);
+        var returnValue = Assert.IsAssignableFrom<IEnumerable<VehicleSummaryDto>>(okResult.Value);
+        Assert.Single(returnValue);
     }
 
     [Fact]
     public async Task GetById_ShouldReturnOkAndVehicle_WhenVehicleExists()
     {
         // Arrange
-        var existingVehicleId = 1;
+        var vehicle = new VehicleDetailsDto { Id = 1, RegistrationNumber = "TEST123" };
+        _mediatorMock.Setup(m => m.Send(It.IsAny<GetVehicleByIdQuery>(), default)).ReturnsAsync(vehicle);
 
         // Act
-        var result = await _controller.GetById(existingVehicleId);
+        var result = await _controller.GetById(1);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var vehicle = Assert.IsType<VehicleDetailsDto>(okResult.Value);
-        Assert.Equal(existingVehicleId, vehicle.Id);
+        var returnValue = Assert.IsType<VehicleDetailsDto>(okResult.Value);
+        Assert.Equal(1, returnValue.Id);
     }
 
     [Fact]
-    public async Task GetById_ShouldReturnNotFound_WhenVehicleDoesNotExist()
+    public async Task GetByRegNo_ShouldReturnOkAndVehicle_WhenVehicleExists()
     {
         // Arrange
-        var nonExistentId = 999;
+        var vehicle = new VehicleDetailsDto { Id = 1, RegistrationNumber = "TEST123" };
+        _mediatorMock.Setup(m => m.Send(It.IsAny<GetVehicleByRegNoQuery>(), default)).ReturnsAsync(vehicle);
 
-        // Act & Assert
-        await Assert.ThrowsAsync<NotFoundException>(() => _controller.GetById(nonExistentId));
+        // Act
+        var result = await _controller.GetByRegNo("TEST123");
+
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var returnValue = Assert.IsType<VehicleDetailsDto>(okResult.Value);
+        Assert.Equal("TEST123", returnValue.RegistrationNumber);
     }
 
     [Fact]
     public async Task Add_ShouldCreateVehicleAndReturnCreatedAtAction()
     {
         // Arrange
-        var newVehicleDto = new VehiclePostDto
-        {
-            RegistrationNumber = "NEWCAR1",
-            Model = "Model S",
-            ModelYear = "2023",
-            Mileage = 500,
-            Value = 90000,
-            Description = "A new electric car",
-            ImageUrl = "/images/no-car.png",
-            ManufacturerId = 1,
-            FuelTypeId = 1,
-            TransmissionTypeId = 1
-        };
+        var command = new CreateVehicleCommand { RegistrationNumber = "NEWCAR1" };
+        var vehicle = new VehicleDetailsDto { Id = 1, RegistrationNumber = "NEWCAR1" };
+        
+        _mediatorMock.Setup(m => m.Send(It.IsAny<CreateVehicleCommand>(), default)).ReturnsAsync(1);
+        _mediatorMock.Setup(m => m.Send(It.IsAny<GetVehicleByIdQuery>(), default)).ReturnsAsync(vehicle);
 
         // Act
-        var result = await _controller.Add(newVehicleDto);
+        var result = await _controller.Add(command);
 
         // Assert
-        Assert.IsType<CreatedAtActionResult>(result);
-        var vehicleCount = await _context.Vehicles.CountAsync();
-        Assert.Equal(2, vehicleCount);
+        var createdAtAction = Assert.IsType<CreatedAtActionResult>(result);
+        Assert.Equal("GetById", createdAtAction.ActionName);
+        var returnValue = Assert.IsType<VehicleDetailsDto>(createdAtAction.Value);
+        Assert.Equal(1, returnValue.Id);
     }
 
     [Fact]
-    public async Task UpdateVehicle_ShouldModifyVehicle_WhenDataIsValid()
+    public async Task UpdateVehicle_ShouldReturnNoContent_WhenUpdateIsSuccessful()
     {
         // Arrange
-        var existingVehicleId = 1;
-        var updatedDescription = "This description has been updated.";
-        var vehicleUpdateDto = new VehicleUpdateDto
-        {
-            Id = existingVehicleId,
-            Description = updatedDescription,
-            Model = "V60",
-            ModelYear = "2020",
-            ManufacturerId = 1,
-            FuelTypeId = 1,
-            TransmissionTypeId = 1
-        };
+        var command = new UpdateVehicleCommand { Id = 1, RegistrationNumber = "UPDATED" };
+        _mediatorMock.Setup(m => m.Send(It.IsAny<UpdateVehicleCommand>(), default)).ReturnsAsync(Unit.Value);
 
         // Act
-        var result = await _controller.UpdateVehicle(existingVehicleId, vehicleUpdateDto);
+        var result = await _controller.UpdateVehicle(1, command);
 
         // Assert
         Assert.IsType<NoContentResult>(result);
-        var updatedVehicle = await _context.Vehicles.FindAsync(existingVehicleId);
-        Assert.NotNull(updatedVehicle);
-        Assert.Equal(updatedDescription, updatedVehicle.Description);
     }
 
     [Fact]
-    public async Task Delete_ShouldRemoveVehicle_WhenIdExists()
+    public async Task MarkAsSold_ShouldReturnNoContent_WhenSuccessful()
     {
         // Arrange
-        var existingVehicleId = 1;
+        _mediatorMock.Setup(m => m.Send(It.IsAny<MarkAsSoldCommand>(), default)).ReturnsAsync(Unit.Value);
 
         // Act
-        var result = await _controller.Delete(existingVehicleId);
+        var result = await _controller.MarkAsSold(1);
 
         // Assert
         Assert.IsType<NoContentResult>(result);
-        var vehicleCount = await _context.Vehicles.CountAsync();
-        Assert.Equal(0, vehicleCount);
+    }
+
+    [Fact]
+    public async Task Delete_ShouldReturnNoContent_WhenSuccessful()
+    {
+        // Arrange
+        _mediatorMock.Setup(m => m.Send(It.IsAny<DeleteVehicleCommand>(), default)).ReturnsAsync(Unit.Value);
+
+        // Act
+        var result = await _controller.Delete(1);
+
+        // Assert
+        Assert.IsType<NoContentResult>(result);
     }
 }
