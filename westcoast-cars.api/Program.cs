@@ -8,8 +8,9 @@ using Microsoft.IdentityModel.Tokens;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Infrastructure.Data;
 using WestcoastCars.Infrastructure.Repositories;
-
 using WestcoastCars.Infrastructure;
+using FluentValidation;
+using WestcoastCars.Application.Common.Behaviors;
 
 DotNetEnv.Env.Load(Path.Combine(Directory.GetCurrentDirectory(), "..", ".env"));
 
@@ -18,9 +19,14 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// Add MediatR and AutoMapper
-builder.Services.AddAutoMapper(typeof(WestcoastCars.Application.Mappings.MappingProfile).Assembly);
-builder.Services.AddMediatR(typeof(WestcoastCars.Application.Features.Manufacturers.Queries.ListAll.ListAllManufacturersQuery).Assembly);
+// Add MediatR, AutoMapper and FluentValidation
+var applicationAssembly = typeof(WestcoastCars.Application.Interfaces.IUnitOfWork).Assembly;
+builder.Services.AddAutoMapper(applicationAssembly);
+builder.Services.AddMediatR(applicationAssembly);
+builder.Services.AddValidatorsFromAssembly(applicationAssembly);
+
+// Add Validation Behavior to MediatR pipeline
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
@@ -28,7 +34,32 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 });
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "Westcoast Cars API", Version = "v1" });
+    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+        Name = "Authorization",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secret = jwtSettings["Secret"];
