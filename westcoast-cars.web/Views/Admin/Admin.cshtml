@@ -1,15 +1,53 @@
+@model westcoast_cars.web.ViewModels.Admin.AdminDashboardViewModel
+
 @section styles{
-<link rel="stylesheet" href="~/css/admin-page.css">
+    <link rel="stylesheet" href="~/css/admin-page.css">
 }
 
 <section class="page">
+    <h1 class="page-title">Sales Dashboard</h1>
 
-    <h1 class="page-title">Administration</h1>
+    <div class="dashboard-grid">
+        <div class="stat-card">
+            <h3>Total Vehicles</h3>
+            <div class="value">@Model.TotalVehicles</div>
+        </div>
+        <div class="stat-card">
+            <h3>Available</h3>
+            <div class="value" style="color: #28a745;">@Model.AvailableVehicles</div>
+        </div>
+        <div class="stat-card">
+            <h3>Sold</h3>
+            <div class="value" style="color: #dc3545;">@Model.SoldVehicles</div>
+        </div>
+        <div class="stat-card">
+            <h3>Inventory Value</h3>
+            <div class="value">@Model.TotalInventoryValue.ToString("C0")</div>
+        </div>
+    </div>
 
-    <div class="admin-container">
-        <a asp-action="Create" asp-controller="Vehicles" class="btn btn-add">Lägg till bil</a>
-        <a asp-action="Create" asp-controller="Manufacturer" class="btn btn-add">Lägg till tillverkare</a>
-        <a asp-action="Create" asp-controller="FuelTypes" class="btn btn-add">Lägg till Bränsle typ</a>
-        <a asp-action="Create" asp-controller="Transmissions" class="btn btn-add">Lägg till Transmissions typ</a>
+    <div class="dashboard-sections">
+        <div class="admin-card">
+            <h2>Stock Distribution</h2>
+            <ul class="stock-list">
+                @foreach(var item in Model.StockByManufacturer)
+                {
+                    <li class="stock-item">
+                        <span class="stock-name">@item.Name</span>
+                        <span class="stock-count">@item.Count cars</span>
+                    </li>
+                }
+            </ul>
+        </div>
+
+        <div class="admin-card">
+            <h2>Quick Management</h2>
+            <div class="quick-actions">
+                <a asp-action="Create" asp-controller="Vehicles" class="btn-add"><i class="fa-solid fa-car"></i> Add Vehicle</a>
+                <a asp-action="Create" asp-controller="Manufacturer" class="btn-add"><i class="fa-solid fa-industry"></i> Add Manufacturer</a>
+                <a asp-action="Create" asp-controller="FuelTypes" class="btn-add"><i class="fa-solid fa-gas-pump"></i> Add Fuel Type</a>
+                <a asp-action="Create" asp-controller="Transmissions" class="btn-add"><i class="fa-solid fa-gear"></i> Add Transmission</a>
+            </div>
+        </div>
     </div>
 </section>

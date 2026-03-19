@@ -1,0 +1,67 @@
+<script type="text/javascript">
+    // Configure toastr options
+    toastr.options = {
+        "closeButton": true,
+        "debug": false,
+        "newestOnTop": true,
+        "progressBar": true,
+        "positionClass": "toast-top-center",
+        "preventDuplicates": false,
+        "onclick": null,
+        "showDuration": "300",
+        "hideDuration": "1000",
+        "timeOut": "5000",
+        "extendedTimeOut": "1000",
+        "showEasing": "swing",
+        "hideEasing": "linear",
+        "showMethod": "fadeIn",
+        "hideMethod": "fadeOut"
+    };
+</script>
+
+<style>
+    /* Custom toastr styles to override the default colors */
+    #toast-container > .toast {
+        background-image: none !important;
+        background-color: #f8f9fa !important; /* Light grey/white */
+        color: #333 !important; /* Dark text */
+        border: 1px solid #ddd;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        opacity: 1 !important;
+        margin-top: 5rem; /* Move below navbar */
+    }
+    
+    #toast-container > .toast-success {
+        border-left: 6px solid #28a745; /* Green left border for success */
+    }
+    
+    #toast-container > .toast-error {
+        border-left: 6px solid #dc3545; /* Red left border for error */
+    }
+
+    .toast-title {
+        font-weight: bold;
+        color: #222;
+    }
+
+    .toast-message {
+        color: #444;
+    }
+
+    .toast-close-button {
+        color: #333 !important;
+    }
+</style>
+
+@if (TempData["success"] != null)
+{
+    <script type="text/javascript">
+        toastr.success('@TempData["success"]', 'Success');
+    </script>
+}
+@if (TempData["error"] != null)
+{
+    <script type="text/javascript">
+        toastr.error('@TempData["error"]', 'Error');
+    </script>
+}

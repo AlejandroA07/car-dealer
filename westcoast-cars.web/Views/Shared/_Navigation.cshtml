@@ -10,10 +10,10 @@
         }
         @if (User.Identity.IsAuthenticated)
         {
-            <li><span class="text-white">Welcome, @User.Identity.Name!</span></li>
+            <li><span class="text-white" style="padding: 0.8rem 0.5rem; margin: 0 0.4rem;">Welcome, @(User.Identity.Name?.Split('@')[0])!</span></li>
             <li>
-                <form asp-controller="Auth" asp-action="Logout" method="post" id="logoutForm">
-                    <button type="submit" class="btn btn-link nav-link text-white">Logout</button>
+                <form asp-controller="Auth" asp-action="Logout" method="post" id="logoutForm" style="display:inline; width:auto; padding:0; background:none; box-shadow:none; margin:0;">
+                    <a href="javascript:document.getElementById('logoutForm').submit()" style="color: var(--light-color); padding: 0.8rem 0.5rem; margin: 0 0.4rem;">Logout</a>
                 </form>
             </li>
         }

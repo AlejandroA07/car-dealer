@@ -44,6 +44,11 @@ public class AuthenticationController : ControllerBase
             request.Password
         );
 
+        if (authResult is null)
+        {
+            return Unauthorized("Invalid credentials");
+        }
+
         var response = new AuthenticationResponse(
             authResult.User.Id,
             authResult.User.FirstName,

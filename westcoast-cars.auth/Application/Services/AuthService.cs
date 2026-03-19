@@ -25,13 +25,13 @@ public class AuthService : IAuthService
         _logger = logger;
     }
 
-    public async Task<AuthenticationResult> LoginAsync(string email, string password)
+    public async Task<AuthenticationResult?> LoginAsync(string email, string password)
     {
         var user = await _userManager.FindByEmailAsync(email);
         if (user is null)
         {
             _logger.LogWarning("Login failed: User with email {Email} not found.", email);
-            throw new Exception("Invalid credentials");
+            return null;
         }
 
         var result = await _signInManager.CheckPasswordSignInAsync(user, password, false);
@@ -39,7 +39,7 @@ public class AuthService : IAuthService
         {
             _logger.LogError("Login failed: Password check failed for user {Email}. IsLockedOut: {IsLockedOut}, IsNotAllowed: {IsNotAllowed}, RequiresTwoFactor: {RequiresTwoFactor}", 
                 email, result.IsLockedOut, result.IsNotAllowed, result.RequiresTwoFactor);
-            throw new Exception("Invalid credentials");
+            return null;
         }
 
         _logger.LogInformation("User {Email} logged in successfully.", email);

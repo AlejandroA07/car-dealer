@@ -56,37 +56,42 @@ namespace westcoast_cars.web.Controllers
 
                 if (result)
                 {
+                    TempData["success"] = "Transmission type created successfully";
                     return RedirectToAction(nameof(Create));
                 }
 
-                ModelState.AddModelError(string.Empty, "API Error: Could not create transmission type");
+                TempData["error"] = "API Error: Could not create transmission type";
                 model.TransmissionTypes = await _transmissionTypeService.ListAllAsync();
                 return View(model);
-            }
-            catch (Exception ex)
-            {
+                }
+                catch (Exception ex)
+                {
                 _logger.LogError(ex, "Error in Create POST");
+                TempData["error"] = "An unexpected error occurred";
                 return View("Errors");
-            }
-        }
+                }
+                }
 
-        [HttpGet("Delete/{id}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            try
-            {
+                [HttpGet("Delete/{id}")]
+                public async Task<IActionResult> Delete(int id)
+                {
+                try
+                {
                 var result = await _transmissionTypeService.DeleteAsync(id);
                 if (result)
                 {
+                    TempData["success"] = "Transmission type deleted successfully";
                     return RedirectToAction(nameof(Create));
                 }
+                TempData["error"] = "Could not delete transmission type";
                 return View("Errors");
-            }
-            catch (Exception ex)
-            {
+                }
+                catch (Exception ex)
+                {
                 _logger.LogError(ex, "Error in Delete");
+                TempData["error"] = "An unexpected error occurred";
                 return View("Errors");
-            }
-        }
+                }
+                }
     }
 }

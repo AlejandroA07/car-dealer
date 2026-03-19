@@ -57,13 +57,16 @@ public class VehiclesController : Controller
             var result = await _vehicleService.DeleteVehicleAsync(id);
             if (result)
             {
+                TempData["success"] = "Vehicle deleted successfully";
                 return RedirectToAction(nameof(Index));
             }
+            TempData["error"] = "Could not delete vehicle";
             return View("Errors");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, $"Error in Delete for ID {id}");
+            TempData["error"] = "An unexpected error occurred";
             return View("Errors");
         }
     }
@@ -104,11 +107,11 @@ public class VehiclesController : Controller
 
             if (result)
             {
-                TempData["SuccessMessage"] = "Vehicle updated successfully";
+                TempData["success"] = "Vehicle updated successfully";
                 return RedirectToAction(nameof(Index));
             }
             
-            ModelState.AddModelError("", "Error updating vehicle.");
+            TempData["error"] = "Error updating vehicle.";
             var errorViewModel = new VehicleBaseViewModel { Vehicle = vehicle };
             // You might need a way to reload dropdowns here if update fails
             return View("Edit", errorViewModel);
@@ -116,7 +119,7 @@ public class VehiclesController : Controller
         catch (Exception ex)
         {
             _logger.LogError(ex, $"EXCEPTION in Edit POST for ID {id}");
-            ModelState.AddModelError("", "An unexpected error occurred");
+            TempData["error"] = "An unexpected error occurred";
             var viewModel = new VehicleBaseViewModel { Vehicle = vehicle };
             // You might need a way to reload dropdowns here
             return View("Edit", viewModel);
@@ -158,10 +161,11 @@ public class VehiclesController : Controller
 
             if (result)
             {
+                TempData["success"] = "Vehicle created successfully";
                 return RedirectToAction(nameof(Index));
             }
 
-            ModelState.AddModelError(string.Empty, "Error creating vehicle");
+            TempData["error"] = "Error creating vehicle";
             // Reload dropdowns on failure
             var freshViewModelOnFail = await _vehicleService.GetVehicleForCreateAsync();
             vehicleViewModel.Manufacturers = freshViewModelOnFail.Manufacturers;
@@ -172,6 +176,7 @@ public class VehiclesController : Controller
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error in Create POST");
+            TempData["error"] = "An unexpected error occurred";
             // Reload dropdowns on exception
             var freshViewModelOnFail = await _vehicleService.GetVehicleForCreateAsync();
             vehicleViewModel.Manufacturers = freshViewModelOnFail.Manufacturers;

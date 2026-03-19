@@ -32,9 +32,9 @@ namespace westcoast_cars.web.Services
             var jsonPayload = JsonSerializer.Serialize(loginRequest, _options);
             var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
 
-            _logger.LogInformation("Attempting to login user {Email} to Auth API at {Url}", model.Email, $"{_authApiBaseUrl}/auth/login");
+            _logger.LogInformation("Attempting to login user {Email} to Auth API at {Url}", model.Email, $"{_authApiBaseUrl}/api/auth/login");
 
-            var response = await _httpClient.PostAsync($"{_authApiBaseUrl}/auth/login", content);
+            var response = await _httpClient.PostAsync($"{_authApiBaseUrl}/api/auth/login", content);
 
             if (response.IsSuccessStatusCode)
             {

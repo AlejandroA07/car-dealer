@@ -35,6 +35,20 @@ namespace westcoast_cars.web.Services
             return JsonSerializer.Deserialize<List<VehicleSummaryDto>>(json, _options);
         }
 
+        public async Task<List<VehicleSummaryDto>> ListAllVehiclesAsync()
+        {
+            var response = await _httpClient.GetAsync($"{_baseUrl}/api/v1/vehicles/list-all");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError($"Error fetching all vehicles list: {response.StatusCode}");
+                return new List<VehicleSummaryDto>();
+            }
+
+            var json = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<List<VehicleSummaryDto>>(json, _options);
+        }
+
         public async Task<VehicleDetailsDto> GetVehicleByIdAsync(int id)
         {
             var response = await _httpClient.GetAsync($"{_baseUrl}/api/v1/vehicles/{id}");

@@ -36,6 +36,15 @@ namespace WestcoastCars.Api.Controllers
             return Ok(result);
         }
 
+        [HttpGet("list-all")]
+        [Authorize(Roles = "Admin,Salesperson")]
+        public async Task<IActionResult> ListAllIncludingSold()
+        {
+            _logger.LogInformation("Retrieving list of ALL vehicles (including sold) via MediatR");
+            var result = await _mediator.Send(new ListAllVehiclesIncludingSoldQuery());
+            return Ok(result);
+        }
+
         [HttpGet("{id}")]
         [AllowAnonymous]
         public async Task<IActionResult> GetById(int id)

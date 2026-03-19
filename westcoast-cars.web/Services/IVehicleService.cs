@@ -6,6 +6,7 @@ namespace westcoast_cars.web.Services
     public interface IVehicleService
     {
         Task<List<VehicleSummaryDto>> ListVehiclesAsync();
+        Task<List<VehicleSummaryDto>> ListAllVehiclesAsync();
         Task<VehicleDetailsDto> GetVehicleByIdAsync(int id);
         Task<bool> DeleteVehicleAsync(int id);
         Task<VehicleBaseViewModel> GetVehicleForEditAsync(int id);

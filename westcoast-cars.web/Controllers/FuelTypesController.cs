@@ -56,16 +56,18 @@ namespace westcoast_cars.web.Controllers
 
                 if (result)
                 {
+                    TempData["success"] = "Fuel type created successfully";
                     return RedirectToAction(nameof(Create));
                 }
 
-                ModelState.AddModelError(string.Empty, "API Error: Could not create fuel type");
+                TempData["error"] = "API Error: Could not create fuel type";
                 model.FuelTypes = await _fuelTypeService.ListAllAsync();
                 return View(model);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error in Create POST");
+                TempData["error"] = "An unexpected error occurred";
                 return View("Errors");
             }
         }
@@ -78,13 +80,16 @@ namespace westcoast_cars.web.Controllers
                 var result = await _fuelTypeService.DeleteAsync(id);
                 if (result)
                 {
+                    TempData["success"] = "Fuel type deleted successfully";
                     return RedirectToAction(nameof(Create));
                 }
+                TempData["error"] = "Could not delete fuel type";
                 return View("Errors");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error in Delete");
+                TempData["error"] = "An unexpected error occurred";
                 return View("Errors");
             }
         }
