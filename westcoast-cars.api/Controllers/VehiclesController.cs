@@ -10,6 +10,7 @@ using WestcoastCars.Application.Features.Vehicles.Commands.Create;
 using WestcoastCars.Application.Features.Vehicles.Commands.Update;
 using WestcoastCars.Application.Features.Vehicles.Commands.Delete;
 using WestcoastCars.Application.Features.Vehicles.Commands.MarkAsSold;
+using WestcoastCars.Application.Features.Vehicles.Queries.Search;
 using Microsoft.Extensions.Logging;
 
 namespace WestcoastCars.Api.Controllers
@@ -25,6 +26,15 @@ namespace WestcoastCars.Api.Controllers
         {
             _mediator = mediator;
             _logger = logger;
+        }
+
+        [HttpGet("search")]
+        [AllowAnonymous]
+        public async Task<IActionResult> Search([FromQuery] VehicleSearchDto search)
+        {
+            _logger.LogInformation("Searching vehicles with criteria: {@Search}", search);
+            var result = await _mediator.Send(new SearchVehiclesQuery(search));
+            return Ok(result);
         }
 
         [HttpGet("list")]

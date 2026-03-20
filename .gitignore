@@ -216,7 +216,7 @@ hotreload.json
 westcoastcars.db
 
 # Data protection keys - should not be in source control
-/dpkeys/ 
+**/dpkeys/ 
 
 # Local development environment script
 dev-env.cmd

@@ -13,5 +13,6 @@ namespace westcoast_cars.web.Services
         Task<bool> UpdateVehicleAsync(int id, VehicleDto vehicle);
         Task<VehicleBaseViewModel> GetVehicleForCreateAsync();
         Task<bool> CreateVehicleAsync(VehicleBaseViewModel vehicleViewModel);
+        Task<List<VehicleSummaryDto>> SearchVehiclesAsync(VehicleSearchDto search);
     }
 }

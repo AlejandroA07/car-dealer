@@ -1,9 +1,20 @@
-﻿@{
+@model westcoast_cars.web.ViewModels.Vehicles.VehicleListViewModel
+@{
     ViewData["Title"] = "Home Page";
 }
 
 @section styles{
     <link rel="stylesheet" href="~/css/landing-page.css">
+    <style>
+        /* Custom override for landing page form */
+        .landing .filter-form {
+            background-color: rgba(244, 244, 244, 0.9); /* Slightly transparent */
+            max-width: 800px;
+        }
+        .landing .filter-section {
+            margin-top: 2rem;
+        }
+    </style>
 }
 
 <div class="landing">
@@ -12,6 +23,7 @@
         <h2>Vi erbjuder nya och begagnade bilar</h2>
         <p>Med högsta kvalitet allt ifrån sportbilar till<br>
         familjer</p>
+        
+        <partial name="_SearchForm" model="Model" />
     </div>
 </div>
-

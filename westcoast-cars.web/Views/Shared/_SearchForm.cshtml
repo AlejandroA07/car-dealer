@@ -1,0 +1,34 @@
+@model westcoast_cars.web.ViewModels.Vehicles.VehicleListViewModel
+
+<div class="filter-section">
+    <form asp-action="Index" asp-controller="Vehicles" method="get" class="filter-form">
+        <div class="filter-group">
+            <label for="Make">Märke</label>
+            <select name="Make" asp-items="Model.Manufacturers" class="form-control">
+                <option value="">Alla märken</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="Model">Modell</label>
+            <input type="text" name="Model" value="@Model.Search.Model" class="form-control" placeholder="T.ex. V90" />
+        </div>
+        <div class="filter-group">
+            <label>Årsmodell</label>
+            <div class="range-inputs">
+                <input type="number" name="MinYear" value="@Model.Search.MinYear" placeholder="Från" class="form-control" />
+                <input type="number" name="MaxYear" value="@Model.Search.MaxYear" placeholder="Till" class="form-control" />
+            </div>
+        </div>
+        <div class="filter-group">
+            <label>Pris (kr)</label>
+            <div class="range-inputs">
+                <input type="number" name="MinPrice" value="@Model.Search.MinPrice" placeholder="Från" class="form-control" />
+                <input type="number" name="MaxPrice" value="@Model.Search.MaxPrice" placeholder="Till" class="form-control" />
+            </div>
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">Sök</button>
+            <a asp-action="Index" asp-controller="Vehicles" class="btn btn-secondary">Rensa</a>
+        </div>
+    </form>
+</div>

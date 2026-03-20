@@ -1,27 +1,68 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using westcoast_cars.web.Services;
 using westcoast_cars.web.ViewModels.Vehicles;
 using WestcoastCars.Contracts.DTOs;
+
+namespace westcoast_cars.web.Controllers;
 
 [Route("Vehicles")]
 public class VehiclesController : Controller
 {
     private readonly IVehicleService _vehicleService;
+    private readonly IManufacturerService _manufacturerService;
     private readonly ILogger<VehiclesController> _logger;
 
-    public VehiclesController(IVehicleService vehicleService, ILogger<VehiclesController> logger)
+    public VehiclesController(IVehicleService vehicleService, IManufacturerService manufacturerService, ILogger<VehiclesController> logger)
     {
         _vehicleService = vehicleService;
+        _manufacturerService = manufacturerService;
         _logger = logger;
     }
 
     [HttpGet("list")]
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index([FromQuery] VehicleSearchDto search)
     {
         try
         {
-            var vehicles = await _vehicleService.ListVehiclesAsync();
-            return View("Index", vehicles);
+            IList<VehicleSummaryDto> vehicles;
+
+            // Check if any filter is applied (ignoring nulls)
+            bool isFiltered = !string.IsNullOrEmpty(search.Make) ||
+                              !string.IsNullOrEmpty(search.Model) ||
+                              search.MinYear.HasValue ||
+                              search.MaxYear.HasValue ||
+                              search.MinPrice.HasValue ||
+                              search.MaxPrice.HasValue ||
+                              search.IsSold.HasValue;
+
+            if (isFiltered)
+            {
+                // Default to available cars if IsSold is not specified
+                if (!search.IsSold.HasValue) search.IsSold = false;
+                vehicles = await _vehicleService.SearchVehiclesAsync(search);
+            }
+            else
+            {
+                vehicles = await _vehicleService.ListVehiclesAsync();
+            }
+
+            var manufacturers = await _manufacturerService.ListAllAsync();
+            var manufacturerList = manufacturers.Select(m => new SelectListItem 
+            { 
+                Value = m.Name, 
+                Text = m.Name,
+                Selected = m.Name == search.Make
+            }).ToList();
+
+            var viewModel = new VehicleListViewModel
+            {
+                Vehicles = vehicles,
+                Search = search,
+                Manufacturers = manufacturerList
+            };
+
+            return View("Index", viewModel);
         }
         catch (Exception ex)
         {

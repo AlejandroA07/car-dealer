@@ -1,11 +1,18 @@
-
-@model IList<WestcoastCars.Contracts.DTOs.VehicleSummaryDto>
+@model westcoast_cars.web.ViewModels.Vehicles.VehicleListViewModel
 
 <section class="page">
     <h1 class="page-title">Aktuella bilar för försäljning</h1>
 
+    <partial name="_SearchForm" model="Model" />
+
     <div class="gallery-wrapper">
-        @foreach (var vehicle in Model)
+        @if (!Model.Vehicles.Any())
+        {
+             <div class="no-results" style="width: 100%; text-align: center; grid-column: 1 / -1;">
+                <p>Inga bilar hittades med de angivna sökkriterierna.</p>
+            </div>
+        }
+        @foreach (var vehicle in Model.Vehicles)
         {
             <div class="gallery-card">
                 <div>@vehicle.Name</div>

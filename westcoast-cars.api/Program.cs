@@ -11,6 +11,7 @@ using WestcoastCars.Infrastructure.Repositories;
 using WestcoastCars.Infrastructure;
 using FluentValidation;
 using WestcoastCars.Application.Common.Behaviors;
+using Microsoft.AspNetCore.DataProtection;
 
 DotNetEnv.Env.Load(Path.Combine(Directory.GetCurrentDirectory(), "..", ".env"));
 
@@ -18,6 +19,22 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddInfrastructure(builder.Configuration);
+
+// Configure data protection to persist keys from configuration.
+var keysPath = builder.Configuration["DataProtectionPath"] ?? "dpkeys";
+if (!Path.IsPathRooted(keysPath))
+{
+    keysPath = Path.Combine(Directory.GetCurrentDirectory(), keysPath);
+}
+
+if (!Directory.Exists(keysPath))
+{
+    Directory.CreateDirectory(keysPath);
+}
+
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(keysPath))
+    .SetApplicationName("WestcoastCars");
 
 // Add MediatR, AutoMapper and FluentValidation
 var applicationAssembly = typeof(WestcoastCars.Application.Interfaces.IUnitOfWork).Assembly;

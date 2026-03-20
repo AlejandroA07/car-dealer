@@ -14,8 +14,20 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddInfrastructure(builder.Configuration, builder.Environment);
 
 
+// Configure data protection to persist keys from configuration.
+var keysPath = builder.Configuration["DataProtectionPath"] ?? "/app/keys";
+if (!Path.IsPathRooted(keysPath))
+{
+    keysPath = Path.Combine(Directory.GetCurrentDirectory(), keysPath);
+}
+
+if (!Directory.Exists(keysPath))
+{
+    Directory.CreateDirectory(keysPath);
+}
+
 builder.Services.AddDataProtection()
-    .PersistKeysToFileSystem(new DirectoryInfo("/app/keys"))
+    .PersistKeysToFileSystem(new DirectoryInfo(keysPath))
     .SetApplicationName("WestcoastCars");
 
 builder.Services.AddControllers();
