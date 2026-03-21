@@ -6,13 +6,30 @@
 @section styles{
     <link rel="stylesheet" href="~/css/landing-page.css">
     <style>
-        /* Custom override for landing page form */
-        .landing .filter-form {
-            background-color: rgba(244, 244, 244, 0.9); /* Slightly transparent */
-            max-width: 800px;
+        .home-section {
+            padding: 4rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
         }
-        .landing .filter-section {
-            margin-top: 2rem;
+        .home-section h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: var(--dark-color);
+        }
+        .about-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+        .about-text p {
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+        }
+        .view-all-container {
+            text-align: center;
+            margin-top: 3rem;
         }
     </style>
 }
@@ -22,8 +39,42 @@
         <h1>Välkommen till Westcoast Cars</h1>
         <h2>Vi erbjuder nya och begagnade bilar</h2>
         <p>Med högsta kvalitet allt ifrån sportbilar till<br>
-        familjer</p>
-        
-        <partial name="_SearchForm" model="Model" />
+        familjebilar</p>
     </div>
 </div>
+
+<section id="featured-cars" class="home-section">
+    <h2>Våra bilar</h2>
+    <div class="gallery-wrapper">
+        @foreach (var vehicle in Model.Vehicles)
+        {
+            <div class="gallery-card">
+                <div>@vehicle.Name</div>
+                <img src="@vehicle.ImageUrl" alt="@vehicle.Model">
+                <div><span>@vehicle.Name</span>&nbsp;<span>@vehicle.ModelYear</span></div>
+                <div class="buttons-container">
+                    <a class="btn btn-dark" asp-action="details" asp-controller="vehicles" asp-route-id="@vehicle.Id">Se mer</a>
+                </div>
+            </div>
+        }
+    </div>
+    <div class="view-all-container">
+        <a asp-action="Index" asp-controller="Vehicles" class="btn btn-primary btn-large">Se alla våra bilar</a>
+    </div>
+</section>
+
+<section id="about-us" class="home-section" style="background-color: #f9f9f9; max-width: 100%;">
+    <div style="max-width: 1200px; margin: 0 auto;">
+        <h2>Om oss</h2>
+        <div class="about-content">
+            <div class="about-text">
+                <p>Westcoast Cars har sedan starten varit en ledande aktör inom bilförsäljning på västkusten. Vi brinner för att hitta rätt bil för varje kund, oavsett om du söker en pålitlig familjebil eller din drömsportbil.</p>
+                <p>Vårt team av experter ser till att varje bil i vårt lager genomgår noggranna kontroller för att garantera högsta kvalitet och säkerhet.</p>
+                <p>Välkommen in till oss för en provkörning och personlig service!</p>
+            </div>
+            <div class="about-image">
+                <img src="~/images/landing.jpg" alt="Vår bilhall" style="border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+            </div>
+        </div>
+    </div>
+</section>

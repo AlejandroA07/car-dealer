@@ -9,7 +9,7 @@ namespace WestcoastCars.Application.Features.Vehicles.Commands.Update
 {
     public class UpdateVehicleCommandHandler : IRequestHandler<UpdateVehicleCommand, Unit>
     {
-        private const string DefaultCarImageName = "no-car.png";
+        private const string DefaultCarImageName = "/images/no-car.png";
         private readonly IUnitOfWork _unitOfWork;
 
         public UpdateVehicleCommandHandler(IUnitOfWork unitOfWork)
@@ -57,7 +57,12 @@ namespace WestcoastCars.Application.Features.Vehicles.Commands.Update
             vehicle.Description = request.Description;
             vehicle.Value = request.Value;
             vehicle.IsSold = request.IsSold;
-            vehicle.ImageUrl = string.IsNullOrEmpty(request.ImageUrl) ? DefaultCarImageName : request.ImageUrl;
+
+            // Only update ImageUrl if a new one is provided.
+            if (!string.IsNullOrEmpty(request.ImageUrl))
+            {
+                vehicle.ImageUrl = request.ImageUrl;
+            }
 
             _unitOfWork.VehicleRepository.Update(vehicle);
 

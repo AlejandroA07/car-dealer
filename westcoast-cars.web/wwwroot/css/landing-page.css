@@ -1,9 +1,8 @@
 .landing {
     background: url('/images/landing.jpg') no-repeat center center/cover;
-    height: 100vh;
+    height: 600px;
     position: relative;
     color: var(--light-color);
-    opacity: 0.9;
   }
   
   .landing .content {

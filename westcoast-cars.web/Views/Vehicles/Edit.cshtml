@@ -6,6 +6,7 @@
     <form asp-action="Edit" asp-route-id="@Model.Vehicle.Id" method="post">
         <input asp-for="Vehicle.Id" type="hidden">
         <input asp-for="Vehicle.RegistrationNumber" type="hidden" />
+        <input asp-for="Vehicle.ImageUrl" type="hidden" />
         <div class="form-control">
             <label asp-for="Vehicle.RegistrationNumber"></label>
             <p class="form-control-plaintext">@Model.Vehicle.RegistrationNumber</p>

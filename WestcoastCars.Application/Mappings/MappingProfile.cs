@@ -15,14 +15,20 @@ namespace WestcoastCars.Application.Mappings
             CreateMap<Vehicle, VehicleSummaryDto>()
                 .ForMember(dest => dest.Manufacturer, opt => opt.MapFrom(src => src.Manufacturer.Name))
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => $"{src.Manufacturer.Name} {src.Model}"))
-                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageUrl ?? "/images/no-car.png"));
+                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => 
+                    string.IsNullOrEmpty(src.ImageUrl) || src.ImageUrl == "no-car.png"
+                    ? "/images/no-car.png" 
+                    : (src.ImageUrl.StartsWith("/") || src.ImageUrl.StartsWith("http") ? src.ImageUrl : "/images/" + src.ImageUrl)));
 
             CreateMap<Vehicle, VehicleDetailsDto>()
                 .ForMember(dest => dest.Manufacturer, opt => opt.MapFrom(src => src.Manufacturer.Name))
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => $"{src.Manufacturer.Name} {src.Model}"))
                 .ForMember(dest => dest.FuelType, opt => opt.MapFrom(src => src.FuelType.Name))
                 .ForMember(dest => dest.TransmissionsType, opt => opt.MapFrom(src => src.TransmissionType.Name))
-                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageUrl ?? "/images/no-car.png"));
+                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => 
+                    string.IsNullOrEmpty(src.ImageUrl) || src.ImageUrl == "no-car.png"
+                    ? "/images/no-car.png" 
+                    : (src.ImageUrl.StartsWith("/") || src.ImageUrl.StartsWith("http") ? src.ImageUrl : "/images/" + src.ImageUrl)));
         }
     }
 }

@@ -49,14 +49,12 @@ namespace westcoast_cars.web.Controllers
                 var claims = new List<Claim>
                 {
                     new Claim(ClaimTypes.Name, model.Email),
-                    new Claim("AccessToken", result.Token)
+                    new Claim(ClaimTypes.NameIdentifier, model.Email)
                 };
 
-                // Parse JWT to extract roles
                 var handler = new JwtSecurityTokenHandler();
                 var jwtToken = handler.ReadJwtToken(result.Token);
                 
-                // Extract roles from the token (using "role" or ClaimTypes.Role)
                 var roleClaims = jwtToken.Claims.Where(c => c.Type == "role" || c.Type == ClaimTypes.Role);
                 foreach (var roleClaim in roleClaims)
                 {
@@ -71,6 +69,16 @@ namespace westcoast_cars.web.Controllers
                     IsPersistent = model.RememberMe,
                     ExpiresUtc = DateTimeOffset.UtcNow.AddHours(1)
                 };
+
+                // Store the access token properly so GetTokenAsync can retrieve it
+                authProperties.StoreTokens(new List<AuthenticationToken>
+                {
+                    new AuthenticationToken
+                    {
+                        Name = "access_token",
+                        Value = result.Token
+                    }
+                });
 
                 await HttpContext.SignInAsync(
                     CookieAuthenticationDefaults.AuthenticationScheme,

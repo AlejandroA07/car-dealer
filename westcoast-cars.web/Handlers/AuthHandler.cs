@@ -23,8 +23,8 @@ namespace westcoast_cars.web.Handlers
 
             if (httpContext != null)
             {
-                // Retrieve the access token from the current user's claims
-                var accessToken = await httpContext.GetTokenAsync("AccessToken"); // "AccessToken" is the key we used in AuthController
+                // Retrieve the access token from the authentication properties
+                var accessToken = await httpContext.GetTokenAsync("access_token");
 
                 if (!string.IsNullOrEmpty(accessToken))
                 {

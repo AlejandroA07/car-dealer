@@ -17,10 +17,15 @@
 <body>
     <header>
         @await Html.PartialAsync("_Navigation")
+        @if (Model is westcoast_cars.web.ViewModels.Vehicles.VehicleListViewModel)
+        {
+            <div class="search-bar-container">
+                @await Html.PartialAsync("_SearchForm", (westcoast_cars.web.ViewModels.Vehicles.VehicleListViewModel)Model)
+            </div>
+        }
     </header>
-        <main>
-            @RenderBody()
-
+    <main class="@(Model is westcoast_cars.web.ViewModels.Vehicles.VehicleListViewModel ? "" : "no-search")">
+        @RenderBody()
             @* <section>
                 @await Html.PartialAsync("_WeeklyOffer")
             </section> *@

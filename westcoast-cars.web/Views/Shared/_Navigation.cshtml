@@ -1,7 +1,7 @@
 <nav class="navbar">
     <h1 class="logo"><span class="text-primary"><i class="fa-solid fa-car"></i> Westcoast</span> Cars</h1>
     <ul>
-        <li><a asp-action="Index" asp-controller="Home">Start</a></li>
+        <li><a asp-action="Index" asp-controller="Home">Hem</a></li>
         <li><a asp-action="Index" asp-controller="Vehicles">Våra bilar</a></li>
         <li><a href="#">Boka Service</a></li>
         @if (User.IsInRole("Admin") || User.IsInRole("Salesperson"))

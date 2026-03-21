@@ -140,7 +140,11 @@ public class VehiclesController : Controller
             if (!ModelState.IsValid)
             {
                 var viewModel = new VehicleBaseViewModel { Vehicle = vehicle };
-                // You might need a way to reload dropdowns here if validation fails
+                // Reload dropdowns
+                var dropdownData = await _vehicleService.GetVehicleForCreateAsync();
+                viewModel.Manufacturers = dropdownData.Manufacturers;
+                viewModel.FuelTypes = dropdownData.FuelTypes;
+                viewModel.TransmissionsTypes = dropdownData.TransmissionsTypes;
                 return View("Edit", viewModel);
             }
 
@@ -154,7 +158,11 @@ public class VehiclesController : Controller
             
             TempData["error"] = "Error updating vehicle.";
             var errorViewModel = new VehicleBaseViewModel { Vehicle = vehicle };
-            // You might need a way to reload dropdowns here if update fails
+            // Reload dropdowns
+            var dropdownDataFail = await _vehicleService.GetVehicleForCreateAsync();
+            errorViewModel.Manufacturers = dropdownDataFail.Manufacturers;
+            errorViewModel.FuelTypes = dropdownDataFail.FuelTypes;
+            errorViewModel.TransmissionsTypes = dropdownDataFail.TransmissionsTypes;
             return View("Edit", errorViewModel);
         }
         catch (Exception ex)
@@ -162,7 +170,11 @@ public class VehiclesController : Controller
             _logger.LogError(ex, $"EXCEPTION in Edit POST for ID {id}");
             TempData["error"] = "An unexpected error occurred";
             var viewModel = new VehicleBaseViewModel { Vehicle = vehicle };
-            // You might need a way to reload dropdowns here
+            // Reload dropdowns
+            var dropdownDataEx = await _vehicleService.GetVehicleForCreateAsync();
+            viewModel.Manufacturers = dropdownDataEx.Manufacturers;
+            viewModel.FuelTypes = dropdownDataEx.FuelTypes;
+            viewModel.TransmissionsTypes = dropdownDataEx.TransmissionsTypes;
             return View("Edit", viewModel);
         }
     }
