@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using WestcoastCars.Auth.Infrastructure.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Security.Claims; // Added this
 
 namespace WestcoastCars.Auth.Infrastructure
 {
@@ -69,6 +70,38 @@ namespace WestcoastCars.Auth.Infrastructure
             else
             {
                 logger.LogInformation("Admin user already exists. No action taken.");
+            }
+
+            // Seed Standard Customer User
+            if (await userManager.FindByNameAsync("user@westcoast-cars.com") == null)
+            {
+                logger.LogInformation("Customer user not found, attempting to create.");
+                var customerUser = new IdentityUser
+                {
+                    UserName = "user@westcoast-cars.com",
+                    Email = "user@westcoast-cars.com",
+                    EmailConfirmed = true
+                };
+
+                var adminPassword = configuration["ADMIN_PASSWORD"]; // Using same password for simplicity in dev/test
+                
+                var result = await userManager.CreateAsync(customerUser, adminPassword);
+                if (result.Succeeded)
+                {
+                    logger.LogInformation("Customer user created.");
+                    await userManager.AddToRoleAsync(customerUser, "Customer");
+                    await userManager.AddClaimsAsync(customerUser, new[]
+                    {
+                        new Claim("firstName", "Test"),
+                        new Claim("lastName", "User")
+                    });
+                    logger.LogInformation("Customer user assigned to Customer role.");
+                }
+                else
+                {
+                    var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                    logger.LogError("Failed to create customer user. Errors: {Errors}", errors);
+                }
             }
         }
     }

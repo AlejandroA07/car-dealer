@@ -1,0 +1,77 @@
+@model westcoast_cars.web.ViewModels.ServiceBooking.ServiceBookingViewModel
+
+@{
+    ViewData["Title"] = "Boka Service";
+}
+
+<section class="page">
+    <h1 class="page-title">Boka Service</h1>
+
+    <div class="form-container" style="max-width: 800px; margin: 0 auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+        <p style="margin-bottom: 2rem; text-align: center; font-size: 1.1rem;">Fyll i formuläret nedan så kontaktar vi dig för att bekräfta din tid i vår verkstad.</p>
+        
+        <form asp-action="Index" method="post" style="width: 100%; max-width: 100%; box-shadow: none; padding: 0;">
+            <div asp-validation-summary="ModelOnly" class="text-danger" style="margin-bottom: 1rem;"></div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <div class="form-control">
+                    <label asp-for="VehicleRegistrationNumber"></label>
+                    <input asp-for="VehicleRegistrationNumber" class="form-control" placeholder="T.ex. ABC 123" />
+                    <span asp-validation-for="VehicleRegistrationNumber" class="text-danger"></span>
+                </div>
+
+                <div class="form-control">
+                    <label asp-for="ServiceType"></label>
+                    <select asp-for="ServiceType" class="form-control">
+                        <option value="">-- Välj typ av service --</option>
+                        <option value="Bas-service">Bas-service</option>
+                        <option value="Stor-service">Stor-service</option>
+                        <option value="Oljebyte">Oljebyte</option>
+                        <option value="Bromsservice">Bromsservice</option>
+                        <option value="Däckbyte">Däckbyte</option>
+                        <option value="Annat">Annat (se beskrivning)</option>
+                    </select>
+                    <span asp-validation-for="ServiceType" class="text-danger"></span>
+                </div>
+
+                <div class="form-control">
+                    <label asp-for="BookingDate"></label>
+                    <input asp-for="BookingDate" class="form-control" type="date" />
+                    <span asp-validation-for="BookingDate" class="text-danger"></span>
+                </div>
+
+                <div class="form-control">
+                    <label asp-for="CustomerName"></label>
+                    <input asp-for="CustomerName" class="form-control" />
+                    <span asp-validation-for="CustomerName" class="text-danger"></span>
+                </div>
+
+                <div class="form-control">
+                    <label asp-for="CustomerEmail"></label>
+                    <input asp-for="CustomerEmail" class="form-control" />
+                    <span asp-validation-for="CustomerEmail" class="text-danger"></span>
+                </div>
+
+                <div class="form-control">
+                    <label asp-for="CustomerPhone"></label>
+                    <input asp-for="CustomerPhone" class="form-control" />
+                    <span asp-validation-for="CustomerPhone" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-control" style="margin-top: 1.5rem;">
+                <label asp-for="Description"></label>
+                <textarea asp-for="Description" class="form-control" rows="4" style="width: 100%; border-radius: 5px; border: 1px solid #333; padding: 0.6rem;"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <div style="margin-top: 2rem; text-align: center;">
+                <button type="submit" class="btn btn-primary" style="padding: 0.8rem 3rem; font-size: 1.1rem;">Skicka bokningsförfrågan</button>
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

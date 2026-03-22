@@ -86,6 +86,16 @@ namespace westcoast_cars.web.Controllers
                     authProperties);
 
                 TempData["success"] = "Login successful";
+
+                // Redirect Admins and Salespersons to the Dashboard if no specific ReturnUrl
+                if (string.IsNullOrEmpty(model.ReturnUrl) || model.ReturnUrl == "/")
+                {
+                    if (claimsIdentity.HasClaim(c => c.Type == ClaimTypes.Role && (c.Value == "Admin" || c.Value == "Salesperson")))
+                    {
+                        return RedirectToAction("Index", "Admin");
+                    }
+                }
+
                 return LocalRedirect(model.ReturnUrl ?? "/");
             }
 

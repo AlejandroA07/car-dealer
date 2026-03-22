@@ -29,6 +29,9 @@ namespace WestcoastCars.Application.Mappings
                     string.IsNullOrEmpty(src.ImageUrl) || src.ImageUrl == "no-car.png"
                     ? "/images/no-car.png" 
                     : (src.ImageUrl.StartsWith("/") || src.ImageUrl.StartsWith("http") ? src.ImageUrl : "/images/" + src.ImageUrl)));
+
+            CreateMap<ServiceBooking, ServiceBookingSummaryDto>()
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
         }
     }
 }

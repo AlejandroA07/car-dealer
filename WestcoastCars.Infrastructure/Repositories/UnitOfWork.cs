@@ -16,6 +16,7 @@ public class UnitOfWork : IUnitOfWork
     public IManufacturerRepository ManufacturerRepository { get; }
     public IFuelTypeRepository FuelTypeRepository { get; }
     public ITransmissionTypeRepository TransmissionTypeRepository { get; }
+    public IServiceBookingRepository ServiceBookingRepository { get; }
 
     public UnitOfWork(WestcoastCarsContext context, IMediator mediator)
     {
@@ -26,6 +27,7 @@ public class UnitOfWork : IUnitOfWork
         ManufacturerRepository = new ManufacturerRepository(context);
         FuelTypeRepository = new FuelTypeRepository(context);
         TransmissionTypeRepository = new TransmissionTypeRepository(context);
+        ServiceBookingRepository = new ServiceBookingRepository(context);
     }
 
     public IRepository<T>? Repository<T>() where T : BaseEntity

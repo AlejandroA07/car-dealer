@@ -37,6 +37,7 @@ builder.Services.AddScoped<IVehicleService, VehicleService>();
 builder.Services.AddScoped<IManufacturerService, ManufacturerService>();
 builder.Services.AddScoped<IFuelTypeService, FuelTypeService>();
 builder.Services.AddScoped<ITransmissionTypeService, TransmissionTypeService>();
+builder.Services.AddScoped<IServiceBookingService, ServiceBookingService>();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<AuthHandler>();

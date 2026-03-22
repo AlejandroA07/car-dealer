@@ -19,9 +19,12 @@
                 <div class="buttons-container">
                     <a class="btn btn-dark" asp-action="details" asp-controller="vehicles" asp-route-id="@vehicle.Id">Se
                         mer</a>
-                    <a class="btn btn-dark" asp-action="edit" asp-controller="vehicles" asp-route-id="@vehicle.Id">Ändra</a>
-                    <a class="btn btn-warning" asp-action="delete" asp-controller="vehicles"
-                    asp-route-id="@vehicle.Id">Såld</a>
+                    @if (User.IsInRole("Admin") || User.IsInRole("Salesperson"))
+                    {
+                        <a class="btn btn-dark" asp-action="edit" asp-controller="vehicles" asp-route-id="@vehicle.Id">Ändra</a>
+                        <a class="btn btn-warning" asp-action="delete" asp-controller="vehicles"
+                        asp-route-id="@vehicle.Id">Såld</a>
+                    }
                 </div>
             </div>
         }
