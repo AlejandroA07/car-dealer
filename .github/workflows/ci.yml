@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Cache NuGet
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build (Release)
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Test (Release + trx)
+        run: dotnet test --no-build --configuration Release --logger "trx;LogFileName=test-results.trx"
+
+      # Opción 1 (recomendada): Docker Compose
+      - name: Build all services (Docker Compose)
+        run: docker compose build
+
+      # Opción 2 (si NO usas compose, comenta la de arriba y usa esto)
+      # - name: Build westcoast-api
+      #   run: docker build -t westcoast-api -f westcoast-cars.api/Dockerfile .
+      #
+      # - name: Build westcoast-auth
+      #   run: docker build -t westcoast-auth -f westcoast-cars.auth/Api/Dockerfile .
+      #
+      # - name: Build westcoast-web
+      #   run: docker build -t westcoast-web -f westcoast-cars.web/Dockerfile .
+
+      - name: Upload test results (only on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: "**/*.trx"
