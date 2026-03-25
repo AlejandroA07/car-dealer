@@ -1,10 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
-    <Nullable>disable</Nullable>
+    <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>westcoast_cars.web</RootNamespace>
+    <UserSecretsId>ea20a42c-8a5d-4f70-aea8-7671362179b6</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

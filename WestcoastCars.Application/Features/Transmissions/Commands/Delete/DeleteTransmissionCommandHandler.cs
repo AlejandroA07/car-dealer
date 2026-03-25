@@ -16,7 +16,7 @@ namespace WestcoastCars.Application.Features.Transmissions.Commands.Delete
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<Unit> Handle(DeleteTransmissionCommand request, CancellationToken cancellationToken)
+        public async Task Handle(DeleteTransmissionCommand request, CancellationToken cancellationToken)
         {
             var repository = _unitOfWork.Repository<TransmissionType>();
             if (repository is null) throw new InvalidOperationException("Repository for TransmissionType is not available.");
@@ -31,8 +31,6 @@ namespace WestcoastCars.Application.Features.Transmissions.Commands.Delete
             repository.Remove(transmissionTypeToDelete!);
 
             await _unitOfWork.CompleteAsync();
-
-            return Unit.Value;
         }
     }
 }

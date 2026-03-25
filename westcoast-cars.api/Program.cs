@@ -13,12 +13,20 @@ using FluentValidation;
 using WestcoastCars.Application.Common.Behaviors;
 using Microsoft.AspNetCore.DataProtection;
 
-DotNetEnv.Env.Load(Path.Combine(Directory.GetCurrentDirectory(), "..", ".env"));
+
+
+using WestcoastCars.Api.Configurations;
+
+using WestcoastCars.Application;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddApplication();
+
+// Configure Options
+builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
 
 // Configure data protection to persist keys from configuration.
 var keysPath = builder.Configuration["DataProtectionPath"] ?? "dpkeys";
@@ -35,15 +43,6 @@ if (!Directory.Exists(keysPath))
 builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(keysPath))
     .SetApplicationName("WestcoastCars");
-
-// Add MediatR, AutoMapper and FluentValidation
-var applicationAssembly = typeof(WestcoastCars.Application.Interfaces.IUnitOfWork).Assembly;
-builder.Services.AddAutoMapper(applicationAssembly);
-builder.Services.AddMediatR(applicationAssembly);
-builder.Services.AddValidatorsFromAssembly(applicationAssembly);
-
-// Add Validation Behavior to MediatR pipeline
-builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
@@ -78,8 +77,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var secret = jwtSettings["Secret"];
+var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? throw new InvalidOperationException("JwtOptions section is missing or invalid");
 
 builder.Services.AddAuthentication(options =>
 {
@@ -94,9 +92,9 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = "WestcoastCars.Auth",
-        ValidAudience = "WestcoastCars.Auth",
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret))
+        ValidIssuer = jwtOptions.Issuer,
+        ValidAudience = jwtOptions.Audience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Secret))
     };
 });
 
@@ -120,6 +118,7 @@ using (var scope = app.Services.CreateScope())
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "An error occurred during database seeding.");
+        throw;
     }
 }
 

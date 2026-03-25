@@ -17,7 +17,7 @@ namespace WestcoastCars.Application.Features.Manufacturers.Commands.Update
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<Unit> Handle(UpdateManufacturerCommand request, CancellationToken cancellationToken)
+        public async Task Handle(UpdateManufacturerCommand request, CancellationToken cancellationToken)
         {
             var repository = _unitOfWork.Repository<Manufacturer>();
             if (repository is null) throw new InvalidOperationException("Repository for Manufacturer is not available.");
@@ -41,8 +41,6 @@ namespace WestcoastCars.Application.Features.Manufacturers.Commands.Update
             manufacturerToUpdate!.Name = request.Name;
 
             await _unitOfWork.CompleteAsync();
-
-            return Unit.Value;
         }
     }
 }

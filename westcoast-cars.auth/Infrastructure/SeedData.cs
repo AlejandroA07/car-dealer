@@ -10,10 +10,8 @@ namespace WestcoastCars.Auth.Infrastructure
 {
     public static class SeedData
     {
-        public static async Task SeedRolesAndAdminUser(AuthDbContext context, UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration)
+        public static async Task SeedRolesAndAdminUser(AuthDbContext context, UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, string defaultPassword, ILogger logger)
         {
-            var logger = userManager.Logger;
-
             // Seed Roles
             if (!await roleManager.RoleExistsAsync("Admin"))
             {
@@ -31,6 +29,12 @@ namespace WestcoastCars.Auth.Infrastructure
                 logger.LogInformation("Created 'Customer' role.");
             }
 
+            if (string.IsNullOrEmpty(defaultPassword))
+            {
+                logger.LogError("Default password is null or empty. Cannot seed users.");
+                return;
+            }
+
             // Seed Admin User
             if (await userManager.FindByNameAsync("admin@westcoast-cars.com") == null)
             {
@@ -42,14 +46,7 @@ namespace WestcoastCars.Auth.Infrastructure
                     EmailConfirmed = true
                 };
 
-                var adminPassword = configuration["ADMIN_PASSWORD"];
-                if (string.IsNullOrEmpty(adminPassword))
-                {
-                    logger.LogError("ADMIN_PASSWORD not found in configuration. Cannot seed admin user.");
-                    return;
-                }
-
-                var result = await userManager.CreateAsync(adminUser, adminPassword);
+                var result = await userManager.CreateAsync(adminUser, defaultPassword);
                 if (result.Succeeded)
                 {
                     logger.LogInformation("userManager.CreateAsync succeeded for admin user.");
@@ -83,9 +80,8 @@ namespace WestcoastCars.Auth.Infrastructure
                     EmailConfirmed = true
                 };
 
-                var adminPassword = configuration["ADMIN_PASSWORD"]; // Using same password for simplicity in dev/test
-                
-                var result = await userManager.CreateAsync(customerUser, adminPassword);
+                // Using default password for simplicity in dev/test
+                var result = await userManager.CreateAsync(customerUser, defaultPassword);
                 if (result.Succeeded)
                 {
                     logger.LogInformation("Customer user created.");

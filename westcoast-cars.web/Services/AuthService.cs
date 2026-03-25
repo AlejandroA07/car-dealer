@@ -3,43 +3,45 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using westcoast_cars.web.ViewModels.Auth;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using WestcoastCars.Auth.Contracts.Auth; // Assuming this DTO exists in the auth contracts
+using WestcoastCars.Auth.Contracts.Auth;
 
 namespace westcoast_cars.web.Services
 {
-    public class AuthService
+    public class AuthService : IAuthService
     {
         private readonly HttpClient _httpClient;
-        private readonly IConfiguration _configuration;
         private readonly ILogger<AuthService> _logger;
-        private readonly string _authApiBaseUrl;
         private readonly JsonSerializerOptions _options;
 
-        public AuthService(HttpClient httpClient, IConfiguration configuration, ILogger<AuthService> logger)
+        public AuthService(HttpClient httpClient, ILogger<AuthService> logger)
         {
             _httpClient = httpClient;
-            _configuration = configuration;
             _logger = logger;
-            _authApiBaseUrl = _configuration["AuthApiBaseUrl"]; // Get base URL from config
             _options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         }
 
         public async Task<LoginResult> LoginAsync(LoginViewModel model)
         {
-            var loginRequest = new LoginRequest(model.Email, model.Password); // Assuming LoginRequest DTO
+            var loginRequest = new LoginRequest(model.Email, model.Password);
             var jsonPayload = JsonSerializer.Serialize(loginRequest, _options);
             var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
 
-            _logger.LogInformation("Attempting to login user {Email} to Auth API at {Url}", model.Email, $"{_authApiBaseUrl}/api/auth/login");
+            _logger.LogInformation("Attempting to login user {Email}", model.Email);
 
-            var response = await _httpClient.PostAsync($"{_authApiBaseUrl}/api/auth/login", content);
+            var response = await _httpClient.PostAsync("api/auth/login", content);
 
             if (response.IsSuccessStatusCode)
             {
                 var authResponseJson = await response.Content.ReadAsStringAsync();
-                var authResponse = JsonSerializer.Deserialize<AuthenticationResponse>(authResponseJson, _options); // Assuming AuthenticationResponse DTO
+                var authResponse = JsonSerializer.Deserialize<AuthenticationResponse>(authResponseJson, _options);
+                
+                if (authResponse == null || string.IsNullOrEmpty(authResponse.Token))
+                {
+                    _logger.LogError("Auth API returned success but payload was empty or missing token.");
+                    return LoginResult.Failure("Invalid response from auth service.");
+                }
+
                 _logger.LogInformation("Login successful for user {Email}", model.Email);
                 return LoginResult.Success(authResponse.Token);
             }
@@ -51,29 +53,14 @@ namespace westcoast_cars.web.Services
             }
         }
 
-        public async Task LogoutAsync()
+        /// <summary>
+        /// Handles client-side logout operations (e.g., clearing cookies/tokens).
+        /// Note: This does not invalidate the JWT on the server as JWTs are stateless.
+        /// </summary>
+        public Task LogoutAsync()
         {
-            // For now, just log out. The actual server-side logout (if any) would go here.
             _logger.LogInformation("User logged out from client-side.");
-            await Task.CompletedTask; // Simulate async operation
+            return Task.CompletedTask;
         }
-    }
-
-    // Helper classes for LoginResult
-    public class LoginResult
-    {
-        public bool IsSuccess { get; }
-        public string Token { get; } // Store the JWT token
-        public string Error { get; }
-
-        private LoginResult(bool isSuccess, string token = null, string error = null)
-        {
-            IsSuccess = isSuccess;
-            Token = token;
-            Error = error;
-        }
-
-        public static LoginResult Success(string token) => new LoginResult(true, token);
-        public static LoginResult Failure(string error) => new LoginResult(false, null, error);
     }
 }

@@ -16,7 +16,7 @@ namespace WestcoastCars.Application.Features.FuelTypes.Commands.Update
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<Unit> Handle(UpdateFuelTypeCommand request, CancellationToken cancellationToken)
+        public async Task Handle(UpdateFuelTypeCommand request, CancellationToken cancellationToken)
         {
             var fuelTypeToUpdate = await _unitOfWork.Repository<FuelType>()?.GetByIdAsync(request.Id);
 
@@ -38,8 +38,6 @@ namespace WestcoastCars.Application.Features.FuelTypes.Commands.Update
             _unitOfWork.Repository<FuelType>()?.Update(fuelTypeToUpdate!);
 
             await _unitOfWork.CompleteAsync();
-
-            return Unit.Value;
         }
     }
 }

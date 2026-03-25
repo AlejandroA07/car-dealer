@@ -1,36 +1,29 @@
 using Microsoft.AspNetCore.DataProtection;
 using westcoast_cars.web.Services;
-using westcoast_cars.web.Handlers; // Added
-using Microsoft.AspNetCore.Authentication; // Added
-using Microsoft.AspNetCore.Authentication.Cookies; // Added
+using westcoast_cars.web.Handlers;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using WestcoastCars.Web.Configurations;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+// Configure Options
+builder.Services.Configure<ServiceOptions>(builder.Configuration.GetSection(ServiceOptions.SectionName));
+var serviceOptions = builder.Configuration.GetSection(ServiceOptions.SectionName).Get<ServiceOptions>() ?? throw new InvalidOperationException("ServiceOptions section is missing or invalid");
+
 // Configure the HttpClient to connect to the API.
 builder.Services.AddHttpClient("ApiClient", client =>
 {
-    var baseUrl = builder.Configuration["Services:ApiUrl"];
-    client.BaseAddress = new Uri(baseUrl);
+    client.BaseAddress = new Uri(serviceOptions.ApiUrl);
 })
 .AddHttpMessageHandler<AuthHandler>();
 
 // Configure the HttpClient for the Auth API.
-builder.Services.AddHttpClient("AuthApiClient", client =>
+builder.Services.AddHttpClient<IAuthService, AuthService>("AuthApiClient", client =>
 {
-    var authApiBaseUrl = builder.Configuration["Services:AuthUrl"];
-    client.BaseAddress = new Uri(authApiBaseUrl);
-});
-
-// Register AuthService and inject the named HttpClient
-builder.Services.AddScoped<AuthService>(sp =>
-{
-    var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
-    var httpClient = httpClientFactory.CreateClient("AuthApiClient");
-    var configuration = sp.GetRequiredService<IConfiguration>();
-    var logger = sp.GetRequiredService<ILogger<AuthService>>();
-    return new AuthService(httpClient, configuration, logger);
+    client.BaseAddress = new Uri(serviceOptions.AuthUrl);
 });
 
 builder.Services.AddScoped<IVehicleService, VehicleService>();

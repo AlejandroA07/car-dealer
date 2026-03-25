@@ -17,7 +17,7 @@ namespace westcoast_cars.web.Services
         {
             _httpClient = httpClientFactory.CreateClient("ApiClient");
             _logger = logger;
-            _baseUrl = config["ApiBaseUrl"];
+            _baseUrl = config["Services:ApiUrl"] ?? throw new InvalidOperationException("Services:ApiUrl is not configured");
             _options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         }
 
@@ -32,7 +32,7 @@ namespace westcoast_cars.web.Services
             }
 
             var json = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<List<VehicleSummaryDto>>(json, _options);
+            return JsonSerializer.Deserialize<List<VehicleSummaryDto>>(json, _options) ?? new List<VehicleSummaryDto>();
         }
 
         public async Task<List<VehicleSummaryDto>> ListAllVehiclesAsync()
@@ -46,10 +46,10 @@ namespace westcoast_cars.web.Services
             }
 
             var json = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<List<VehicleSummaryDto>>(json, _options);
+            return JsonSerializer.Deserialize<List<VehicleSummaryDto>>(json, _options) ?? new List<VehicleSummaryDto>();
         }
 
-        public async Task<VehicleDetailsDto> GetVehicleByIdAsync(int id)
+        public async Task<VehicleDetailsDto?> GetVehicleByIdAsync(int id)
         {
             var response = await _httpClient.GetAsync($"{_baseUrl}/api/v1/vehicles/{id}");
             if (!response.IsSuccessStatusCode)
@@ -75,7 +75,7 @@ namespace westcoast_cars.web.Services
             return false;
         }
 
-        public async Task<VehicleBaseViewModel> GetVehicleForEditAsync(int id)
+        public async Task<VehicleBaseViewModel?> GetVehicleForEditAsync(int id)
         {
             var vehicleToEdit = await GetVehicleByIdAsync(id);
             if (vehicleToEdit is null) return null;
@@ -133,7 +133,7 @@ namespace westcoast_cars.web.Services
             return false;
         }
 
-        public async Task<VehicleBaseViewModel> GetVehicleForCreateAsync()
+        public async Task<VehicleBaseViewModel?> GetVehicleForCreateAsync()
         {
             var viewModel = new VehicleBaseViewModel
             {
@@ -208,9 +208,9 @@ namespace westcoast_cars.web.Services
             
             await Task.WhenAll(manufacturersTask, fuelTypesTask, transmissionsTask);
 
-            var manufacturers = JsonSerializer.Deserialize<List<NamedObjectDto>>(await manufacturersTask, _options);
-            var fuelTypes = JsonSerializer.Deserialize<List<NamedObjectDto>>(await fuelTypesTask, _options);
-            var transmissionsTypes = JsonSerializer.Deserialize<List<NamedObjectDto>>(await transmissionsTask, _options);
+            var manufacturers = JsonSerializer.Deserialize<List<NamedObjectDto>>(await manufacturersTask, _options) ?? new List<NamedObjectDto>();
+            var fuelTypes = JsonSerializer.Deserialize<List<NamedObjectDto>>(await fuelTypesTask, _options) ?? new List<NamedObjectDto>();
+            var transmissionsTypes = JsonSerializer.Deserialize<List<NamedObjectDto>>(await transmissionsTask, _options) ?? new List<NamedObjectDto>();
 
             viewModel.Vehicle.ManufacturerId = manufacturers.FirstOrDefault(m => m.Name.Equals(vehicleToEdit.Manufacturer, StringComparison.OrdinalIgnoreCase))?.Id ?? 0;
             viewModel.Vehicle.FuelTypeId = fuelTypes.FirstOrDefault(f => f.Name.Equals(vehicleToEdit.FuelType, StringComparison.OrdinalIgnoreCase))?.Id ?? 0;
@@ -229,9 +229,9 @@ namespace westcoast_cars.web.Services
             
             await Task.WhenAll(manufacturersTask, fuelTypesTask, transmissionsTask);
 
-            var manufacturers = JsonSerializer.Deserialize<List<NamedObjectDto>>(await manufacturersTask, _options);
-            var fuelTypes = JsonSerializer.Deserialize<List<NamedObjectDto>>(await fuelTypesTask, _options);
-            var transmissionsTypes = JsonSerializer.Deserialize<List<NamedObjectDto>>(await transmissionsTask, _options);
+            var manufacturers = JsonSerializer.Deserialize<List<NamedObjectDto>>(await manufacturersTask, _options) ?? new List<NamedObjectDto>();
+            var fuelTypes = JsonSerializer.Deserialize<List<NamedObjectDto>>(await fuelTypesTask, _options) ?? new List<NamedObjectDto>();
+            var transmissionsTypes = JsonSerializer.Deserialize<List<NamedObjectDto>>(await transmissionsTask, _options) ?? new List<NamedObjectDto>();
 
             viewModel.Manufacturers = manufacturers.Select(m => new SelectListItem { Value = m.Id.ToString(), Text = m.Name }).ToList();
             viewModel.FuelTypes = fuelTypes.Select(f => new SelectListItem { Value = f.Id.ToString(), Text = f.Name }).ToList();

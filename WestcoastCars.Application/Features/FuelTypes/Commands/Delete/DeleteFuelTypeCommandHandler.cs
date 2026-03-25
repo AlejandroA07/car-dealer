@@ -16,7 +16,7 @@ namespace WestcoastCars.Application.Features.FuelTypes.Commands.Delete
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<Unit> Handle(DeleteFuelTypeCommand request, CancellationToken cancellationToken)
+        public async Task Handle(DeleteFuelTypeCommand request, CancellationToken cancellationToken)
         {
             var repository = _unitOfWork.Repository<FuelType>();
             if (repository is null) throw new InvalidOperationException("Repository for FuelType is not available.");
@@ -31,8 +31,6 @@ namespace WestcoastCars.Application.Features.FuelTypes.Commands.Delete
             repository.Remove(fuelTypeToDelete!);
 
             await _unitOfWork.CompleteAsync();
-
-            return Unit.Value;
         }
     }
 }

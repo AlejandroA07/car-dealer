@@ -16,7 +16,7 @@ namespace WestcoastCars.Application.Features.Transmissions.Commands.Update
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<Unit> Handle(UpdateTransmissionCommand request, CancellationToken cancellationToken)
+        public async Task Handle(UpdateTransmissionCommand request, CancellationToken cancellationToken)
         {
             var transmissionTypeToUpdate = await _unitOfWork.Repository<TransmissionType>()?.GetByIdAsync(request.Id);
 
@@ -38,8 +38,6 @@ namespace WestcoastCars.Application.Features.Transmissions.Commands.Update
             _unitOfWork.Repository<TransmissionType>()?.Update(transmissionTypeToUpdate!);
 
             await _unitOfWork.CompleteAsync();
-
-            return Unit.Value;
         }
     }
 }

@@ -17,7 +17,7 @@ namespace WestcoastCars.Application.Features.Manufacturers.Commands.Delete
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<Unit> Handle(DeleteManufacturerCommand request, CancellationToken cancellationToken)
+        public async Task Handle(DeleteManufacturerCommand request, CancellationToken cancellationToken)
         {
             var repository = _unitOfWork.Repository<Manufacturer>();
             if (repository is null) throw new InvalidOperationException("Repository for Manufacturer is not available.");
@@ -32,8 +32,6 @@ namespace WestcoastCars.Application.Features.Manufacturers.Commands.Delete
             repository.Remove(manufacturerToDelete!);
 
             await _unitOfWork.CompleteAsync();
-
-            return Unit.Value;
         }
     }
 }
