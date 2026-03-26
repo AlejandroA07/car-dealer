@@ -18,45 +18,59 @@ public class AuthenticationController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterRequest request)
     {
-        var authResult = await _authService.RegisterAsync(
-            request.FirstName,
-            request.LastName,
-            request.Email,
-            request.Password
-        );
+        try
+        {
+            var authResult = await _authService.RegisterAsync(
+                request.FirstName,
+                request.LastName,
+                request.Email,
+                request.Password
+            );
 
-        var response = new AuthenticationResponse(
-            authResult.User.Id,
-            authResult.User.FirstName,
-            authResult.User.LastName,
-            authResult.User.Email,
-            authResult.Token
-        );
+            var response = new AuthenticationResponse(
+                authResult.User.Id,
+                authResult.User.FirstName,
+                authResult.User.LastName,
+                authResult.User.Email,
+                authResult.Token
+            );
 
-        return Ok(response);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginRequest request)
     {
-        var authResult = await _authService.LoginAsync(
-            request.Email,
-            request.Password
-        );
-
-        if (authResult is null)
+        try
         {
-            return Unauthorized("Invalid credentials");
+            var authResult = await _authService.LoginAsync(
+                request.Email,
+                request.Password
+            );
+
+            if (authResult is null)
+            {
+                return Unauthorized("Invalid credentials");
+            }
+
+            var response = new AuthenticationResponse(
+                authResult.User.Id,
+                authResult.User.FirstName,
+                authResult.User.LastName,
+                authResult.User.Email,
+                authResult.Token
+            );
+
+            return Ok(response);
         }
-
-        var response = new AuthenticationResponse(
-            authResult.User.Id,
-            authResult.User.FirstName,
-            authResult.User.LastName,
-            authResult.User.Email,
-            authResult.Token
-        );
-
-        return Ok(response);
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }
