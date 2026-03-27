@@ -108,7 +108,15 @@ using (var scope = app.Services.CreateScope())
     var context = services.GetRequiredService<WestcoastCarsContext>();
     try
     {
-        await context.Database.MigrateAsync();
+        if (context.Database.IsRelational() && !context.Database.IsSqlite())
+        {
+            await context.Database.MigrateAsync();
+        }
+        else if (context.Database.IsSqlite())
+        {
+            await context.Database.EnsureCreatedAsync();
+        }
+        
         await SeedData.LoadManufacturerData(context);
         await SeedData.LoadFuelTypeData(context);
         await SeedData.LoadTransmissionsData(context);
@@ -139,3 +147,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program { }

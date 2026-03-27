@@ -15,18 +15,27 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection");
-        var password = Environment.GetEnvironmentVariable("MYSQL_PASSWORD");
 
-        if (connectionString is not null && password is not null)
+        if (connectionString == "DataSource=:memory:" || connectionString?.Contains("Mode=Memory") == true)
         {
-            connectionString = connectionString.Replace("${MYSQL_PASSWORD}", password);
+            services.AddDbContext<WestcoastCarsContext>(options =>
+                options.UseSqlite(connectionString));
         }
+        else
+        {
+            var password = Environment.GetEnvironmentVariable("MYSQL_PASSWORD");
 
-        services.AddDbContext<WestcoastCarsContext>(options =>
-            options.UseMySql(connectionString,
-                new MySqlServerVersion(new Version(8, 0, 21)),
-                mySqlOptions => mySqlOptions.EnableStringComparisonTranslations()
-            ));
+            if (connectionString is not null && password is not null)
+            {
+                connectionString = connectionString.Replace("${MYSQL_PASSWORD}", password);
+            }
+
+            services.AddDbContext<WestcoastCarsContext>(options =>
+                options.UseMySql(connectionString,
+                    new MySqlServerVersion(new Version(8, 0, 21)),
+                    mySqlOptions => mySqlOptions.EnableStringComparisonTranslations()
+                ));
+        }
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IVehicleRepository, VehicleRepository>();
         services.AddScoped<IManufacturerRepository, ManufacturerRepository>();
