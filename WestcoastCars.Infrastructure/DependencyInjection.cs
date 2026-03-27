@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Infrastructure.Data;
 using WestcoastCars.Infrastructure.Repositories;
+using WestcoastCars.Infrastructure.BackgroundJobs;
 
 namespace WestcoastCars.Infrastructure;
 
@@ -32,6 +33,8 @@ public static class DependencyInjection
         services.AddScoped<IFuelTypeRepository, FuelTypeRepository>();
         services.AddScoped<ITransmissionTypeRepository, TransmissionTypeRepository>();
         services.AddScoped<IServiceBookingRepository, ServiceBookingRepository>();
+
+        services.AddHostedService<OutboxProcessor>();
 
         return services;
     }

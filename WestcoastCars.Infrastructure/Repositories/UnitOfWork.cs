@@ -1,6 +1,8 @@
 using MediatR;
 using System.Collections;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Domain.Entities;
 using WestcoastCars.Infrastructure.Data;
@@ -47,14 +49,12 @@ public class UnitOfWork : IUnitOfWork
 
     public async Task<int> CompleteAsync()
     {
+        await ConvertDomainEventsToOutboxMessages();
         var result = await _context.SaveChangesAsync();
-
-        await DispatchDomainEventsAsync();
-
         return result;
     }
 
-    private async Task DispatchDomainEventsAsync()
+    private async Task ConvertDomainEventsToOutboxMessages()
     {
         var domainEvents = _context.ChangeTracker
             .Entries<BaseEntity>()
@@ -62,15 +62,27 @@ public class UnitOfWork : IUnitOfWork
             .SelectMany(x => x)
             .ToList();
 
-        foreach (var domainEvent in domainEvents)
+        var options = new JsonSerializerOptions
         {
-            await _mediator.Publish(domainEvent);
-        }
+            ReferenceHandler = ReferenceHandler.IgnoreCycles
+        };
+
+        var outboxMessages = domainEvents.Select(domainEvent => new OutboxMessage
+        {
+            Id = Guid.NewGuid(),
+            OccurredOnUtc = DateTime.UtcNow,
+            Type = domainEvent.GetType().Name,
+            Content = JsonSerializer.Serialize(domainEvent, domainEvent.GetType(), options)
+        }).ToList();
+
+        _context.Set<OutboxMessage>().AddRange(outboxMessages);
 
         _context.ChangeTracker
             .Entries<BaseEntity>()
             .ToList()
             .ForEach(e => e.Entity.ClearDomainEvents());
+            
+        await Task.CompletedTask;
     }
 
     public void Dispose()

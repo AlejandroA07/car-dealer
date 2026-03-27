@@ -23,6 +23,7 @@ namespace WestcoastCars.Api.Controllers
             {
                 NotFoundException => (StatusCodes.Status404NotFound, "Not Found"),
                 ConflictException => (StatusCodes.Status409Conflict, "Conflict"),
+                ValidationException => (StatusCodes.Status400BadRequest, "One or more validation errors occurred."),
                 _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred.")
             };
 
@@ -33,6 +34,11 @@ namespace WestcoastCars.Api.Controllers
                 Instance = HttpContext.Request.Path,
                 Detail = exception.Message
             };
+
+            if (exception is ValidationException validationException)
+            {
+                problemDetails.Extensions["errors"] = validationException.Errors;
+            }
 
             var traceId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
             problemDetails.Extensions["traceId"] = traceId;

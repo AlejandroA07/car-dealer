@@ -24,7 +24,7 @@ services:
       - ASPNETCORE_URLS=http://+:8080
       - ConnectionStrings__DefaultConnection=Server=auth-db;Port=3306;Database=westcoast_auth;Uid=root;Pwd=${MYSQL_PASSWORD}
       - JwtSettings__Secret=${JWT_SECRET}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - AdminSettings__Password=${ADMIN_PASSWORD}
     volumes:
       - ./dpkeys:/app/keys
     depends_on:

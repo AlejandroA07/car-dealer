@@ -16,7 +16,7 @@
 
   <ItemGroup>
     <Content Include="Data\json\*.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 
