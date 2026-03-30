@@ -7,6 +7,6 @@ namespace westcoast_cars.web.ViewModels
     {
         [Required(ErrorMessage = "Namn måste anges")]
         [DisplayName("Namn")]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
     }
 }

@@ -4,7 +4,7 @@
         <li><a asp-action="Index" asp-controller="Home">Hem</a></li>
         <li><a asp-action="Index" asp-controller="Vehicles">Våra bilar</a></li>
         <li><a asp-action="Index" asp-controller="Service">Boka Service</a></li>
-        @if (User.Identity.IsAuthenticated)
+        @if (User.Identity?.IsAuthenticated == true)
         {
             <li>
                 @if (User.IsInRole("Admin") || User.IsInRole("Salesperson"))

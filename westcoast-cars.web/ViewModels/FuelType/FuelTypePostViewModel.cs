@@ -7,6 +7,6 @@ namespace westcoast_cars.web.ViewModels.FuelType
     public class FuelTypePostViewModel : BaseViewModel
     {
         [JsonIgnore]
-        public IList<FuelTypeListViewModel> FuelTypes { get; set; }
+        public IList<FuelTypeListViewModel> FuelTypes { get; set; } = new List<FuelTypeListViewModel>();
     }
 }

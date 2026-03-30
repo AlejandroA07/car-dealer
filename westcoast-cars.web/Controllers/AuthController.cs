@@ -25,7 +25,7 @@ namespace westcoast_cars.web.Controllers
         [HttpGet("login")]
         public IActionResult Login(string returnUrl = "/")
         {
-            if (User.Identity.IsAuthenticated)
+            if (User.Identity?.IsAuthenticated == true)
             {
                 return LocalRedirect(returnUrl);
             }
@@ -46,6 +46,13 @@ namespace westcoast_cars.web.Controllers
 
             if (result.IsSuccess)
             {
+                if (string.IsNullOrWhiteSpace(result.Token))
+                {
+                    ModelState.AddModelError(string.Empty, "Invalid login response.");
+                    TempData["error"] = "Invalid login attempt";
+                    return View(model);
+                }
+
                 var claims = new List<Claim>
                 {
                     new Claim(ClaimTypes.Name, model.Email),
@@ -99,7 +106,7 @@ namespace westcoast_cars.web.Controllers
                 return LocalRedirect(model.ReturnUrl ?? "/");
             }
 
-            ModelState.AddModelError(string.Empty, result.Error);
+            ModelState.AddModelError(string.Empty, result.Error ?? "Invalid login attempt.");
             TempData["error"] = "Invalid login attempt";
             return View(model);
         }

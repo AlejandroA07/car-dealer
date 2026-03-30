@@ -7,6 +7,6 @@ namespace westcoast_cars.web.ViewModels.TransmissionType
     public class TransmissionTypePostViewModel : BaseViewModel
     {
         [JsonIgnore]
-        public IList<TransmissionTypeListViewModel> TransmissionTypes { get; set; }
+        public IList<TransmissionTypeListViewModel> TransmissionTypes { get; set; } = new List<TransmissionTypeListViewModel>();
     }
 }

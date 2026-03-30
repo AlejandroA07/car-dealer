@@ -4,8 +4,8 @@ namespace westcoast_cars.web.Services
 {
     public class TransmissionTypeService : GenericDataService<TransmissionTypeListViewModel, TransmissionTypePostViewModel>, ITransmissionTypeService
     {
-        public TransmissionTypeService(IHttpClientFactory httpClientFactory, IConfiguration config, ILogger<TransmissionTypeService> logger)
-            : base(httpClientFactory, config, logger, "transmissions")
+        public TransmissionTypeService(IHttpClientFactory httpClientFactory, ILogger<TransmissionTypeService> logger)
+            : base(httpClientFactory, logger, "transmissions")
         {
         }
     }
