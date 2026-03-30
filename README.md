@@ -124,6 +124,49 @@ docker compose logs -f web
 Open:
 - `http://<YOUR_VM_PUBLIC_IP>/`
 
+## Deployment (Render.com + Aiven MySQL)
+
+Render’s free tier is a good option for demos/portfolio projects, but Render does **not** provide a free managed MySQL database. The simplest path is:
+
+- Host the three services (`web`, `api`, `auth-api`) as **Render web services** (Docker)
+- Host MySQL on **Aiven** (free MySQL service)
+
+This repo includes a Render Blueprint file: `render.yaml`.
+
+### 1) Create an Aiven MySQL service and databases
+
+In Aiven, create a free MySQL service and then create two databases:
+
+```sql
+CREATE DATABASE westcoast_cars_db;
+CREATE DATABASE westcoast_auth;
+```
+
+You’ll use the Aiven host/port/user/password to build two connection strings (one per database).
+
+### 2) Deploy on Render using the Blueprint
+
+1. In Render, choose **New** → **Blueprint** and select this repo.
+2. When prompted for environment variables:
+   - Set `ConnectionStrings__DefaultConnection` for `westcoast-cars-api` (point to `westcoast_cars_db` on Aiven)
+   - Set `ConnectionStrings__DefaultConnection` for `westcoast-cars-auth-api` (point to `westcoast_auth` on Aiven)
+   - Set `AdminSettings__Password` for `westcoast-cars-auth-api`
+3. Deploy.
+
+### 3) Verify service URLs used by the Web UI
+
+The Web service uses these environment variables:
+
+- `Services__ApiUrl`
+- `Services__AuthUrl`
+
+By default, `render.yaml` assumes these Render URLs:
+
+- `https://westcoast-cars-api.onrender.com`
+- `https://westcoast-cars-auth-api.onrender.com`
+
+If your actual service URLs differ, update the Web service’s environment variables in the Render dashboard and redeploy.
+
 ## Local development (without Docker)
 
 ### Prerequisites
