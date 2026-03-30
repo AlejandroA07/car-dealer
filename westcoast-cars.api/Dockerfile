@@ -31,8 +31,8 @@ COPY ["WestcoastCars.Contracts/WestcoastCars.Contracts.csproj", "WestcoastCars.C
 COPY ["WestcoastCars.Domain/WestcoastCars.Domain.csproj", "WestcoastCars.Domain/"]
 COPY ["WestcoastCars.Infrastructure/WestcoastCars.Infrastructure.csproj", "WestcoastCars.Infrastructure/"]
 
-# Restore dependencies for the entire solution
-RUN dotnet restore "westcoast-cars.sln"
+# Restore only what this service needs (avoids requiring test projects during container builds)
+RUN dotnet restore "westcoast-cars.api/westcoast-cars.api.csproj"
 
 # Copy the rest of the source code into the container
 COPY . .
