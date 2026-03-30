@@ -118,6 +118,10 @@ ipch/
 *.etl
 
 # Roslyn files
+
+# Ignore Markdown docs (keep only root README.md)
+*.md
+!/README.md
 *.ruleset
 
 # StyleCop
