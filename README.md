@@ -124,48 +124,59 @@ docker compose logs -f web
 Open:
 - `http://<YOUR_VM_PUBLIC_IP>/`
 
-## Deployment (Render.com + Aiven MySQL)
+## Deployment (Railway)
 
-Render’s free tier is a good option for demos/portfolio projects, but Render does **not** provide a free managed MySQL database. The simplest path is:
+Railway can host the **entire stack** (microservices + MySQL) in one project:
 
-- Host the three services (`web`, `api`, `auth-api`) as **Render web services** (Docker)
-- Host MySQL on **Aiven** (free MySQL service)
+- `web` (public)
+- `api` (private)
+- `auth-api` (private)
+- `mysql-api` (MySQL for `api`)
+- `mysql-auth` (MySQL for `auth-api`)
 
-This repo includes a Render Blueprint file: `render.yaml`.
+Railway provides private networking between services. Every service gets an internal DNS name like `api.railway.internal` for service-to-service HTTP calls.
 
-### 1) Create an Aiven MySQL service and databases
+### 1) Create a Railway project + databases
 
-In Aiven, create a free MySQL service and then create two databases:
+1. Create a new Railway project from this GitHub repo.
+2. Add two MySQL services in the project:
+   - Name one `mysql-api`
+   - Name one `mysql-auth`
 
-```sql
-CREATE DATABASE westcoast_cars_db;
-CREATE DATABASE westcoast_auth;
-```
+### 2) Create the microservices as Docker services
 
-You’ll use the Aiven host/port/user/password to build two connection strings (one per database).
+Create three services from the same repo and set each to build from a different Dockerfile:
 
-### 2) Deploy on Render using the Blueprint
+- `web` (Dockerfile: `westcoast-cars.web/Dockerfile`)
+- `api` (Dockerfile: `westcoast-cars.api/Dockerfile`)
+- `auth-api` (Dockerfile: `westcoast-cars.auth/Api/Dockerfile`)
 
-1. In Render, choose **New** → **Blueprint** and select this repo.
-2. When prompted for environment variables:
-   - Set `ConnectionStrings__DefaultConnection` for `westcoast-cars-api` (point to `westcoast_cars_db` on Aiven)
-   - Set `ConnectionStrings__DefaultConnection` for `westcoast-cars-auth-api` (point to `westcoast_auth` on Aiven)
-   - Set `AdminSettings__Password` for `westcoast-cars-auth-api`
-3. Deploy.
+Recommended: make only `web` publicly reachable and keep `api` + `auth-api` private (they’re still reachable from `web` via Railway private DNS).
 
-### 3) Verify service URLs used by the Web UI
+### 3) Configure environment variables
 
-The Web service uses these environment variables:
+Set these variables on each service:
 
-- `Services__ApiUrl`
-- `Services__AuthUrl`
+**`web`**
+- `PORT=8080`
+- `ASPNETCORE_URLS=http://0.0.0.0:8080`
+- `Services__ApiUrl=http://api.railway.internal:8080`
+- `Services__AuthUrl=http://auth-api.railway.internal:8080`
 
-By default, `render.yaml` assumes these Render URLs:
+**`api`**
+- `PORT=8080`
+- `ASPNETCORE_URLS=http://0.0.0.0:8080`
+- `JwtSettings__Secret=<generate a strong random value>`
+- `ConnectionStrings__DefaultConnection=Server=<mysql-api host>;Port=<mysql-api port>;Database=<mysql-api database>;Uid=<mysql-api user>;Pwd=<mysql-api password>;`
 
-- `https://westcoast-cars-api.onrender.com`
-- `https://westcoast-cars-auth-api.onrender.com`
+**`auth-api`**
+- `PORT=8080`
+- `ASPNETCORE_URLS=http://0.0.0.0:8080`
+- `JwtSettings__Secret=<same value as api>`
+- `AdminSettings__Password=<choose a strong password>`
+- `ConnectionStrings__DefaultConnection=Server=<mysql-auth host>;Port=<mysql-auth port>;Database=<mysql-auth database>;Uid=<mysql-auth user>;Pwd=<mysql-auth password>;`
 
-If your actual service URLs differ, update the Web service’s environment variables in the Render dashboard and redeploy.
+Tip: Railway MySQL services expose `MYSQLHOST`, `MYSQLPORT`, `MYSQLUSER`, `MYSQLPASSWORD`, `MYSQLDATABASE`, and `MYSQL_URL` variables that you can copy into the connection string.
 
 ## Local development (without Docker)
 
