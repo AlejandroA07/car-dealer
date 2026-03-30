@@ -53,6 +53,77 @@ Optional local endpoints (if exposed by your compose config):
 - API: `http://localhost:5001`
 - Auth API: `http://localhost:5003`
 
+## Deployment (Oracle Cloud Always Free VM)
+
+This project is easiest to deploy as-is on a single Linux VM using Docker Compose. The recommended setup exposes only the `web` service publicly over HTTP on port 80.
+
+### 1) Create the VM
+
+- Create an Oracle Cloud “Always Free” Linux VM (Ampere A1 is a good choice).
+- Open inbound ports:
+  - `22/tcp` (SSH) from your IP
+  - `80/tcp` (HTTP) from anywhere
+
+### 2) SSH in and install Docker
+
+Example (Ubuntu):
+```bash
+sudo apt-get update
+sudo apt-get install -y git docker.io docker-compose-plugin
+sudo usermod -aG docker $USER
+exit
+```
+
+SSH back in so group permissions apply.
+
+### 3) Clone the repo on the VM
+
+```bash
+git clone git@github.com:AlejandroA07/car-dealer.git
+cd car-dealer
+```
+
+### 4) Create production secrets (never commit)
+
+Create `.env` in the repo root:
+```bash
+MYSQL_PASSWORD=change-me
+JWT_SECRET=change-me-to-a-long-random-value
+ADMIN_PASSWORD=change-me
+```
+
+Create `prod_db_password.txt` (used by `docker-compose.prod.yml`) and set it to the same value as `MYSQL_PASSWORD`:
+```bash
+echo "change-me" > prod_db_password.txt
+```
+
+Create the shared data-protection key ring directory on the VM (host-side):
+```bash
+mkdir -p dpkeys
+```
+
+### 5) Start the stack (production-ish)
+
+`docker-compose.deploy.yml` exposes only the Web UI on port 80 and keeps the APIs private to the Docker network.
+
+```bash
+docker compose --env-file .env \
+  -f docker-compose.yml \
+  -f docker-compose.prod.yml \
+  -f docker-compose.deploy.yml \
+  up -d --build
+```
+
+### 6) Verify
+
+```bash
+docker compose ps
+docker compose logs -f web
+```
+
+Open:
+- `http://<YOUR_VM_PUBLIC_IP>/`
+
 ## Local development (without Docker)
 
 ### Prerequisites

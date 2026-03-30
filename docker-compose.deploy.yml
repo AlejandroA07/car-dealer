@@ -1,0 +1,22 @@
+services:
+  # Public entrypoint
+  web:
+    ports:
+      - "80:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      # Use the shared mounted key ring from docker-compose.yml (./dpkeys:/app/keys)
+      - DataProtectionPath=/app/keys
+
+  # Keep internal-only on the Docker network
+  api:
+    ports: []
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+
+  auth-api:
+    ports: []
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      # Use the shared mounted key ring from docker-compose.yml (./dpkeys:/app/keys)
+      - DataProtectionPath=/app/keys
