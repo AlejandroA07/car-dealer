@@ -23,11 +23,38 @@ public static class DependencyInjection
         }
         else
         {
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                connectionString = Environment.GetEnvironmentVariable("MYSQL_URL");
+            }
+
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                var host = Environment.GetEnvironmentVariable("MYSQLHOST");
+                var port = Environment.GetEnvironmentVariable("MYSQLPORT") ?? "3306";
+                var database = Environment.GetEnvironmentVariable("MYSQLDATABASE");
+                var user = Environment.GetEnvironmentVariable("MYSQLUSER");
+                var password = Environment.GetEnvironmentVariable("MYSQLPASSWORD");
+
+                if (!string.IsNullOrWhiteSpace(host) &&
+                    !string.IsNullOrWhiteSpace(database) &&
+                    !string.IsNullOrWhiteSpace(user) &&
+                    !string.IsNullOrWhiteSpace(password))
+                {
+                    connectionString = $"Server={host};Port={port};Database={database};Uid={user};Pwd={password};";
+                }
+            }
+
             var password = Environment.GetEnvironmentVariable("MYSQL_PASSWORD");
 
             if (connectionString is not null && password is not null)
             {
                 connectionString = connectionString.Replace("${MYSQL_PASSWORD}", password);
+            }
+
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                throw new InvalidOperationException("ConnectionStrings:DefaultConnection is missing. Set ConnectionStrings__DefaultConnection or MYSQL_URL (or MYSQLHOST/MYSQLPORT/MYSQLDATABASE/MYSQLUSER/MYSQLPASSWORD).");
             }
 
             services.AddDbContext<WestcoastCarsContext>(options =>
