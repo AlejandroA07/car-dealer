@@ -7,6 +7,7 @@ using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Infrastructure.Data;
 using WestcoastCars.Infrastructure.Repositories;
 using WestcoastCars.Infrastructure.BackgroundJobs;
+using System;
 
 namespace WestcoastCars.Infrastructure;
 
@@ -23,25 +24,39 @@ public static class DependencyInjection
         }
         else
         {
-            if (string.IsNullOrWhiteSpace(connectionString))
+            // Prefer Railway-provided MySQL environment variables when present.
+            // This avoids relying on docker-compose style placeholders like ${MYSQL_PASSWORD} or service hosts like "db".
+            var host = Environment.GetEnvironmentVariable("MYSQLHOST");
+            var port = Environment.GetEnvironmentVariable("MYSQLPORT") ?? "3306";
+            var database = Environment.GetEnvironmentVariable("MYSQLDATABASE");
+            var user = Environment.GetEnvironmentVariable("MYSQLUSER");
+            var mysqlPassword = Environment.GetEnvironmentVariable("MYSQLPASSWORD");
+
+            if (!string.IsNullOrWhiteSpace(host) &&
+                !string.IsNullOrWhiteSpace(database) &&
+                !string.IsNullOrWhiteSpace(user) &&
+                !string.IsNullOrWhiteSpace(mysqlPassword))
             {
-                connectionString = Environment.GetEnvironmentVariable("MYSQL_URL");
+                connectionString = $"Server={host};Port={port};Database={database};Uid={user};Pwd={mysqlPassword};";
             }
 
             if (string.IsNullOrWhiteSpace(connectionString))
             {
-                var host = Environment.GetEnvironmentVariable("MYSQLHOST");
-                var port = Environment.GetEnvironmentVariable("MYSQLPORT") ?? "3306";
-                var database = Environment.GetEnvironmentVariable("MYSQLDATABASE");
-                var user = Environment.GetEnvironmentVariable("MYSQLUSER");
-                var mysqlPassword = Environment.GetEnvironmentVariable("MYSQLPASSWORD");
+                var mysqlUrl = Environment.GetEnvironmentVariable("MYSQL_URL");
 
-                if (!string.IsNullOrWhiteSpace(host) &&
-                    !string.IsNullOrWhiteSpace(database) &&
-                    !string.IsNullOrWhiteSpace(user) &&
-                    !string.IsNullOrWhiteSpace(mysqlPassword))
+                if (!string.IsNullOrWhiteSpace(mysqlUrl) &&
+                    mysqlUrl.StartsWith("mysql://", StringComparison.OrdinalIgnoreCase))
                 {
-                    connectionString = $"Server={host};Port={port};Database={database};Uid={user};Pwd={mysqlPassword};";
+                    var uri = new Uri(mysqlUrl);
+                    var userInfo = uri.UserInfo.Split(':', 2);
+                    var uriUser = Uri.UnescapeDataString(userInfo[0]);
+                    var uriPassword = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : string.Empty;
+                    var uriDatabase = uri.AbsolutePath.Trim('/'); // "/db" -> "db"
+                    connectionString = $"Server={uri.Host};Port={uri.Port};Database={uriDatabase};Uid={uriUser};Pwd={uriPassword};";
+                }
+                else if (!string.IsNullOrWhiteSpace(mysqlUrl))
+                {
+                    connectionString = mysqlUrl;
                 }
             }
 
@@ -60,7 +75,11 @@ public static class DependencyInjection
             services.AddDbContext<WestcoastCarsContext>(options =>
                 options.UseMySql(connectionString,
                     new MySqlServerVersion(new Version(8, 0, 21)),
-                    mySqlOptions => mySqlOptions.EnableStringComparisonTranslations()
+                    mySqlOptions =>
+                    {
+                        mySqlOptions.EnableStringComparisonTranslations();
+                        mySqlOptions.EnableRetryOnFailure();
+                    }
                 ));
         }
         services.AddScoped<IUnitOfWork, UnitOfWork>();
