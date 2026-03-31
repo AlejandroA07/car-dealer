@@ -34,22 +34,22 @@ public static class DependencyInjection
                 var port = Environment.GetEnvironmentVariable("MYSQLPORT") ?? "3306";
                 var database = Environment.GetEnvironmentVariable("MYSQLDATABASE");
                 var user = Environment.GetEnvironmentVariable("MYSQLUSER");
-                var password = Environment.GetEnvironmentVariable("MYSQLPASSWORD");
+                var mysqlPassword = Environment.GetEnvironmentVariable("MYSQLPASSWORD");
 
                 if (!string.IsNullOrWhiteSpace(host) &&
                     !string.IsNullOrWhiteSpace(database) &&
                     !string.IsNullOrWhiteSpace(user) &&
-                    !string.IsNullOrWhiteSpace(password))
+                    !string.IsNullOrWhiteSpace(mysqlPassword))
                 {
-                    connectionString = $"Server={host};Port={port};Database={database};Uid={user};Pwd={password};";
+                    connectionString = $"Server={host};Port={port};Database={database};Uid={user};Pwd={mysqlPassword};";
                 }
             }
 
-            var password = Environment.GetEnvironmentVariable("MYSQL_PASSWORD");
+            var composePassword = Environment.GetEnvironmentVariable("MYSQL_PASSWORD");
 
-            if (connectionString is not null && password is not null)
+            if (connectionString is not null && composePassword is not null)
             {
-                connectionString = connectionString.Replace("${MYSQL_PASSWORD}", password);
+                connectionString = connectionString.Replace("${MYSQL_PASSWORD}", composePassword);
             }
 
             if (string.IsNullOrWhiteSpace(connectionString))
