@@ -1,9 +1,11 @@
+using System.Reflection;
 using MediatR;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using WestcoastCars.Api.Configurations;
 
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Infrastructure.Data;
@@ -12,10 +14,14 @@ using WestcoastCars.Infrastructure;
 using FluentValidation;
 using WestcoastCars.Application.Common.Behaviors;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.OpenApi.Models;
 
 
 
-using WestcoastCars.Api.Configurations;
+using WestcoastCars.Api.Swagger.Examples;
+using Swashbuckle.AspNetCore.Filters;
+
+// ... other usings ...
 
 using WestcoastCars.Application;
 
@@ -48,27 +54,48 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
 });
+
+builder.Services.AddSwaggerExamplesFromAssemblyOf<VehicleDtoExample>();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "Westcoast Cars API", Version = "v1" });
-    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-    {
-        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
-        Name = "Authorization",
-        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
+    c.SwaggerDoc("v1", new OpenApiInfo 
+    { 
+        Title = "Westcoast Cars API", 
+        Version = "v1",
+        Description = "API for managing vehicle inventory, manufacturers, and service bookings."
     });
-    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    c.IncludeXmlComments(xmlPath);
+
+    var contractsXmlPath = Path.Combine(AppContext.BaseDirectory, "WestcoastCars.Contracts.xml");
+    if (File.Exists(contractsXmlPath))
+        c.IncludeXmlComments(contractsXmlPath);
+
+    c.ExampleFilters();
+
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter your JWT token in the format: {token}. Example: eyJhbGciOiJIUzI1NiIs..."
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
-            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            new OpenApiSecurityScheme
             {
-                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                Reference = new OpenApiReference
                 {
-                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Type = ReferenceType.SecurityScheme,
                     Id = "Bearer"
                 }
             },
@@ -134,7 +161,16 @@ using (var scope = app.Services.CreateScope())
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Westcoast Cars API v1");
+        c.RoutePrefix = "swagger";
+        c.DocumentTitle = "Westcoast Cars API Documentation";
+        c.DisplayRequestDuration();
+        c.EnableDeepLinking();
+        c.EnableFilter();
+        c.ShowExtensions();
+    });
 }
 
 app.UseStaticFiles();

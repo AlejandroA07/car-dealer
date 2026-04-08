@@ -236,3 +236,6 @@ issue-report.md
 
 # Integration Test Walkthrough
 integrationTest.md
+
+# AI Assistant directories
+.claude/

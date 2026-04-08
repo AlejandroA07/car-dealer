@@ -4,8 +4,12 @@ using WestcoastCars.Auth.Contracts.Auth;
 
 namespace WestcoastCars.Auth.Api.Controllers;
 
+/// <summary>
+/// Handles user authentication and registration.
+/// </summary>
 [ApiController]
 [Route("api/auth")]
+[Tags("Authentication")]
 public class AuthenticationController : ControllerBase
 {
     private readonly IAuthService _authService;
@@ -15,7 +19,16 @@ public class AuthenticationController : ControllerBase
         _authService = authService;
     }
 
+    /// <summary>
+    /// Registers a new user account.
+    /// </summary>
+    /// <param name="request">Registration details.</param>
+    /// <returns>Authentication token and user info.</returns>
+    /// <response code="200">Registration successful.</response>
+    /// <response code="400">Invalid registration data or email already exists.</response>
     [HttpPost("register")]
+    [ProducesResponseType(typeof(AuthenticationResponse), 200)]
+    [ProducesResponseType(400)]
     public async Task<IActionResult> Register(RegisterRequest request)
     {
         try
@@ -43,7 +56,16 @@ public class AuthenticationController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Authenticates a user and returns a JWT token.
+    /// </summary>
+    /// <param name="request">Login credentials.</param>
+    /// <returns>Authentication token and user info.</returns>
+    /// <response code="200">Login successful.</response>
+    /// <response code="401">Invalid credentials.</response>
     [HttpPost("login")]
+    [ProducesResponseType(typeof(AuthenticationResponse), 200)]
+    [ProducesResponseType(401)]
     public async Task<IActionResult> Login(LoginRequest request)
     {
         try

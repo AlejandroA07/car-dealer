@@ -6,6 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>westcoast_cars.api</RootNamespace>
     <UserSecretsId>a4795057-ddcc-41dd-a7e1-254f32e3b636</UserSecretsId>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,6 +21,8 @@
     </PackageReference>
     
     <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.4" />
+    
+    <PackageReference Include="Swashbuckle.AspNetCore.Filters" Version="9.0.1" />
   </ItemGroup>
 
   <ItemGroup>
