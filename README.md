@@ -232,6 +232,35 @@ dotnet run --project westcoast-cars.web/westcoast-cars.web.csproj
 dotnet test westcoast-cars.sln
 ```
 
+## Manual Blocket sync
+
+The API supports a manual Blocket inventory sync through:
+
+```bash
+POST /api/v1/vehicles/import/blocket
+```
+
+Requirements:
+- Authenticated user with `Admin` or `Salesperson` role
+- `BlocketApi` settings configured in `westcoast-cars.api/appsettings*.json`
+- `JwtSettings__Secret` configured consistently for the API and auth service
+
+Example payload:
+
+```json
+{
+  "limit": 50,
+  "locations": "STOCKHOLM",
+  "models": "VOLVO",
+  "orgId": "3003419"
+}
+```
+
+Behavior:
+- The sync is manual only
+- Each sync replaces the current inventory
+- The resulting inventory is capped at 50 latest listings
+
 ## Contributing (short)
 
 - Use feature branches.

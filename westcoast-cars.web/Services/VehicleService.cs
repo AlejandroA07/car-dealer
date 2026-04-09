@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.WebUtilities;
 using westcoast_cars.web.ViewModels.Vehicles;
@@ -98,7 +99,7 @@ namespace westcoast_cars.web.Services
                 Vehicle = new VehicleDto
                 {
                     Id = vehicleToEdit.Id,
-                    RegistrationNumber = vehicleToEdit.RegistrationNumber,
+                    RegistrationNumber = vehicleToEdit.RegistrationNumber ?? string.Empty,
                     Model = vehicleToEdit.Model,
                     ModelYear = vehicleToEdit.ModelYear,
                     Mileage = vehicleToEdit.Mileage,
@@ -221,6 +222,61 @@ namespace westcoast_cars.web.Services
             return JsonSerializer.Deserialize<List<VehicleSummaryDto>>(json, _options) ?? new List<VehicleSummaryDto>();
         }, new List<VehicleSummaryDto>(), "searching vehicles");
     }
+
+        public async Task<BlocketSyncViewModel> SyncBlocketAsync(BlocketSyncViewModel model)
+        {
+            return await ExecuteWithApiFallback(async () =>
+            {
+                var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}/api/v1/vehicles/import/blocket", new
+                {
+                    limit = model.Limit,
+                    orgId = model.OrgId,
+                    locations = model.Locations,
+                    models = model.Models
+                });
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("Error syncing Blocket vehicles: {StatusCode} - {Error}", response.StatusCode, errorContent);
+                    return new BlocketSyncViewModel
+                    {
+                        Limit = model.Limit,
+                        OrgId = model.OrgId,
+                        Locations = model.Locations,
+                        Models = model.Models,
+                        ErrorMessage = "The sync could not be completed. Please try again."
+                    };
+                }
+
+                var result = await response.Content.ReadFromJsonAsync<BlocketSyncViewModel>(_options);
+                if (result is null)
+                {
+                    return new BlocketSyncViewModel
+                    {
+                        Limit = model.Limit,
+                        OrgId = model.OrgId,
+                        Locations = model.Locations,
+                        Models = model.Models,
+                        ErrorMessage = "The sync completed but no summary was returned."
+                    };
+                }
+
+                result.Limit = model.Limit;
+                result.OrgId = model.OrgId;
+                result.Locations = model.Locations;
+                result.Models = model.Models;
+                result.HasResult = true;
+                return result;
+            }, new BlocketSyncViewModel
+            {
+                Limit = model.Limit,
+                OrgId = model.OrgId,
+                Locations = model.Locations,
+                Models = model.Models,
+                ErrorMessage = "The API is currently unavailable."
+            }, "syncing Blocket vehicles");
+        }
 
     private async Task LoadDropdownData(VehicleBaseViewModel viewModel, VehicleDetailsDto vehicleToEdit)
         {

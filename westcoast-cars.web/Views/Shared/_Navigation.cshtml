@@ -6,6 +6,10 @@
         <li><a asp-action="Index" asp-controller="Service">Boka Service</a></li>
         @if (User.Identity?.IsAuthenticated == true)
         {
+            @if (User.IsInRole("Admin") || User.IsInRole("Salesperson"))
+            {
+                <li><a asp-action="SyncBlocket" asp-controller="Vehicles">Sync Blocket</a></li>
+            }
             <li>
                 @if (User.IsInRole("Admin") || User.IsInRole("Salesperson"))
                 {

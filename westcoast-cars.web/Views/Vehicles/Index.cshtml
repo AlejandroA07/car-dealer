@@ -13,9 +13,31 @@
         @foreach (var vehicle in Model.Vehicles)
         {
             <div class="gallery-card">
-                <div>@vehicle.Name</div>
+                <div class="gallery-card-title">@vehicle.Name</div>
                 <img src="@vehicle.ImageUrl" alt="@vehicle.Model">
-                <div><span>@vehicle.Name</span>&nbsp;<span>@vehicle.ModelYear</span></div>
+                <div class="gallery-card-subtitle"><span>@vehicle.Name</span>&nbsp;<span>@vehicle.ModelYear</span></div>
+                <div class="gallery-card-price">@vehicle.Value.ToString("N0") kr</div>
+                @if (!string.IsNullOrWhiteSpace(vehicle.Color) || !string.IsNullOrWhiteSpace(vehicle.City) || vehicle.PublishedAt.HasValue || !string.IsNullOrWhiteSpace(vehicle.Source))
+                {
+                    <ul class="gallery-card-meta">
+                        @if (!string.IsNullOrWhiteSpace(vehicle.Color))
+                        {
+                            <li>@vehicle.Color</li>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(vehicle.City))
+                        {
+                            <li>@vehicle.City</li>
+                        }
+                        @if (vehicle.PublishedAt.HasValue)
+                        {
+                            <li>@vehicle.PublishedAt.Value.ToLocalTime().ToString("yyyy-MM-dd")</li>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(vehicle.Source))
+                        {
+                            <li>@vehicle.Source</li>
+                        }
+                    </ul>
+                }
                 <div class="buttons-container">
                     <a class="btn btn-dark" asp-action="details" asp-controller="vehicles" asp-route-id="@vehicle.Id">Se
                         mer</a>

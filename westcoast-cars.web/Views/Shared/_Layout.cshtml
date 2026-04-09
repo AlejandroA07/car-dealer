@@ -45,6 +45,10 @@
             }
             else
             {
+                @if (User.IsInRole("Admin") || User.IsInRole("Salesperson"))
+                {
+                    <li><a asp-action="SyncBlocket" asp-controller="Vehicles"><i class="fa-solid fa-rotate"></i> Sync Blocket</a></li>
+                }
                 <li>
                     <form asp-controller="Auth" asp-action="Logout" method="post" id="sidebarLogoutForm" style="display:none;"></form>
                     <a href="javascript:document.getElementById('sidebarLogoutForm').submit()">

@@ -123,6 +123,7 @@ ipch/
 *.md
 !/README.md
 blocket-import-plan.md
+blocket-sync-ui-plan.md
 *.ruleset
 
 # StyleCop

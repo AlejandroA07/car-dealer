@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Authorization;
 using westcoast_cars.web.Services;
 using westcoast_cars.web.ViewModels.Vehicles;
 using WestcoastCars.Contracts.DTOs;
@@ -68,6 +69,47 @@ public class VehiclesController : Controller
         {
             _logger.LogError(ex, "Error in Index");
             return View("Errors");
+        }
+    }
+
+    [Authorize(Roles = "Admin,Salesperson")]
+    [HttpGet("sync-blocket")]
+    public IActionResult SyncBlocket()
+    {
+        return View("SyncBlocket", new BlocketSyncViewModel());
+    }
+
+    [Authorize(Roles = "Admin,Salesperson")]
+    [HttpPost("sync-blocket")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SyncBlocket(BlocketSyncViewModel model)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                return View("SyncBlocket", model);
+            }
+
+            var result = await _vehicleService.SyncBlocketAsync(model);
+
+            if (string.IsNullOrWhiteSpace(result.ErrorMessage))
+            {
+                TempData["success"] = $"Blocket sync completed. Imported {result.TotalImported} vehicles.";
+            }
+            else
+            {
+                TempData["error"] = result.ErrorMessage;
+            }
+
+            return View("SyncBlocket", result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in Blocket sync");
+            model.ErrorMessage = "An unexpected error occurred while running the Blocket sync.";
+            TempData["error"] = model.ErrorMessage;
+            return View("SyncBlocket", model);
         }
     }
 

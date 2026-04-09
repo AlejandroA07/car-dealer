@@ -1,0 +1,88 @@
+@model westcoast_cars.web.ViewModels.Vehicles.BlocketSyncViewModel
+
+@section styles{
+    <link rel="stylesheet" href="~/css/admin-page.css">
+}
+
+<section class="page">
+    <h1 class="page-title">Manual Blocket Sync</h1>
+
+    <div class="dashboard-sections sync-layout">
+        <div class="admin-card">
+            <h2>Run Sync</h2>
+            <p class="sync-copy">Fetch the latest Blocket listings and replace the current vehicle inventory with a fresh set of up to 50 cars.</p>
+
+            <form asp-action="SyncBlocket" asp-controller="Vehicles" method="post" class="sync-form">
+                @Html.AntiForgeryToken()
+
+                <div class="form-control">
+                    <label asp-for="Limit"></label>
+                    <input asp-for="Limit" type="number" min="1" max="50" />
+                    <span asp-validation-for="Limit" class="text-danger"></span>
+                </div>
+
+                <div class="form-control">
+                    <label asp-for="Locations"></label>
+                    <input asp-for="Locations" type="text" placeholder="Example: STOCKHOLM" />
+                </div>
+
+                <div class="form-control">
+                    <label asp-for="Models"></label>
+                    <input asp-for="Models" type="text" placeholder="Example: VOLVO" />
+                </div>
+
+                <div class="form-control">
+                    <label asp-for="OrgId"></label>
+                    <input asp-for="OrgId" type="text" placeholder="Optional dealer/store id" />
+                </div>
+
+                <button type="submit" class="btn-add sync-submit">Run Blocket Sync</button>
+            </form>
+        </div>
+
+        <div class="admin-card">
+            <h2>Latest Result</h2>
+
+            @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+            {
+                <p class="sync-error">@Model.ErrorMessage</p>
+            }
+            else if (Model.HasResult)
+            {
+                <div class="dashboard-grid sync-stats">
+                    <div class="stat-card">
+                        <h3>Imported</h3>
+                        <div class="value">@Model.TotalImported</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Replaced</h3>
+                        <div class="value">@Model.TotalReplaced</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Skipped</h3>
+                        <div class="value">@Model.TotalSkipped</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Pages</h3>
+                        <div class="value">@Model.PagesFetched</div>
+                    </div>
+                </div>
+
+                <ul class="stock-list sync-summary">
+                    <li class="stock-item"><span class="stock-name">Requested limit</span><span class="stock-count">@Model.RequestedLimit</span></li>
+                    <li class="stock-item"><span class="stock-name">Applied limit</span><span class="stock-count">@Model.AppliedLimit</span></li>
+                    <li class="stock-item"><span class="stock-name">Fetched from API</span><span class="stock-count">@Model.TotalFetched</span></li>
+                    <li class="stock-item"><span class="stock-name">Prepared for import</span><span class="stock-count">@Model.TotalPrepared</span></li>
+                </ul>
+            }
+            else
+            {
+                <p class="sync-copy">No sync has been run from this page yet. Use the form to start a manual import.</p>
+            }
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -97,3 +97,43 @@
         grid-template-columns: 1fr;
     }
 }
+
+.sync-layout {
+    align-items: start;
+}
+
+.sync-form {
+    width: 100%;
+    max-width: 100%;
+    box-shadow: none;
+    background: #f8f8f8;
+    border: 1px solid #e7e7e7;
+}
+
+.sync-submit {
+    margin-top: 1rem;
+    border: 0;
+    cursor: pointer;
+}
+
+.sync-copy {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    color: #555;
+}
+
+.sync-error {
+    color: #b42318;
+    background: #fef3f2;
+    border: 1px solid #fecdca;
+    border-radius: 6px;
+    padding: 0.9rem 1rem;
+}
+
+.sync-stats {
+    margin-bottom: 1.5rem;
+}
+
+.sync-summary {
+    margin-top: 0.5rem;
+}

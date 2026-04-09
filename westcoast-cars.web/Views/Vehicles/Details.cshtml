@@ -19,6 +19,35 @@
                 <span><strong>Pris</strong></span>
                 <span>@Model.Value</span>
             </div>
+            <div class="vehicle-detail-grid">
+                <span><strong>Registration number</strong></span>
+                <span>@(string.IsNullOrWhiteSpace(Model.RegistrationNumber) ? "Not available" : Model.RegistrationNumber)</span>
+                <span><strong>Fuel</strong></span>
+                <span>@Model.FuelType</span>
+                <span><strong>Transmission</strong></span>
+                <span>@Model.TransmissionsType</span>
+                <span><strong>Color</strong></span>
+                <span>@(string.IsNullOrWhiteSpace(Model.Color) ? "Not available" : Model.Color)</span>
+                <span><strong>City</strong></span>
+                <span>@(string.IsNullOrWhiteSpace(Model.City) ? "Not available" : Model.City)</span>
+                <span><strong>Published</strong></span>
+                <span>@(Model.PublishedAt.HasValue ? Model.PublishedAt.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm") : "Not available")</span>
+                <span><strong>Imported</strong></span>
+                <span>@(Model.ImportedAt.HasValue ? Model.ImportedAt.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm") : "Not available")</span>
+                <span><strong>Source</strong></span>
+                <span>@(string.IsNullOrWhiteSpace(Model.Source) ? "Manual inventory" : Model.Source)</span>
+                <span><strong>Listing link</strong></span>
+                <span>
+                    @if (string.IsNullOrWhiteSpace(Model.SourceUrl))
+                    {
+                        @:Not available
+                    }
+                    else
+                    {
+                        <a href="@Model.SourceUrl" target="_blank" rel="noopener noreferrer">Open original listing</a>
+                    }
+                </span>
+            </div>
             <h4>Beskrivning</h4>
             <div>@Model.Description</div>
         </div>

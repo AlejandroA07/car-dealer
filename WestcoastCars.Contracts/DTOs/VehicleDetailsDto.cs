@@ -4,7 +4,7 @@ namespace WestcoastCars.Contracts.DTOs
     public class VehicleDetailsDto
     {
         public int Id { get; set; }
-        public string RegistrationNumber { get; set; } = string.Empty;
+        public string? RegistrationNumber { get; set; }
         public string FuelType { get; set; } = string.Empty;
         public string TransmissionsType { get; set; } = string.Empty;
         public int Mileage { get; set; }
@@ -16,5 +16,12 @@ namespace WestcoastCars.Contracts.DTOs
         public string ModelYear { get; set; } = string.Empty;
         public string ImageUrl { get; set; } = string.Empty;
         public bool IsSold { get; set; }
+        public string? ExternalListingId { get; set; }
+        public string? Source { get; set; }
+        public string? SourceUrl { get; set; }
+        public DateTime? PublishedAt { get; set; }
+        public DateTime? ImportedAt { get; set; }
+        public string? Color { get; set; }
+        public string? City { get; set; }
     }
 }

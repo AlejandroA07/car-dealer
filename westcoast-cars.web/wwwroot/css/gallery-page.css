@@ -27,6 +27,39 @@
     padding: 0.2rem;
     box-shadow: none;
   }
+
+  .gallery-card-title {
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .gallery-card-subtitle {
+    color: #555;
+    text-align: center;
+  }
+
+  .gallery-card-price {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--secondary-color);
+  }
+
+  .gallery-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .gallery-card-meta li {
+    background: #e9ecef;
+    border-radius: 999px;
+    padding: 0.25rem 0.7rem;
+    font-size: 0.85rem;
+  }
   
   .modal {
     position: fixed;
