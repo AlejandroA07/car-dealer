@@ -4,7 +4,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WestcoastCars.Application.Interfaces;
+using WestcoastCars.Infrastructure.Clients;
 using WestcoastCars.Infrastructure.Data;
+using WestcoastCars.Infrastructure.Options;
 using WestcoastCars.Infrastructure.Repositories;
 using WestcoastCars.Infrastructure.BackgroundJobs;
 using System;
@@ -15,6 +17,18 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        services.Configure<BlocketApiOptions>(configuration.GetSection(BlocketApiOptions.SectionName));
+        services.AddHttpClient<IBlocketApiClient, BlocketApiClient>((serviceProvider, client) =>
+        {
+            var options = serviceProvider
+                .GetRequiredService<Microsoft.Extensions.Options.IOptions<BlocketApiOptions>>()
+                .Value;
+
+            client.BaseAddress = new Uri(options.BaseUrl);
+            client.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds);
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("WestcoastCars/1.0");
+        });
+
         var connectionString = configuration.GetConnectionString("DefaultConnection");
 
         if (connectionString == "DataSource=:memory:" || connectionString?.Contains("Mode=Memory") == true)

@@ -3,6 +3,8 @@ using AutoMapper;
 using MediatR;
 using FluentValidation;
 using WestcoastCars.Application.Common.Behaviors;
+using WestcoastCars.Application.Interfaces;
+using WestcoastCars.Application.Services;
 
 namespace WestcoastCars.Application;
 
@@ -18,6 +20,7 @@ public static class DependencyInjection
             cfg.RegisterServicesFromAssembly(assembly));
             
         services.AddValidatorsFromAssembly(assembly);
+        services.AddTransient<IBlocketVehicleImportMapper, BlocketVehicleImportMapper>();
         
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         
