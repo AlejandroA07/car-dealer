@@ -26,7 +26,7 @@ public class BlocketCarSearchItem
     public string? CanonicalUrl { get; set; }
 
     [JsonPropertyName("image")]
-    public string? ImageUrl { get; set; }
+    public BlocketImage? Image { get; set; }
 
     [JsonPropertyName("price")]
     public BlocketPrice? Price { get; set; }
@@ -75,4 +75,19 @@ public class BlocketPrice
 
     [JsonPropertyName("price_unit")]
     public string? PriceUnit { get; set; }
+}
+
+public class BlocketImage
+{
+    [JsonPropertyName("url")]
+    public string? Url { get; set; }
+
+    [JsonPropertyName("path")]
+    public string? Path { get; set; }
+
+    [JsonPropertyName("height")]
+    public int? Height { get; set; }
+
+    [JsonPropertyName("width")]
+    public int? Width { get; set; }
 }

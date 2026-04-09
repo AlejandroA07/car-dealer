@@ -109,8 +109,8 @@ public class BlocketVehicleImportMapper : IBlocketVehicleImportMapper
 
     private static string NormalizeImageUrl(BlocketCarSearchItem searchItem, BlocketCarAdDetails? adDetails)
     {
-        var imageUrl = searchItem.ImageUrl
-            ?? adDetails?.ImageUrl;
+        var imageUrl = searchItem.Image?.Url
+            ?? adDetails?.Image?.Url;
 
         return NormalizeOptional(imageUrl) ?? DefaultImageUrl;
     }

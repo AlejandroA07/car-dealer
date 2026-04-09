@@ -38,7 +38,7 @@ public class BlocketCarAdDetails
     public string? AdId { get; set; }
 
     [JsonPropertyName("image")]
-    public string? ImageUrl { get; set; }
+    public BlocketImage? Image { get; set; }
 
     [JsonPropertyName("equipment")]
     public List<string> Equipment { get; set; } = [];

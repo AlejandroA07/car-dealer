@@ -75,11 +75,9 @@ public class SyncBlocketVehiclesCommandHandler : IRequestHandler<SyncBlocketVehi
         }
 
         var importedVehicles = await BuildVehicleEntitiesAsync(preparedVehicles);
-        var existingImportedVehicles = (await _unitOfWork.VehicleRepository
-                .FindAsync(vehicle => vehicle.Source == "Blocket"))
-            .ToList();
+        var existingVehicles = (await _unitOfWork.VehicleRepository.GetAllAsync()).ToList();
 
-        _unitOfWork.VehicleRepository.RemoveRange(existingImportedVehicles);
+        _unitOfWork.VehicleRepository.RemoveRange(existingVehicles);
 
         if (importedVehicles.Count > 0)
         {
@@ -96,7 +94,7 @@ public class SyncBlocketVehiclesCommandHandler : IRequestHandler<SyncBlocketVehi
             TotalFetched = totalFetched,
             TotalPrepared = preparedVehicles.Count,
             TotalImported = importedVehicles.Count,
-            TotalReplaced = existingImportedVehicles.Count,
+            TotalReplaced = existingVehicles.Count,
             TotalSkipped = totalSkipped,
             Vehicles = preparedVehicles
         };

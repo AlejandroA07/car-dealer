@@ -15,7 +15,7 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        var connectionString = "Data Source=TestDb;Mode=Memory;Cache=Shared";
+        var connectionString = $"Data Source=TestDb_{Guid.NewGuid():N};Mode=Memory;Cache=Shared";
         _connection = new SqliteConnection(connectionString);
         _connection.Open();
 
@@ -24,18 +24,6 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
         builder.UseSetting("JwtSettings:Issuer", "WestcoastCars.Auth");
         builder.UseSetting("JwtSettings:Audience", "WestcoastCars.Auth");
         builder.UseSetting("JwtSettings:ExpiryMinutes", "60");
-
-        builder.ConfigureServices(services =>
-        {
-            var sp = services.BuildServiceProvider();
-
-            using (var scope = sp.CreateScope())
-            {
-                var scopedServices = scope.ServiceProvider;
-                var db = scopedServices.GetRequiredService<WestcoastCarsContext>();
-                db.Database.EnsureCreated();
-            }
-        });
     }
 
     protected override void Dispose(bool disposing)

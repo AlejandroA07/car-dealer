@@ -10,6 +10,7 @@ using WestcoastCars.Application.Features.Vehicles.Commands.Create;
 using WestcoastCars.Application.Features.Vehicles.Commands.Update;
 using WestcoastCars.Application.Features.Vehicles.Commands.Delete;
 using WestcoastCars.Application.Features.Vehicles.Commands.MarkAsSold;
+using WestcoastCars.Application.Features.Vehicles.Commands.SyncBlocket;
 using WestcoastCars.Application.Features.Vehicles.Queries.Search;
 using Microsoft.Extensions.Logging;
 
@@ -131,6 +132,24 @@ namespace WestcoastCars.Api.Controllers
             var id = await _mediator.Send(command);
             var result = await _mediator.Send(new GetVehicleByIdQuery { Id = id });
             return CreatedAtAction(nameof(GetById), new { id = id }, result);
+        }
+
+        /// <summary>
+        /// Manually syncs the latest Blocket vehicle listings. Requires Admin or Salesperson role.
+        /// </summary>
+        /// <param name="command">Sync options such as limit, org id, locations, and models.</param>
+        /// <returns>A summary of the sync result.</returns>
+        [HttpPost("import/blocket")]
+        [Authorize(Roles = "Admin,Salesperson")]
+        [ProducesResponseType(typeof(SyncBlocketVehiclesResult), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(403)]
+        public async Task<IActionResult> SyncBlocket([FromBody] SyncBlocketVehiclesCommand command)
+        {
+            var request = command ?? new SyncBlocketVehiclesCommand();
+            _logger.LogInformation("🔄 Starting manual Blocket sync with limit {Limit}", request.Limit);
+            var result = await _mediator.Send(request);
+            return Ok(result);
         }
 
         /// <summary>

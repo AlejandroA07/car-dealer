@@ -139,16 +139,21 @@ public class SyncBlocketVehiclesCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ShouldReplaceOldImportedVehicles_AndPreserveManualVehicles()
+    public async Task Handle_ShouldReplaceExistingVehicles()
     {
-        var existingImportedVehicles = new List<Vehicle>
+        var existingVehicles = new List<Vehicle>
         {
-            new() { Id = 1, Source = "Blocket", Model = "Old", ModelYear = "2020", ImageUrl = "x", Description = "x", Manufacturer = new Manufacturer { Name = "VOLVO" }, FuelType = new FuelType { Name = "Petrol" }, TransmissionType = new TransmissionType { Name = "Automatic" } }
+            new() { Id = 1, Source = "Blocket", Model = "Old", ModelYear = "2020", ImageUrl = "x", Description = "x", Manufacturer = new Manufacturer { Name = "VOLVO" }, FuelType = new FuelType { Name = "Petrol" }, TransmissionType = new TransmissionType { Name = "Automatic" } },
+            new() { Id = 2, Source = null, Model = "Manual", ModelYear = "2021", ImageUrl = "x", Description = "x", Manufacturer = new Manufacturer { Name = "VOLVO" }, FuelType = new FuelType { Name = "Petrol" }, TransmissionType = new TransmissionType { Name = "Automatic" } }
         };
 
         _vehicleRepositoryMock
             .Setup(repository => repository.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Vehicle, bool>>>()))
-            .ReturnsAsync(existingImportedVehicles);
+            .ReturnsAsync([]);
+
+        _vehicleRepositoryMock
+            .Setup(repository => repository.GetAllAsync())
+            .ReturnsAsync(existingVehicles);
 
         _blocketApiClientMock
             .Setup(client => client.SearchCarsAsync(It.IsAny<BlocketCarSearchRequest>(), It.IsAny<CancellationToken>()))
@@ -182,9 +187,9 @@ public class SyncBlocketVehiclesCommandHandlerTests
 
         var result = await _handler.Handle(new SyncBlocketVehiclesCommand { Limit = 1 }, CancellationToken.None);
 
-        Assert.Equal(1, result.TotalReplaced);
+        Assert.Equal(2, result.TotalReplaced);
         Assert.Equal(1, result.TotalImported);
-        _vehicleRepositoryMock.Verify(repository => repository.RemoveRange(It.Is<IEnumerable<Vehicle>>(vehicles => vehicles.Count() == 1)), Times.Once);
+        _vehicleRepositoryMock.Verify(repository => repository.RemoveRange(It.Is<IEnumerable<Vehicle>>(vehicles => vehicles.Count() == 2)), Times.Once);
         _vehicleRepositoryMock.Verify(repository => repository.AddRangeAsync(It.Is<IEnumerable<Vehicle>>(vehicles => vehicles.Count() == 1)), Times.Once);
         _unitOfWorkMock.Verify(unitOfWork => unitOfWork.CompleteAsync(), Times.Once);
     }
