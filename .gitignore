@@ -122,6 +122,7 @@ ipch/
 # Ignore Markdown docs (keep only root README.md)
 *.md
 !/README.md
+blocket-import-plan.md
 *.ruleset
 
 # StyleCop

@@ -18,7 +18,7 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
             .Include(v => v.Manufacturer)
             .Include(v => v.FuelType)
             .Include(v => v.TransmissionType)
-            .SingleOrDefaultAsync(v => v.RegistrationNumber.ToUpper() == regNo.ToUpper());
+            .SingleOrDefaultAsync(v => v.RegistrationNumber != null && v.RegistrationNumber.ToUpper() == regNo.ToUpper());
     }
 
     public async Task<IEnumerable<Vehicle>> SearchAsync(VehicleSearchDto search)

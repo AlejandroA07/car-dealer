@@ -4,7 +4,7 @@ namespace WestcoastCars.Domain.Entities;
 
 public class Vehicle : BaseEntity
 {
-    public required string RegistrationNumber { get; set; }
+    public string? RegistrationNumber { get; set; }
     public required string Model { get; set; }
     public required string ModelYear { get; set; }
     public int Mileage { get; set; }
@@ -12,6 +12,13 @@ public class Vehicle : BaseEntity
     public int Value { get; set; }
     public required string Description { get; set; }
     public bool IsSold { get; set; }
+    public string? ExternalListingId { get; set; }
+    public string? Source { get; set; }
+    public string? SourceUrl { get; set; }
+    public DateTime? PublishedAt { get; set; }
+    public DateTime? ImportedAt { get; set; }
+    public string? Color { get; set; }
+    public string? City { get; set; }
     // Navigation property...
     public int ManufacturerId { get; set; }
     // Composition...

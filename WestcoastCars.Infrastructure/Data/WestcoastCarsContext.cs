@@ -12,5 +12,16 @@ namespace WestcoastCars.Infrastructure.Data
         public DbSet<ServiceBooking> ServiceBookings { get; set; }
         public DbSet<OutboxMessage> OutboxMessages { get; set; }
         public WestcoastCarsContext(DbContextOptions options) : base(options){}
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Vehicle>()
+                .HasIndex(vehicle => vehicle.ExternalListingId);
+
+            modelBuilder.Entity<Vehicle>()
+                .HasIndex(vehicle => vehicle.Source);
+        }
     }
 }
