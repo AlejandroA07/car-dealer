@@ -239,13 +239,32 @@ namespace westcoast_cars.web.Services
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
                     _logger.LogError("Error syncing Blocket vehicles: {StatusCode} - {Error}", response.StatusCode, errorContent);
+                    var errorMessage = "The sync could not be completed. Please try again.";
+
+                    if (!string.IsNullOrWhiteSpace(errorContent))
+                    {
+                        try
+                        {
+                            using var jsonDocument = JsonDocument.Parse(errorContent);
+                            if (jsonDocument.RootElement.TryGetProperty("detail", out var detailElement) &&
+                                detailElement.ValueKind == JsonValueKind.String &&
+                                !string.IsNullOrWhiteSpace(detailElement.GetString()))
+                            {
+                                errorMessage = detailElement.GetString()!;
+                            }
+                        }
+                        catch (JsonException)
+                        {
+                        }
+                    }
+
                     return new BlocketSyncViewModel
                     {
                         Limit = model.Limit,
                         OrgId = model.OrgId,
                         Locations = model.Locations,
                         Models = model.Models,
-                        ErrorMessage = "The sync could not be completed. Please try again."
+                        ErrorMessage = errorMessage
                     };
                 }
 

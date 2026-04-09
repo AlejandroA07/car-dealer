@@ -7,4 +7,6 @@ public class BlocketApiOptions
     public string BaseUrl { get; set; } = "https://blocket-api.se/";
     public int TimeoutSeconds { get; set; } = 30;
     public string DefaultSortOrder { get; set; } = "PUBLISHED_DESC";
+    public int MinRequestIntervalMilliseconds { get; set; } = 300;
+    public int MaxRetries { get; set; } = 3;
 }

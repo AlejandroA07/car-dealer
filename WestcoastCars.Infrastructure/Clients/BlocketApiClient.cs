@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Net;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 using WestcoastCars.Application.Interfaces;
@@ -13,6 +14,8 @@ public class BlocketApiClient : IBlocketApiClient
     {
         PropertyNameCaseInsensitive = true
     };
+    private static readonly SemaphoreSlim RequestThrottle = new(1, 1);
+    private static DateTimeOffset _nextAllowedRequestAt = DateTimeOffset.MinValue;
 
     private readonly HttpClient _httpClient;
     private readonly BlocketApiOptions _options;
@@ -20,7 +23,7 @@ public class BlocketApiClient : IBlocketApiClient
     public BlocketApiClient(HttpClient httpClient, IOptions<BlocketApiOptions> options)
     {
         _httpClient = httpClient;
-        _options = options.Value;
+        _options = options?.Value ?? new BlocketApiOptions();
     }
 
     public async Task<BlocketCarSearchResponse> SearchCarsAsync(BlocketCarSearchRequest request, CancellationToken cancellationToken = default)
@@ -50,17 +53,80 @@ public class BlocketApiClient : IBlocketApiClient
 
     private async Task<T> GetFromJsonAsync<T>(string requestUri, CancellationToken cancellationToken)
     {
-        using var response = await _httpClient.GetAsync(requestUri, cancellationToken);
-        response.EnsureSuccessStatusCode();
-
-        await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
-        var payload = await JsonSerializer.DeserializeAsync<T>(responseStream, JsonOptions, cancellationToken);
-
-        if (payload is null)
+        for (var attempt = 0; ; attempt++)
         {
-            throw new InvalidOperationException($"Blocket API returned an empty payload for '{requestUri}'.");
+            await WaitForRequestSlotAsync(cancellationToken);
+
+            using var response = await _httpClient.GetAsync(requestUri, cancellationToken);
+
+            if (ShouldRetry(response.StatusCode) && attempt < _options.MaxRetries)
+            {
+                var retryDelay = GetRetryDelay(response, attempt);
+                await Task.Delay(retryDelay, cancellationToken);
+                continue;
+            }
+
+            response.EnsureSuccessStatusCode();
+
+            await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
+            var payload = await JsonSerializer.DeserializeAsync<T>(responseStream, JsonOptions, cancellationToken);
+
+            if (payload is null)
+            {
+                throw new InvalidOperationException($"Blocket API returned an empty payload for '{requestUri}'.");
+            }
+
+            return payload;
+        }
+    }
+
+    private async Task WaitForRequestSlotAsync(CancellationToken cancellationToken)
+    {
+        await RequestThrottle.WaitAsync(cancellationToken);
+
+        try
+        {
+            var now = DateTimeOffset.UtcNow;
+            var delay = _nextAllowedRequestAt - now;
+
+            if (delay > TimeSpan.Zero)
+            {
+                await Task.Delay(delay, cancellationToken);
+            }
+
+            var requestIntervalMilliseconds = Math.Max(0, _options.MinRequestIntervalMilliseconds);
+            _nextAllowedRequestAt = DateTimeOffset.UtcNow.AddMilliseconds(requestIntervalMilliseconds);
+        }
+        finally
+        {
+            RequestThrottle.Release();
+        }
+    }
+
+    private static bool ShouldRetry(HttpStatusCode statusCode)
+    {
+        return statusCode == HttpStatusCode.TooManyRequests || (int)statusCode >= 500;
+    }
+
+    private static TimeSpan GetRetryDelay(HttpResponseMessage response, int attempt)
+    {
+        var retryAfter = response.Headers.RetryAfter;
+
+        if (retryAfter?.Delta is not null)
+        {
+            return retryAfter.Delta.Value;
         }
 
-        return payload;
+        if (retryAfter?.Date is not null)
+        {
+            var untilRetry = retryAfter.Date.Value - DateTimeOffset.UtcNow;
+            if (untilRetry > TimeSpan.Zero)
+            {
+                return untilRetry;
+            }
+        }
+
+        var seconds = Math.Min(8, Math.Pow(2, attempt + 1));
+        return TimeSpan.FromSeconds(seconds);
     }
 }
