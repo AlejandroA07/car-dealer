@@ -21,8 +21,8 @@ public class VehiclesController : Controller
         _logger = logger;
     }
 
-    [HttpGet("list")]
-    public async Task<IActionResult> Index([FromQuery] VehicleSearchDto search)
+    [HttpGet("list", Name = "VehicleCatalog")]
+    public async Task<IActionResult> Index([FromQuery] VehicleSearchDto search, [FromQuery] int page = 1)
     {
         try
         {
@@ -48,19 +48,30 @@ public class VehiclesController : Controller
                 vehicles = await _vehicleService.ListVehiclesAsync();
             }
 
+            const int pageSize = 15;
+            var totalVehicles = vehicles.Count;
+            var currentPage = Math.Clamp(page, 1, Math.Max(1, (int)Math.Ceiling(totalVehicles / (double)pageSize)));
+            var pagedVehicles = vehicles
+                .Skip((currentPage - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
             var manufacturers = await _manufacturerService.ListAllAsync();
-            var manufacturerList = manufacturers.Select(m => new SelectListItem 
-            { 
-                Value = m.Name, 
+            var manufacturerList = manufacturers.Select(m => new SelectListItem
+            {
+                Value = m.Name,
                 Text = m.Name,
                 Selected = m.Name == search.Make
             }).ToList();
 
             var viewModel = new VehicleListViewModel
             {
-                Vehicles = vehicles,
+                Vehicles = pagedVehicles,
                 Search = search,
-                Manufacturers = manufacturerList
+                Manufacturers = manufacturerList,
+                CurrentPage = currentPage,
+                PageSize = pageSize,
+                TotalVehicles = totalVehicles
             };
 
             return View("Index", viewModel);
@@ -197,7 +208,7 @@ public class VehiclesController : Controller
                 TempData["success"] = "Vehicle updated successfully";
                 return RedirectToAction(nameof(Index));
             }
-            
+
             TempData["error"] = "Error updating vehicle.";
             var errorViewModel = new VehicleBaseViewModel { Vehicle = vehicle };
             // Reload dropdowns

@@ -241,3 +241,6 @@ integrationTest.md
 
 # AI Assistant directories
 .claude/
+
+# Local planning and private documentation
+docs/

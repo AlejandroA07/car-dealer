@@ -1,54 +1,105 @@
 @model westcoast_cars.web.ViewModels.Admin.AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
 
 @section styles{
     <link rel="stylesheet" href="~/css/admin-page.css">
 }
 
-<section class="page">
-    <h1 class="page-title">Sales Dashboard</h1>
+<section class="section-block site-container admin-dashboard">
+    <div class="section-heading section-heading-spacious">
+        <div>
+            <span class="eyebrow">Operativ överblick</span>
+            <h1 class="section-title">Sales dashboard</h1>
+            <p class="section-description">Mätvärden, lagerfördelning och snabba genvägar samlade i ett tydligare arbetsflöde.</p>
+        </div>
+        <a asp-action="Create" asp-controller="Vehicles" class="btn btn-primary">Lägg till bil</a>
+    </div>
 
     <div class="dashboard-grid">
-        <div class="stat-card">
-            <h3>Total Vehicles</h3>
-            <div class="value">@Model.TotalVehicles</div>
-        </div>
-        <div class="stat-card">
-            <h3>Available</h3>
-            <div class="value" style="color: #28a745;">@Model.AvailableVehicles</div>
-        </div>
-        <div class="stat-card">
-            <h3>Sold</h3>
-            <div class="value" style="color: #dc3545;">@Model.SoldVehicles</div>
-        </div>
-        <div class="stat-card">
-            <h3>Inventory Value</h3>
-            <div class="value">@Model.TotalInventoryValue.ToString("C0")</div>
-        </div>
+        <article class="metric-card card-surface">
+            <span>Total lagerstorlek</span>
+            <strong>@Model.TotalVehicles</strong>
+            <small>Totalt registrerade fordon</small>
+        </article>
+        <article class="metric-card card-surface metric-card-positive">
+            <span>Tillgängliga</span>
+            <strong>@Model.AvailableVehicles</strong>
+            <small>Klara att sälja</small>
+        </article>
+        <article class="metric-card card-surface metric-card-muted">
+            <span>Sålda</span>
+            <strong>@Model.SoldVehicles</strong>
+            <small>Historiskt avslutade affärer</small>
+        </article>
+        <article class="metric-card card-surface">
+            <span>Lagervärde</span>
+            <strong>@Model.TotalInventoryValue.ToString("C0")</strong>
+            <small>Samlat värde i lager</small>
+        </article>
     </div>
 
     <div class="dashboard-sections">
-        <div class="admin-card">
-            <h2>Stock Distribution</h2>
+        <article class="admin-card card-surface">
+            <div class="card-heading">
+                <div>
+                    <span class="eyebrow">Fördelning</span>
+                    <h2>Stock per tillverkare</h2>
+                </div>
+            </div>
+
             <ul class="stock-list">
-                @foreach(var item in Model.StockByManufacturer)
+                @foreach (var item in Model.StockByManufacturer)
                 {
                     <li class="stock-item">
                         <span class="stock-name">@item.Name</span>
-                        <span class="stock-count">@item.Count cars</span>
+                        <span class="stock-count">@item.Count bilar</span>
                     </li>
                 }
             </ul>
-        </div>
+        </article>
 
-        <div class="admin-card">
-            <h2>Quick Management</h2>
-            <div class="quick-actions">
-                <a asp-action="SyncBlocket" asp-controller="Vehicles" class="btn-add"><i class="fa-solid fa-rotate"></i> Sync Blocket</a>
-                <a asp-action="Create" asp-controller="Vehicles" class="btn-add"><i class="fa-solid fa-car"></i> Add Vehicle</a>
-                <a asp-action="Create" asp-controller="Manufacturer" class="btn-add"><i class="fa-solid fa-industry"></i> Add Manufacturer</a>
-                <a asp-action="Create" asp-controller="FuelTypes" class="btn-add"><i class="fa-solid fa-gas-pump"></i> Add Fuel Type</a>
-                <a asp-action="Create" asp-controller="Transmissions" class="btn-add"><i class="fa-solid fa-gear"></i> Add Transmission</a>
+        <article class="admin-card card-surface">
+            <div class="card-heading">
+                <div>
+                    <span class="eyebrow">Genvägar</span>
+                    <h2>Quick management</h2>
+                </div>
             </div>
-        </div>
+
+            <div class="quick-actions">
+                <a asp-action="SyncBlocket" asp-controller="Vehicles" class="btn btn-secondary btn-full"><i class="fa-solid fa-rotate"></i> Sync Blocket</a>
+                <a asp-action="Create" asp-controller="Vehicles" class="btn btn-primary btn-full"><i class="fa-solid fa-car"></i> Lägg till bil</a>
+                <a asp-action="Create" asp-controller="Manufacturer" class="btn btn-ghost btn-full"><i class="fa-solid fa-industry"></i> Lägg till tillverkare</a>
+                <a asp-action="Create" asp-controller="FuelTypes" class="btn btn-ghost btn-full"><i class="fa-solid fa-gas-pump"></i> Lägg till bränsletyp</a>
+                <a asp-action="Create" asp-controller="Transmissions" class="btn btn-ghost btn-full"><i class="fa-solid fa-gear"></i> Lägg till växellåda</a>
+            </div>
+        </article>
     </div>
+
+    @if (Model.RecentVehicles.Any())
+    {
+        <article class="admin-card card-surface recent-vehicles-card">
+            <div class="card-heading">
+                <div>
+                    <span class="eyebrow">Senaste objekt</span>
+                    <h2>Nyligen uppdaterade bilar</h2>
+                </div>
+            </div>
+
+            <div class="recent-vehicles-list">
+                @foreach (var vehicle in Model.RecentVehicles.Take(4))
+                {
+                    <div class="recent-vehicle-row">
+                        <div>
+                            <strong>@vehicle.Name</strong>
+                            <p>@vehicle.Model · @vehicle.ModelYear</p>
+                        </div>
+                        <span>@vehicle.Value.ToString("N0") kr</span>
+                    </div>
+                }
+            </div>
+        </article>
+    }
 </section>

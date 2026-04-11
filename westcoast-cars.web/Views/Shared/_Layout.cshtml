@@ -1,5 +1,10 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+@{
+    var pageTitle = string.IsNullOrWhiteSpace(ViewData["Title"]?.ToString())
+        ? "Westcoast Cars"
+        : $"{ViewData["Title"]} | Westcoast Cars";
+}
+<!DOCTYPE html>
+<html lang="sv">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -10,72 +15,116 @@
     @RenderSection("styles", false)
     <link rel="stylesheet" href="~/css/site.css">
     <link rel="stylesheet" href="~/css/vehicle-detail-page.css">
+    <link rel="stylesheet" href="~/css/ui-redesign.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" />
     <script src="https://kit.fontawesome.com/8dda4e2421.js" crossorigin="anonymous"></script>
-    <title>@ViewData["Title"] Westcoast Cars</title>
+    <title>@pageTitle</title>
 </head>
-<body>
-    <header>
-        @await Html.PartialAsync("_Navigation")
-        @if (Model is westcoast_cars.web.ViewModels.Vehicles.VehicleListViewModel)
-        {
-            <div class="search-bar-container">
-                @await Html.PartialAsync("_SearchForm", (westcoast_cars.web.ViewModels.Vehicles.VehicleListViewModel)Model)
-            </div>
-        }
+<body id="top">
+    <header class="site-header">
+        <div class="site-header-shell">
+            @await Html.PartialAsync("_Navigation")
+        </div>
     </header>
-    <main class="@(Model is westcoast_cars.web.ViewModels.Vehicles.VehicleListViewModel ? "" : "no-search")">
+
+    <main class="site-main">
         @RenderBody()
-            @* <section>
-                @await Html.PartialAsync("_WeeklyOffer")
-            </section> *@
-        </main>
+    </main>
+
+    <footer id="kontakt" class="site-footer">
+        <div class="site-container site-footer-content">
+            <div class="site-footer-brand">
+                <p class="site-footer-title">Westcoast Cars</p>
+                <p>En lugnare bilaffär med tydliga val, personlig service och kurerat lager.</p>
+            </div>
+
+            <div class="site-footer-group">
+                <h2>Snabblänkar</h2>
+                <a asp-action="Index" asp-controller="Home" asp-fragment="kontakt">Kontakt</a>
+                <a asp-action="Index" asp-controller="Home" asp-fragment="plats">Plats</a>
+            </div>
+
+            <div class="site-footer-group">
+                <h2>Juridiskt</h2>
+                <a href="#">Integritetspolicy</a>
+                <a href="#">Villkor</a>
+            </div>
+
+            <div class="site-footer-meta">
+                <p>© 2026 Westcoast Cars. Nordisk enkelhet.</p>
+                <div class="site-footer-icons" aria-label="Kontaktvägar">
+                    <a href="#plats" aria-label="Visa plats"><i class="fa-solid fa-globe"></i></a>
+                    <a href="mailto:info@westcoast-cars.com" aria-label="Skicka e-post"><i class="fa-solid fa-envelope"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <a href="#top" class="scroll-top-button" aria-label="Till toppen">
+        <i class="fa-solid fa-chevron-up"></i>
+    </a>
 
     <div id="sidebarOverlay" class="sidebar-overlay"></div>
-    <div id="sidebar" class="sidebar">
-        <span id="closeBtn" class="close-btn">&times;</span>
-        <h2>Meny</h2>
+    <aside id="sidebar" class="sidebar" aria-hidden="true">
+        <button id="closeBtn" class="close-btn" type="button" aria-label="Stäng meny">&times;</button>
+        <div class="sidebar-brand">
+            <span class="brand-kicker">Westcoast Cars</span>
+            <h2>Snabbmeny</h2>
+        </div>
         <ul class="sidebar-links">
-            <li><a asp-action="Index" asp-controller="Vehicles"><i class="fa-solid fa-car"></i> Våra bilar</a></li>
-            <li><a asp-action="Index" asp-controller="Service"><i class="fa-solid fa-wrench"></i> Boka service</a></li>
+            <li><a asp-action="Index" asp-controller="Home"><i class="fa-solid fa-house"></i> Hem</a></li>
+            <li><a asp-route="VehicleCatalog"><i class="fa-solid fa-car"></i> Katalog</a></li>
+            <li><a asp-action="Index" asp-controller="Service"><i class="fa-solid fa-wrench"></i> Service</a></li>
+            <li><a asp-action="Index" asp-controller="Home" asp-fragment="kontakt"><i class="fa-solid fa-envelope"></i> Kontakt</a></li>
+            <li><a asp-action="Index" asp-controller="Home" asp-fragment="plats"><i class="fa-solid fa-location-dot"></i> Plats</a></li>
             @if (User.Identity?.IsAuthenticated != true)
             {
                 <li><a asp-action="Login" asp-controller="Auth"><i class="fa-solid fa-right-to-bracket"></i> Logga in</a></li>
-                <li><a href="#"><i class="fa-solid fa-user-plus"></i> Skapa konto</a></li>
             }
             else
             {
                 @if (User.IsInRole("Admin") || User.IsInRole("Salesperson"))
                 {
-                    <li><a asp-action="SyncBlocket" asp-controller="Vehicles"><i class="fa-solid fa-rotate"></i> Sync Blocket</a></li>
+                    <li><a asp-action="Index" asp-controller="Admin"><i class="fa-solid fa-chart-line"></i> Dashboard</a></li>
+                    <li><a asp-action="SyncBlocket" asp-controller="Vehicles"><i class="fa-solid fa-rotate"></i> Synka Blocket</a></li>
                 }
                 <li>
-                    <form asp-controller="Auth" asp-action="Logout" method="post" id="sidebarLogoutForm" style="display:none;"></form>
+                    <form asp-controller="Auth" asp-action="Logout" method="post" id="sidebarLogoutForm" class="inline-form"></form>
                     <a href="javascript:document.getElementById('sidebarLogoutForm').submit()">
                         <i class="fa-solid fa-right-from-bracket"></i> Logga ut
                     </a>
                 </li>
             }
         </ul>
-    </div>
+    </aside>
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             const sidebar = $('#sidebar');
             const overlay = $('#sidebarOverlay');
+            const body = $('body');
 
-            $('#menuBtn').on('click', function() {
-                sidebar.addClass('active');
+            function openSidebar() {
+                sidebar.addClass('active').attr('aria-hidden', 'false');
                 overlay.addClass('active');
-                $('body').css('overflow', 'hidden'); // Prevent scrolling
-            });
+                body.addClass('drawer-open');
+            }
 
-            $('#closeBtn, #sidebarOverlay').on('click', function() {
-                sidebar.removeClass('active');
+            function closeSidebar() {
+                sidebar.removeClass('active').attr('aria-hidden', 'true');
                 overlay.removeClass('active');
-                $('body').css('overflow', 'auto');
+                body.removeClass('drawer-open');
+            }
+
+            $('#menuBtn').on('click', openSidebar);
+            $('#closeBtn, #sidebarOverlay').on('click', closeSidebar);
+
+            $(document).on('keyup', function (event) {
+                if (event.key === 'Escape') {
+                    closeSidebar();
+                }
             });
         });
     </script>

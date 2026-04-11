@@ -1,0 +1,93 @@
+@model WestcoastCars.Contracts.DTOs.VehicleSummaryDto
+@{
+    var title = $"{Model.Manufacturer} {Model.Name}".Trim();
+    if (string.IsNullOrWhiteSpace(title)) title = Model.Model;
+
+    var hasMeta = !string.IsNullOrWhiteSpace(Model.Color)
+        || !string.IsNullOrWhiteSpace(Model.City)
+        || !string.IsNullOrWhiteSpace(Model.Source);
+}
+
+<article class="vehicle-card">
+    <a class="vehicle-card-media" asp-action="Details" asp-controller="Vehicles" asp-route-id="@Model.Id" aria-label="Se mer om @title">
+        <img src="@Model.ImageUrl" alt="@title">
+        <span class="vehicle-status-chip vehicle-status-chip-overlay @(Model.IsSold ? "vehicle-status-chip-muted" : null)">@(Model.IsSold ? "Såld" : "Tillgänglig")</span>
+    </a>
+
+    <div class="vehicle-card-body">
+        <div class="vehicle-card-catalog-head">
+            <span class="vehicle-status-chip vehicle-status-chip-inline @(Model.IsSold ? "vehicle-status-chip-muted" : null)">@(Model.IsSold ? "Såld" : "Tillgänglig")</span>
+            <div class="vehicle-card-catalog-price">
+                <strong>@Model.Value.ToString("N0") kr</strong>
+                <small>Pris</small>
+            </div>
+        </div>
+
+        <div class="vehicle-card-topline">
+            <span>@Model.ModelYear</span>
+            @if (!string.IsNullOrWhiteSpace(Model.Source))
+            {
+                <span>@Model.Source</span>
+            }
+        </div>
+
+        <div class="vehicle-card-heading">
+            <h3>@title</h3>
+            @if (!string.IsNullOrWhiteSpace(Model.Model))
+            {
+                <p class="vehicle-card-model-line">@Model.Model</p>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.Color))
+            {
+                <p class="vehicle-card-color-line">@Model.Color</p>
+            }
+        </div>
+
+        <div class="vehicle-card-facts">
+            @if (!string.IsNullOrWhiteSpace(Model.Color))
+            {
+                <span>@Model.Color</span>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.City))
+            {
+                <span>@Model.City</span>
+            }
+            @if (!hasMeta)
+            {
+                <span>Kurerat lager</span>
+            }
+        </div>
+
+        <div class="vehicle-card-spec-row">
+            <span><i class="fa-regular fa-calendar"></i> @Model.ModelYear</span>
+            @if (!string.IsNullOrWhiteSpace(Model.City))
+            {
+                <span><i class="fa-solid fa-location-dot"></i> @Model.City</span>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.Source))
+            {
+                <span><i class="fa-solid fa-bolt"></i> @Model.Source</span>
+            }
+        </div>
+
+        <div class="vehicle-card-footer">
+            <div>
+                <span class="vehicle-card-price">@Model.Value.ToString("N0") kr</span>
+                <small>Klar för visning</small>
+            </div>
+            <a class="vehicle-card-link" asp-action="Details" asp-controller="Vehicles" asp-route-id="@Model.Id" aria-label="Se mer om @title">
+                <i class="fa-solid fa-compass"></i>
+            </a>
+        </div>
+
+        <a class="vehicle-card-details-button" asp-action="Details" asp-controller="Vehicles" asp-route-id="@Model.Id">Se detaljer</a>
+
+        @if (User.IsInRole("Admin") || User.IsInRole("Salesperson"))
+        {
+            <div class="vehicle-card-actions">
+                <a class="btn btn-ghost" asp-action="Edit" asp-controller="Vehicles" asp-route-id="@Model.Id">Ändra</a>
+                <a class="btn btn-danger" asp-action="Delete" asp-controller="Vehicles" asp-route-id="@Model.Id">Såld</a>
+            </div>
+        }
+    </div>
+</article>

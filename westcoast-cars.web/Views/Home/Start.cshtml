@@ -1,80 +1,80 @@
 @model westcoast_cars.web.ViewModels.Vehicles.VehicleListViewModel
 @{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Hem";
 }
 
-@section styles{
-    <link rel="stylesheet" href="~/css/landing-page.css">
-    <style>
-        .home-section {
-            padding: 4rem 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .home-section h2 {
-            text-align: center;
-            font-size: 2.5rem;
-            margin-bottom: 3rem;
-            color: var(--dark-color);
-        }
-        .about-content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 4rem;
-            align-items: center;
-        }
-        .about-text p {
-            font-size: 1.1rem;
-            margin-bottom: 1.5rem;
-        }
-        .view-all-container {
-            text-align: center;
-            margin-top: 3rem;
-        }
-    </style>
-}
-
-<div class="landing">
-    <div class="content">
-        <h1>Välkommen till Westcoast Cars</h1>
-        <h2>Vi erbjuder nya och begagnade bilar</h2>
-        <p>Med högsta kvalitet allt ifrån sportbilar till<br>
-        familjebilar</p>
+<section class="home-hero" aria-labelledby="home-hero-title">
+    <div class="home-hero-media">
+        <img src="~/images/landing.jpg" alt="Westcoast Cars bilhall med utvalda bilar" />
+        <div class="home-hero-overlay"></div>
     </div>
-</div>
 
-<section id="featured-cars" class="home-section">
-    <h2>Våra bilar</h2>
-    <div class="gallery-wrapper">
-        @foreach (var vehicle in Model.Vehicles)
-        {
-            <div class="gallery-card">
-                <div>@vehicle.Name</div>
-                <img src="@vehicle.ImageUrl" alt="@vehicle.Model">
-                <div><span>@vehicle.Name</span>&nbsp;<span>@vehicle.ModelYear</span></div>
-                <div class="buttons-container">
-                    <a class="btn btn-dark" asp-action="details" asp-controller="vehicles" asp-route-id="@vehicle.Id">Se mer</a>
-                </div>
+    <div class="home-hero-content site-container">
+        <div class="home-hero-copy">
+            <span class="eyebrow">Kurerad bilhandel på västkusten</span>
+            <h1 id="home-hero-title">Trygga bilaffärer med nordisk enkelhet.</h1>
+            <p>
+                Vi hjälper dig hitta rätt bil med tydlig information, noggrant utvalda fordon och personlig service från första klick till provkörning.
+            </p>
+            <div class="hero-actions">
+                <a asp-route="VehicleCatalog" class="btn btn-primary">
+                    Utforska lager <i class="fa-solid fa-arrow-right"></i>
+                </a>
+                <a asp-action="Index" asp-controller="Service" class="btn btn-secondary">Boka service</a>
             </div>
-        }
-    </div>
-    <div class="view-all-container">
-        <a asp-action="Index" asp-controller="Vehicles" class="btn btn-primary btn-large">Se alla våra bilar</a>
+        </div>
     </div>
 </section>
 
-<section id="about-us" class="home-section" style="background-color: #f9f9f9; max-width: 100%;">
-    <div style="max-width: 1200px; margin: 0 auto;">
-        <h2>Om oss</h2>
-        <div class="about-content">
-            <div class="about-text">
-                <p>Westcoast Cars har sedan starten varit en ledande aktör inom bilförsäljning på västkusten. Vi brinner för att hitta rätt bil för varje kund, oavsett om du söker en pålitlig familjebil eller din drömsportbil.</p>
-                <p>Vårt team av experter ser till att varje bil i vårt lager genomgår noggranna kontroller för att garantera högsta kvalitet och säkerhet.</p>
-                <p>Välkommen in till oss för en provkörning och personlig service!</p>
+<section id="utvalda-bilar" class="selection-section">
+    <div class="site-container">
+        <div class="section-heading section-heading-spacious">
+            <div>
+                <span class="eyebrow">Utvalt lager</span>
+                <h2>Utvalda bilar</h2>
+                <p class="section-description">Bild först, tydligt pris och minimalt brus — så blir det enklare att jämföra rätt bil.</p>
             </div>
-            <div class="about-image">
-                <img src="~/images/landing.jpg" alt="Vår bilhall" style="border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+            <a asp-route="VehicleCatalog" class="text-link">Se hela lagret <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+        </div>
+
+        @if (!Model.Vehicles.Any())
+        {
+            <div class="empty-state card-surface">
+                <h3>Inga utvalda bilar att visa just nu</h3>
+                <p>När lagret uppdateras visas de första utvalda bilarna här.</p>
+                <a asp-route="VehicleCatalog" class="btn btn-primary">Gå till lager</a>
             </div>
+        }
+        else
+        {
+            <div class="vehicle-grid vehicle-grid-featured">
+                @foreach (var vehicle in Model.Vehicles)
+                {
+                    @await Html.PartialAsync("_VehicleCard", vehicle)
+                }
+            </div>
+        }
+    </div>
+</section>
+
+<section id="plats" class="location-section site-container">
+    <div class="location-map" aria-label="Karta till Westcoast Cars">
+        <div class="map-grid" aria-hidden="true"></div>
+        <div class="map-pin">
+            <i class="fa-solid fa-location-dot"></i>
+            <span>Westcoast Cars</span>
+        </div>
+    </div>
+
+    <div class="location-copy">
+        <span class="eyebrow">Plats</span>
+        <h2>Besök vår bilhall på västkusten.</h2>
+        <p>
+            Kom förbi för att se aktuella bilar, prata med oss om nästa steg eller boka en personlig genomgång.
+        </p>
+        <div class="location-actions">
+            <a href="#kontakt" class="btn btn-primary">Kontakta oss</a>
+            <a asp-action="Index" asp-controller="Service" class="btn btn-secondary">Boka service</a>
         </div>
     </div>
 </section>
