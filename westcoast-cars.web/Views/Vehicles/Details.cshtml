@@ -1,75 +1,131 @@
 @model WestcoastCars.Contracts.DTOs.VehicleDetailsDto
 @{
     ViewData["Title"] = $"{Model.Manufacturer} {Model.Model}";
+    var title = Model.Name?.Trim() ?? string.Empty;
+    if (!string.IsNullOrWhiteSpace(Model.Manufacturer) &&
+        !title.StartsWith(Model.Manufacturer, StringComparison.OrdinalIgnoreCase))
+    {
+        title = $"{Model.Manufacturer} {title}".Trim();
+    }
+    if (string.IsNullOrWhiteSpace(title)) title = Model.Model;
+    var statusText = Model.IsSold ? "Såld" : "Tillgänglig";
+    var colorText = string.IsNullOrWhiteSpace(Model.Color) ? "Ej angivet" : Model.Color;
+    var cityText = string.IsNullOrWhiteSpace(Model.City) ? "Göteborg" : Model.City;
+    var sourceText = string.IsNullOrWhiteSpace(Model.Source) ? "Westcoast Cars" : Model.Source;
 }
 
-<section class="section-block site-container">
-    <div class="vehicle-detail-shell">
-        <div class="vehicle-detail-main card-surface">
-            <a asp-action="Index" class="text-link back-link"><i class="fa-solid fa-arrow-left-long"></i> Tillbaka till lagret</a>
-
-            <div class="vehicle-detail-header-row">
-                <div>
-                    <span class="eyebrow">@Model.Manufacturer</span>
-                    <h1>@Model.Name</h1>
-                    <p class="vehicle-detail-subtitle">@Model.Model · @Model.ModelYear</p>
+<section class="vehicle-details-page">
+    <div class="site-container vehicle-details-container">
+        <section class="details-hero-grid" aria-labelledby="vehicle-title">
+            <div class="details-gallery">
+                <div class="details-main-image">
+                    <img src="@Model.ImageUrl" alt="@title" />
+                    <span class="details-cert-chip">Nordiskt certifierad</span>
                 </div>
-                <div class="vehicle-price-card">
-                    <span>Pris</span>
+
+                <div class="details-thumbs" aria-label="Bildöversikt">
+                    <div class="details-thumb is-active"><img src="@Model.ImageUrl" alt="@title exteriör" /></div>
+                    <div class="details-thumb details-thumb-dark"><i class="fa-solid fa-circle-dot"></i></div>
+                    <div class="details-thumb details-thumb-dark"><i class="fa-solid fa-car-rear"></i></div>
+                    <div class="details-thumb details-thumb-more"><span>+12 bilder</span></div>
+                </div>
+            </div>
+
+            <aside class="details-buy-box" aria-label="Pris och nästa steg">
+                <p class="details-maker">@Model.Manufacturer</p>
+                <h1 id="vehicle-title">@title</h1>
+                <p class="details-subtitle">@Model.ModelYear · @colorText</p>
+
+                <div class="details-price-block">
                     <strong>@Model.Value.ToString("N0") kr</strong>
-                    <small>@(Model.IsSold ? "Såld" : "Tillgänglig för visning")</small>
+                    <span>Exklusive skatt och registreringsavgift</span>
                 </div>
+
+                <div class="details-action-stack">
+                    <a asp-action="Index" asp-controller="Service" class="btn btn-primary btn-full">
+                        Boka visning <i class="fa-regular fa-calendar"></i>
+                    </a>
+                    <a href="#kontakt" class="btn btn-secondary btn-full">
+                        Kontakta oss <i class="fa-regular fa-envelope"></i>
+                    </a>
+                    @if (!string.IsNullOrWhiteSpace(Model.SourceUrl))
+                    {
+                        <a href="@Model.SourceUrl" target="_blank" rel="noopener noreferrer" class="details-source-link">
+                            Visa originalannons <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        </a>
+                    }
+                </div>
+
+                <div class="details-trust-box">
+                    <i class="fa-solid fa-certificate"></i>
+                    <div>
+                        <strong>Westcoast kvalitetssäkrad</strong>
+                        <p>Den här bilen är presenterad med tydliga fakta och personlig hjälp från första kontakt.</p>
+                    </div>
+                </div>
+            </aside>
+        </section>
+
+        <section class="details-lower-grid">
+            <div class="details-main-content">
+                <section class="details-spec-section" aria-labelledby="details-spec-title">
+                    <h2 id="details-spec-title">Tekniska specifikationer</h2>
+                    <div class="details-spec-grid">
+                        <article><span>År</span><strong>@Model.ModelYear</strong></article>
+                        <article><span>Miltal</span><strong>@Model.Mileage.ToString("N0") km</strong></article>
+                        <article><span>Bränsle</span><strong>@Model.FuelType</strong></article>
+                        <article><span>Växellåda</span><strong>@Model.TransmissionsType</strong></article>
+                        <article><span>Färg</span><strong>@colorText</strong></article>
+                        <article><span>Källa</span><strong>@sourceText</strong></article>
+                    </div>
+                </section>
+
+                <section class="details-description-block" aria-labelledby="details-description-title">
+                    <h2 id="details-description-title">Beskrivning</h2>
+                    <p>@(string.IsNullOrWhiteSpace(Model.Description) ? "Ingen beskrivning tillgänglig ännu. Kontakta oss så hjälper vi dig med mer information om bilen." : Model.Description)</p>
+
+                    <div class="details-feature-row">
+                        <article>
+                            <i class="fa-solid fa-shield-halved"></i>
+                            <div>
+                                <strong>Trygg affär</strong>
+                                <span>Tydlig information före kontakt</span>
+                            </div>
+                        </article>
+                        <article>
+                            <i class="fa-solid fa-headset"></i>
+                            <div>
+                                <strong>Personlig hjälp</strong>
+                                <span>Rådgivning hela vägen</span>
+                            </div>
+                        </article>
+                    </div>
+                </section>
             </div>
 
-            <div class="vehicle-hero-image">
-                <img src="@Model.ImageUrl" alt="@($"{Model.Manufacturer} {Model.Model}")" />
-            </div>
+            <aside class="details-side-stack">
+                <section class="details-location-card" aria-labelledby="details-location-title">
+                    <h2 id="details-location-title">Plats</h2>
+                    <div class="details-map-preview" aria-hidden="true">
+                        <i class="fa-solid fa-location-dot"></i>
+                    </div>
+                    <strong>Westcoast Cars</strong>
+                    <p>@cityText</p>
+                    <div class="details-open-row">
+                        <span><i class="fa-solid fa-circle"></i> Öppet idag</span>
+                        <span>09:00 – 18:00</span>
+                    </div>
+                </section>
 
-            <div class="vehicle-highlight-grid">
-                <div class="detail-highlight">
-                    <span>Årsmodell</span>
-                    <strong>@Model.ModelYear</strong>
-                </div>
-                <div class="detail-highlight">
-                    <span>Miltal</span>
-                    <strong>@Model.Mileage.ToString("N0") km</strong>
-                </div>
-                <div class="detail-highlight">
-                    <span>Bränsle</span>
-                    <strong>@Model.FuelType</strong>
-                </div>
-                <div class="detail-highlight">
-                    <span>Växellåda</span>
-                    <strong>@Model.TransmissionsType</strong>
-                </div>
-            </div>
-
-            <div class="detail-info-grid">
-                <div class="detail-row"><span>Registreringsnummer</span><strong>@(string.IsNullOrWhiteSpace(Model.RegistrationNumber) ? "Ej tillgängligt" : Model.RegistrationNumber)</strong></div>
-                <div class="detail-row"><span>Färg</span><strong>@(string.IsNullOrWhiteSpace(Model.Color) ? "Ej angivet" : Model.Color)</strong></div>
-                <div class="detail-row"><span>Ort</span><strong>@(string.IsNullOrWhiteSpace(Model.City) ? "Ej angivet" : Model.City)</strong></div>
-                <div class="detail-row"><span>Publicerad</span><strong>@(Model.PublishedAt.HasValue ? Model.PublishedAt.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm") : "Ej tillgängligt")</strong></div>
-                <div class="detail-row"><span>Importerad</span><strong>@(Model.ImportedAt.HasValue ? Model.ImportedAt.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm") : "Ej tillgängligt")</strong></div>
-                <div class="detail-row"><span>Källa</span><strong>@(string.IsNullOrWhiteSpace(Model.Source) ? "Manuellt lager" : Model.Source)</strong></div>
-            </div>
-
-            <div class="detail-description card-surface card-surface-subtle">
-                <span class="eyebrow">Beskrivning</span>
-                <p>@(string.IsNullOrWhiteSpace(Model.Description) ? "Ingen beskrivning tillgänglig ännu." : Model.Description)</p>
-            </div>
-        </div>
-
-        <aside class="vehicle-detail-sidebar card-surface">
-            <span class="eyebrow">Nästa steg</span>
-            <h2>Redo att ta nästa steg?</h2>
-            <p>Ta kontakt med teamet för provkörning, finansieringsfrågor eller mer information om bilen.</p>
-
-            @if (!string.IsNullOrWhiteSpace(Model.SourceUrl))
-            {
-                <a href="@Model.SourceUrl" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-full">Öppna originalannons</a>
-            }
-
-            <a asp-action="Index" asp-controller="Service" class="btn btn-ghost btn-full">Boka service eller rådgivning</a>
-        </aside>
+                <section class="details-assurance-card" aria-labelledby="details-assurance-title">
+                    <h2 id="details-assurance-title">Westcoast trygghet</h2>
+                    <ul>
+                        <li><i class="fa-solid fa-shield-halved"></i><span><strong>Kontrollerad information</strong>Pris, status och fakta visas tidigt.</span></li>
+                        <li><i class="fa-solid fa-rotate-left"></i><span><strong>Rak kontakt</strong>Vi hjälper dig snabbt vidare utan onödigt brus.</span></li>
+                        <li><i class="fa-solid fa-truck-fast"></i><span><strong>Smidig leverans</strong>Vi planerar hämtning eller överlämning tillsammans.</span></li>
+                    </ul>
+                </section>
+            </aside>
+        </section>
     </div>
 </section>

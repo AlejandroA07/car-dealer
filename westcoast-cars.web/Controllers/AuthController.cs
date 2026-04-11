@@ -48,8 +48,8 @@ namespace westcoast_cars.web.Controllers
             {
                 if (string.IsNullOrWhiteSpace(result.Token))
                 {
-                    ModelState.AddModelError(string.Empty, "Invalid login response.");
-                    TempData["error"] = "Invalid login attempt";
+                    ModelState.AddModelError(string.Empty, "Ogiltigt svar från inloggningen.");
+                    TempData["error"] = "Inloggningen misslyckades";
                     return View(model);
                 }
 
@@ -92,7 +92,7 @@ namespace westcoast_cars.web.Controllers
                     new ClaimsPrincipal(claimsIdentity),
                     authProperties);
 
-                TempData["success"] = "Login successful";
+                TempData["success"] = "Du är inloggad";
 
                 // Redirect Admins and Salespersons to the Dashboard if no specific ReturnUrl
                 if (string.IsNullOrEmpty(model.ReturnUrl) || model.ReturnUrl == "/")
@@ -106,8 +106,8 @@ namespace westcoast_cars.web.Controllers
                 return LocalRedirect(model.ReturnUrl ?? "/");
             }
 
-            ModelState.AddModelError(string.Empty, result.Error ?? "Invalid login attempt.");
-            TempData["error"] = "Invalid login attempt";
+            ModelState.AddModelError(string.Empty, result.Error ?? "Ogiltig e-post eller lösenord.");
+            TempData["error"] = "Inloggningen misslyckades";
             return View(model);
         }
 
@@ -116,7 +116,7 @@ namespace westcoast_cars.web.Controllers
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            TempData["success"] = "You have been logged out";
+            TempData["success"] = "Du har loggats ut";
             return RedirectToAction("Index", "Home");
         }
     }
