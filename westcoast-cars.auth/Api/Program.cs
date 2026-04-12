@@ -138,7 +138,10 @@ using (var scope = app.Services.CreateScope())
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "An error occurred during migration or seeding.");
+        logger.LogCritical(ex,
+            "Auth API cannot start because the auth database is unavailable or migration/seeding failed. Database: {Database}. Connection: {ConnectionString}. Start MySQL, verify the 'westcoast_auth' database exists, and check ConnectionStrings:DefaultConnection.",
+            "westcoast_auth",
+            SanitizeConnectionString(builder.Configuration.GetConnectionString("DefaultConnection")));
         throw;
     }
 }
@@ -169,3 +172,33 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+static string SanitizeConnectionString(string? connectionString)
+{
+    if (string.IsNullOrWhiteSpace(connectionString))
+    {
+        return "(missing)";
+    }
+
+    try
+    {
+        var builder = new System.Data.Common.DbConnectionStringBuilder
+        {
+            ConnectionString = connectionString
+        };
+
+        foreach (var key in new[] { "Password", "Pwd" })
+        {
+            if (builder.ContainsKey(key))
+            {
+                builder[key] = "***";
+            }
+        }
+
+        return builder.ConnectionString;
+    }
+    catch
+    {
+        return "(configured but could not be sanitized)";
+    }
+}

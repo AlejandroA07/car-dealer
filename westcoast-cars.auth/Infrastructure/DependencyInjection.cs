@@ -78,7 +78,9 @@ public static class DependencyInjection
                 }
             }
 
-            options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+            options.UseMySql(
+                connectionString,
+                new MySqlServerVersion(new Version(8, 0, 21)));
         });
 
         services.AddIdentity<IdentityUser, IdentityRole>(options =>

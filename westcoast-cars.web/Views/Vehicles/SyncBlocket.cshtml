@@ -1,85 +1,111 @@
 @model westcoast_cars.web.ViewModels.Vehicles.BlocketSyncViewModel
 
-@section styles{
-    <link rel="stylesheet" href="~/css/admin-page.css">
+@{
+    ViewData["Title"] = "Synka Blocket";
 }
 
-<section class="page">
-    <h1 class="page-title">Manual Blocket Sync</h1>
+<section class="admin-editor-page">
+    <div class="site-container admin-workspace-container">
+        @await Html.PartialAsync("_AdminSidebar")
 
-    <div class="dashboard-sections sync-layout">
-        <div class="admin-card">
-            <h2>Run Sync</h2>
-            <p class="sync-copy">Fetch the latest Blocket listings and replace the current vehicle inventory with a fresh set of up to 50 cars.</p>
-
-            <form asp-action="SyncBlocket" asp-controller="Vehicles" method="post" class="sync-form">
-                @Html.AntiForgeryToken()
-
-                <div class="form-control">
-                    <label asp-for="Limit"></label>
-                    <input asp-for="Limit" type="number" min="1" max="50" />
-                    <span asp-validation-for="Limit" class="text-danger"></span>
+        <main class="admin-workspace-main vehicle-editor-main">
+            <header class="vehicle-editor-header">
+                <div>
+                    <span class="vehicle-editor-kicker">Lagerimport</span>
+                    <h1>Synka Blocket</h1>
+                    <p>Hämta aktuella Blocket-annonser och ersätt lagret med en kontrollerad import.</p>
                 </div>
+            </header>
 
-                <div class="form-control">
-                    <label asp-for="Locations"></label>
-                    <input asp-for="Locations" type="text" placeholder="Example: STOCKHOLM" />
-                </div>
-
-                <div class="form-control">
-                    <label asp-for="Models"></label>
-                    <input asp-for="Models" type="text" placeholder="Example: VOLVO" />
-                </div>
-
-                <div class="form-control">
-                    <label asp-for="OrgId"></label>
-                    <input asp-for="OrgId" type="text" placeholder="Optional dealer/store id" />
-                </div>
-
-                <button type="submit" class="btn-add sync-submit">Run Blocket Sync</button>
-            </form>
-        </div>
-
-        <div class="admin-card">
-            <h2>Latest Result</h2>
-
-            @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
-            {
-                <p class="sync-error">@Model.ErrorMessage</p>
-            }
-            else if (Model.HasResult)
-            {
-                <div class="dashboard-grid sync-stats">
-                    <div class="stat-card">
-                        <h3>Imported</h3>
-                        <div class="value">@Model.TotalImported</div>
+            <div class="admin-utility-layout">
+                <section class="vehicle-editor-card">
+                    <div class="vehicle-editor-section-title">
+                        <i class="fa-solid fa-rotate"></i>
+                        <h2>Manuell synkning</h2>
                     </div>
-                    <div class="stat-card">
-                        <h3>Replaced</h3>
-                        <div class="value">@Model.TotalReplaced</div>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Skipped</h3>
-                        <div class="value">@Model.TotalSkipped</div>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Pages</h3>
-                        <div class="value">@Model.PagesFetched</div>
-                    </div>
-                </div>
 
-                <ul class="stock-list sync-summary">
-                    <li class="stock-item"><span class="stock-name">Requested limit</span><span class="stock-count">@Model.RequestedLimit</span></li>
-                    <li class="stock-item"><span class="stock-name">Applied limit</span><span class="stock-count">@Model.AppliedLimit</span></li>
-                    <li class="stock-item"><span class="stock-name">Fetched from API</span><span class="stock-count">@Model.TotalFetched</span></li>
-                    <li class="stock-item"><span class="stock-name">Prepared for import</span><span class="stock-count">@Model.TotalPrepared</span></li>
-                </ul>
-            }
-            else
-            {
-                <p class="sync-copy">No sync has been run from this page yet. Use the form to start a manual import.</p>
-            }
-        </div>
+                    <p class="admin-utility-copy">
+                        Kör en ny import när lagret behöver uppdateras. Begränsningen skyddar sidan från att hämta för mycket data på en gång.
+                    </p>
+
+                    <form asp-action="SyncBlocket" asp-controller="Vehicles" method="post" class="vehicle-editor-form admin-sync-form">
+                        @Html.AntiForgeryToken()
+
+                        <label class="vehicle-editor-field">
+                            <span>Max antal bilar</span>
+                            <input asp-for="Limit" type="number" min="1" max="50" />
+                            <span class="vehicle-editor-error" asp-validation-for="Limit"></span>
+                        </label>
+
+                        <label class="vehicle-editor-field">
+                            <span>Platser</span>
+                            <input asp-for="Locations" type="text" placeholder="t.ex. STOCKHOLM" />
+                        </label>
+
+                        <label class="vehicle-editor-field">
+                            <span>Modeller</span>
+                            <input asp-for="Models" type="text" placeholder="t.ex. VOLVO" />
+                        </label>
+
+                        <label class="vehicle-editor-field">
+                            <span>Organisations-id</span>
+                            <input asp-for="OrgId" type="text" placeholder="Valfritt handlare-id" />
+                        </label>
+
+                        <div class="vehicle-editor-actions">
+                            <button type="submit" class="btn btn-primary">
+                                Synka Blocket
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </form>
+                </section>
+
+                <section class="vehicle-editor-card vehicle-editor-card-muted">
+                    <div class="vehicle-editor-section-title">
+                        <i class="fa-solid fa-list-check"></i>
+                        <h2>Senaste resultat</h2>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+                    {
+                        <p class="vehicle-editor-validation">@Model.ErrorMessage</p>
+                    }
+                    else if (Model.HasResult)
+                    {
+                        <div class="admin-sync-stats">
+                            <div class="admin-sync-stat">
+                                <span>Importerade</span>
+                                <strong>@Model.TotalImported</strong>
+                            </div>
+                            <div class="admin-sync-stat">
+                                <span>Ersatta</span>
+                                <strong>@Model.TotalReplaced</strong>
+                            </div>
+                            <div class="admin-sync-stat">
+                                <span>Överhoppade</span>
+                                <strong>@Model.TotalSkipped</strong>
+                            </div>
+                            <div class="admin-sync-stat">
+                                <span>Sidor</span>
+                                <strong>@Model.PagesFetched</strong>
+                            </div>
+                        </div>
+
+                        <ul class="admin-sync-summary">
+                            <li><span>Begärd gräns</span><strong>@Model.RequestedLimit</strong></li>
+                            <li><span>Använd gräns</span><strong>@Model.AppliedLimit</strong></li>
+                            <li><span>Hämtade från API</span><strong>@Model.TotalFetched</strong></li>
+                            <li><span>Förberedda för import</span><strong>@Model.TotalPrepared</strong></li>
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="admin-utility-copy">Ingen synkning har körts från den här sidan ännu.</p>
+                    }
+                </section>
+            </div>
+        </main>
     </div>
 </section>
 

@@ -17,7 +17,10 @@ namespace westcoast_cars.web.Controllers
         [HttpGet]
         public IActionResult Index()
         {
-            return View(new ServiceBookingViewModel());
+            return View(new ServiceBookingViewModel
+            {
+                ServiceType = "Bas-service"
+            });
         }
 
         [HttpPost]

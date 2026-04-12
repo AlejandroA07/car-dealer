@@ -1,31 +1,67 @@
 @model westcoast_cars.web.ViewModels.Manufacturer.ManufacturerPostViewModel
-<section class="page">
 
-    <h1 class="page-title">Lägg till ny tillverkare</h1>
+@{
+    ViewData["Title"] = "Tillverkare";
+}
 
-    <form asp-action="Create" method="post">
-        <div class="form-control">
-            <label asp-for="Name"></label>
-            <input asp-for="Name" type="text">
-            <span class="error" asp-validation-for="Name"></span>
-        </div>
-        <div class="form-control">
-            <div class="buttons-container">
-                <button class="btn btn-dark">Spara</button>
-                <a asp-action="Index" asp-controller="Admin" class="btn btn-warning">Avbryt</a>
+<section class="admin-editor-page">
+    <div class="site-container admin-workspace-container">
+        @await Html.PartialAsync("_AdminSidebar")
+
+        <main class="admin-workspace-main vehicle-editor-main">
+            <header class="vehicle-editor-header">
+                <div>
+                    <span class="vehicle-editor-kicker">Lagerdata</span>
+                    <h1>Tillverkare</h1>
+                    <p>Lägg till och hantera bilmärken som används i katalogen.</p>
+                </div>
+            </header>
+
+            <div class="admin-utility-layout">
+                <section class="vehicle-editor-card">
+                    <div class="vehicle-editor-section-title">
+                        <i class="fa-solid fa-building"></i>
+                        <h2>Lägg till tillverkare</h2>
+                    </div>
+
+                    <form asp-action="Create" method="post" class="vehicle-editor-form admin-utility-form">
+                        <label class="vehicle-editor-field">
+                            <span>Namn</span>
+                            <input asp-for="Name" type="text" placeholder="t.ex. Volvo" />
+                            <span class="vehicle-editor-error" asp-validation-for="Name"></span>
+                        </label>
+
+                        <div class="vehicle-editor-actions">
+                            <button class="btn btn-primary" type="submit">Spara</button>
+                            <a asp-action="Index" asp-controller="Admin" class="btn btn-secondary">Avbryt</a>
+                        </div>
+                    </form>
+                </section>
+
+                <section class="vehicle-editor-card vehicle-editor-card-muted">
+                    <div class="vehicle-editor-section-title">
+                        <i class="fa-solid fa-list"></i>
+                        <h2>Befintliga tillverkare</h2>
+                    </div>
+
+                    <div class="admin-utility-list">
+                        @foreach (var make in Model.Manufacturers)
+                        {
+                            <div class="admin-utility-row">
+                                <div>
+                                    <strong>@make.Name</strong>
+                                    <small>ID @make.Id</small>
+                                </div>
+                                <a asp-action="Delete" asp-route-id="@make.Id" class="btn btn-secondary">Ta bort</a>
+                            </div>
+                        }
+                    </div>
+                </section>
             </div>
-        </div>
-    </form>
-
-    <section class="list">
-            <section class="list">
-        @foreach (var make in @Model.Manufacturers)
-        {
-            <div>
-                <span>@make.Id</span>&nbsp;<span>@make.Name</span>
-                <a asp-action="Delete" asp-route-id="@make.Id" class="btn btn-danger">Delete</a>
-            </div>
-        }
-    </section>
-    </section>
+        </main>
+    </div>
 </section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -29,27 +29,43 @@ namespace westcoast_cars.web.Services
 
             _logger.LogInformation("Attempting to login user {Email}", model.Email);
 
-            var response = await _httpClient.PostAsync("api/auth/login", content);
-
-            if (response.IsSuccessStatusCode)
+            try
             {
-                var authResponseJson = await response.Content.ReadAsStringAsync();
-                var authResponse = JsonSerializer.Deserialize<AuthenticationResponse>(authResponseJson, _options);
-                
-                if (authResponse == null || string.IsNullOrEmpty(authResponse.Token))
+                var response = await _httpClient.PostAsync("api/auth/login", content);
+
+                if (response.IsSuccessStatusCode)
                 {
-                    _logger.LogError("Auth API returned success but payload was empty or missing token.");
-                    return LoginResult.Failure("Invalid response from auth service.");
+                    var authResponseJson = await response.Content.ReadAsStringAsync();
+                    var authResponse = JsonSerializer.Deserialize<AuthenticationResponse>(authResponseJson, _options);
+
+                    if (authResponse == null || string.IsNullOrEmpty(authResponse.Token))
+                    {
+                        _logger.LogError("Auth API returned success but payload was empty or missing token.");
+                        return LoginResult.Failure("Ogiltigt svar från inloggningstjänsten.");
+                    }
+
+                    _logger.LogInformation("Login successful for user {Email}", model.Email);
+                    return LoginResult.Success(authResponse.Token);
                 }
 
-                _logger.LogInformation("Login successful for user {Email}", model.Email);
-                return LoginResult.Success(authResponse.Token);
-            }
-            else
-            {
                 var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogError("Login failed for user {Email}. Status: {StatusCode}, Error: {ErrorContent}", model.Email, response.StatusCode, errorContent);
+                _logger.LogWarning("Login failed for user {Email}. Status: {StatusCode}, Error: {ErrorContent}", model.Email, response.StatusCode, errorContent);
                 return LoginResult.Failure($"Login failed: {response.ReasonPhrase} - {errorContent}");
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "Auth API is unavailable while logging in user {Email}.", model.Email);
+                return LoginResult.Failure("Inloggningstjänsten är tillfälligt otillgänglig. Försök igen senare.");
+            }
+            catch (TaskCanceledException ex)
+            {
+                _logger.LogError(ex, "Auth API request timed out while logging in user {Email}.", model.Email);
+                return LoginResult.Failure("Inloggningstjänsten svarar inte just nu. Försök igen senare.");
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex, "Auth API returned an invalid JSON response while logging in user {Email}.", model.Email);
+                return LoginResult.Failure("Ogiltigt svar från inloggningstjänsten.");
             }
         }
 

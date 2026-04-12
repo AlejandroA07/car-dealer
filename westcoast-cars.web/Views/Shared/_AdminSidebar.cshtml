@@ -1,0 +1,60 @@
+@{
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
+    var action = ViewContext.RouteData.Values["action"]?.ToString() ?? string.Empty;
+
+    string IsActive(string targetController, string targetAction)
+    {
+        return string.Equals(controller, targetController, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(action, targetAction, StringComparison.OrdinalIgnoreCase)
+                ? "is-active"
+                : string.Empty;
+    }
+}
+
+<aside class="admin-workspace-sidebar" aria-label="Administrationsmeny">
+    <div class="admin-sidebar-brand">
+        <span>Westcoast</span>
+        <strong>Admin Suite</strong>
+    </div>
+
+    <nav class="admin-sidebar-nav">
+        <a asp-action="Index" asp-controller="Admin" class='@IsActive("Admin", "Index")'>
+            <i class="fa-solid fa-chart-line"></i>
+            <span>Dashboard</span>
+        </a>
+        <a asp-route="VehicleCatalog">
+            <i class="fa-solid fa-car-side"></i>
+            <span>Lager</span>
+        </a>
+        <a asp-action="Create" asp-controller="Vehicles" class='@IsActive("Vehicles", "Create")'>
+            <i class="fa-solid fa-plus"></i>
+            <span>Lägg till bil</span>
+        </a>
+        <a asp-action="SyncBlocket" asp-controller="Vehicles" class='@IsActive("Vehicles", "SyncBlocket")'>
+            <i class="fa-solid fa-rotate"></i>
+            <span>Synka Blocket</span>
+        </a>
+    </nav>
+
+    <div class="admin-sidebar-group">
+        <a asp-action="Create" asp-controller="Manufacturer" class='@IsActive("Manufacturer", "Create")'>
+            <i class="fa-solid fa-building"></i>
+            <span>Tillverkare</span>
+        </a>
+        <a asp-action="Create" asp-controller="FuelTypes" class='@IsActive("FuelTypes", "Create")'>
+            <i class="fa-solid fa-gas-pump"></i>
+            <span>Bränsletyper</span>
+        </a>
+        <a asp-action="Create" asp-controller="Transmissions" class='@IsActive("Transmissions", "Create")'>
+            <i class="fa-solid fa-gears"></i>
+            <span>Växellådor</span>
+        </a>
+    </div>
+
+    <div class="admin-sidebar-footer">
+        <a asp-action="Index" asp-controller="Home" asp-fragment="kontakt">
+            <i class="fa-regular fa-circle-question"></i>
+            <span>Hjälp</span>
+        </a>
+    </div>
+</aside>

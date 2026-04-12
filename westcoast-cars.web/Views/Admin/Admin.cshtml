@@ -6,25 +6,28 @@
 }
 
 <section class="admin-dashboard-page">
-    <div class="site-container admin-dashboard-container">
-        <header class="admin-dashboard-header">
-            <div>
-                <span class="eyebrow">Administrativ överblick</span>
-                <h1>Lagerdashboard</h1>
-            </div>
+    <div class="site-container admin-workspace-container">
+        @await Html.PartialAsync("_AdminSidebar")
 
-            <div class="admin-dashboard-actions" aria-label="Snabbåtgärder">
-                <a asp-action="SyncBlocket" asp-controller="Vehicles" class="btn btn-primary">
-                    <i class="fa-solid fa-rotate"></i> Synka Blocket
-                </a>
-                <a asp-action="Create" asp-controller="Vehicles" class="btn btn-secondary">
-                    <i class="fa-solid fa-plus"></i> Lägg till bil
-                </a>
-                <a asp-action="Create" asp-controller="Manufacturer" class="btn btn-secondary">
-                    <i class="fa-solid fa-building"></i> Lägg till tillverkare
-                </a>
-            </div>
-        </header>
+        <div class="admin-workspace-main admin-dashboard-container">
+            <header class="admin-dashboard-header">
+                <div>
+                    <span class="eyebrow">Administrativ överblick</span>
+                    <h1>Lagerdashboard</h1>
+                </div>
+
+                <div class="admin-dashboard-actions" aria-label="Snabbåtgärder">
+                    <a asp-action="SyncBlocket" asp-controller="Vehicles" class="btn btn-primary">
+                        <i class="fa-solid fa-rotate"></i> Synka Blocket
+                    </a>
+                    <a asp-action="Create" asp-controller="Vehicles" class="btn btn-secondary">
+                        <i class="fa-solid fa-plus"></i> Lägg till bil
+                    </a>
+                    <a asp-action="Create" asp-controller="Manufacturer" class="btn btn-secondary">
+                        <i class="fa-solid fa-building"></i> Lägg till tillverkare
+                    </a>
+                </div>
+            </header>
 
         <section class="admin-metric-grid" aria-label="Lagerstatistik">
             <article class="admin-metric-card">
@@ -152,10 +155,6 @@
             </article>
         </section>
 
-        <section class="admin-secondary-actions" aria-label="Fler adminåtgärder">
-            <a asp-action="Create" asp-controller="FuelTypes"><i class="fa-solid fa-gas-pump"></i> Lägg till bränsletyp</a>
-            <a asp-action="Create" asp-controller="Transmissions"><i class="fa-solid fa-gears"></i> Lägg till växellåda</a>
-            <a asp-action="Index" asp-controller="Home" asp-fragment="plats"><i class="fa-solid fa-location-dot"></i> Platser</a>
-        </section>
+        </div>
     </div>
 </section>

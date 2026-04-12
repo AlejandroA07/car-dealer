@@ -152,7 +152,10 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred during database seeding.");
+        logger.LogCritical(ex,
+            "Main API cannot start because the vehicle database is unavailable or migration/seeding failed. Database: {Database}. Connection: {ConnectionString}. Start MySQL, verify the 'westcoast_cars_db' database exists, and check ConnectionStrings:DefaultConnection.",
+            "westcoast_cars_db",
+            SanitizeConnectionString(builder.Configuration.GetConnectionString("DefaultConnection")));
         throw;
     }
 }
@@ -183,5 +186,35 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+static string SanitizeConnectionString(string? connectionString)
+{
+    if (string.IsNullOrWhiteSpace(connectionString))
+    {
+        return "(missing)";
+    }
+
+    try
+    {
+        var builder = new System.Data.Common.DbConnectionStringBuilder
+        {
+            ConnectionString = connectionString
+        };
+
+        foreach (var key in new[] { "Password", "Pwd" })
+        {
+            if (builder.ContainsKey(key))
+            {
+                builder[key] = "***";
+            }
+        }
+
+        return builder.ConnectionString;
+    }
+    catch
+    {
+        return "(configured but could not be sanitized)";
+    }
+}
 
 public partial class Program { }

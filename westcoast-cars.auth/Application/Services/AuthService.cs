@@ -14,8 +14,8 @@ public class AuthService : IAuthService
     private readonly ILogger<AuthService> _logger;
 
     public AuthService(
-        IJwtTokenGenerator jwtTokenGenerator, 
-        UserManager<IdentityUser> userManager, 
+        IJwtTokenGenerator jwtTokenGenerator,
+        UserManager<IdentityUser> userManager,
         SignInManager<IdentityUser> signInManager,
         ILogger<AuthService> logger)
     {
@@ -37,7 +37,7 @@ public class AuthService : IAuthService
         var result = await _signInManager.CheckPasswordSignInAsync(user, password, false);
         if (!result.Succeeded)
         {
-            _logger.LogError("Login failed: Password check failed for user {Email}. IsLockedOut: {IsLockedOut}, IsNotAllowed: {IsNotAllowed}, RequiresTwoFactor: {RequiresTwoFactor}", 
+            _logger.LogWarning("Login failed: Password check failed for user {Email}. IsLockedOut: {IsLockedOut}, IsNotAllowed: {IsNotAllowed}, RequiresTwoFactor: {RequiresTwoFactor}",
                 email, result.IsLockedOut, result.IsNotAllowed, result.RequiresTwoFactor);
             return null;
         }
@@ -104,4 +104,3 @@ public class AuthService : IAuthService
         return new AuthenticationResult(domainUser, token);
     }
 }
-

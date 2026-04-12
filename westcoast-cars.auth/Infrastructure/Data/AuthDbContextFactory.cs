@@ -40,7 +40,9 @@ public class AuthDbContextFactory : IDesignTimeDbContextFactory<AuthDbContext>
         var optionsBuilder = new DbContextOptionsBuilder<AuthDbContext>();
         var connectionString = $"Server=localhost;Port=3307;Database=westcoast_auth;Uid=root;Pwd={password}";
 
-        optionsBuilder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+        optionsBuilder.UseMySql(
+            connectionString,
+            new MySqlServerVersion(new Version(8, 0, 21)));
 
         return new AuthDbContext(optionsBuilder.Options);
     }
