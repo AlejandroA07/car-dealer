@@ -13,8 +13,10 @@ public class FuelTypeRepository : Repository<FuelType>, IFuelTypeRepository
 
     public async Task<FuelType?> FindByNameWithVehiclesAsync(string name)
     {
+        var normalizedName = name.ToUpper();
+
         return await _context.FuelTypes
             .Include(f => f.Vehicles)
-            .SingleOrDefaultAsync(f => f.Name.ToUpper() == name.ToUpper());
+            .SingleOrDefaultAsync(f => f.Name.ToUpper() == normalizedName);
     }
 }

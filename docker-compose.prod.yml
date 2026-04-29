@@ -1,5 +1,5 @@
-# Production-like environment configuration
-# This configuration simulates Docker Secrets by using a local file for the password.
+# Production-like environment configuration.
+# This configuration simulates Docker Secrets by using a local file for the PostgreSQL password.
 
 secrets:
   db_password:
@@ -21,17 +21,7 @@ services:
   db:
     ports: []
     environment:
-      # The MySQL image can read the password from a file specified by this env var.
-      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_password
-      # Unset the variable that might be inherited from the base compose file.
-      - MYSQL_ROOT_PASSWORD=
-    secrets:
-      - db_password
-
-  auth-db:
-    ports: []
-    environment:
-      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_password
-      - MYSQL_ROOT_PASSWORD=
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db_password
+      - POSTGRES_PASSWORD=
     secrets:
       - db_password

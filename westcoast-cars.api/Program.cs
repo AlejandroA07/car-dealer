@@ -162,8 +162,8 @@ using (var scope = app.Services.CreateScope())
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
         logger.LogCritical(ex,
-            "Main API cannot start because the vehicle database is unavailable or migration/seeding failed. Database: {Database}. Connection: {ConnectionString}. Start MySQL, verify the 'westcoast_cars_db' database exists, and check ConnectionStrings:DefaultConnection.",
-            "westcoast_cars_db",
+            "Main API cannot start because the PostgreSQL database is unavailable or migration/seeding failed for business data. Database: {Database}. Connection: {ConnectionString}. Verify PostgreSQL is running and check ConnectionStrings:DefaultConnection.",
+            "westcoast_cars",
             SanitizeConnectionString(builder.Configuration.GetConnectionString("DefaultConnection")));
         throw;
     }
@@ -205,9 +205,9 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         logger.LogCritical(ex,
-            "Main API cannot start because the auth database is unavailable or migration/seeding failed. Database: {Database}. Connection: {ConnectionString}. Start MySQL, verify the 'westcoast_auth' database exists, and check ConnectionStrings:AuthConnection.",
-            "westcoast_auth",
-            SanitizeConnectionString(builder.Configuration.GetConnectionString("AuthConnection")));
+            "Main API cannot start because the PostgreSQL database is unavailable or migration/seeding failed for auth data. Database: {Database}. Connection: {ConnectionString}. Verify PostgreSQL is running and check ConnectionStrings:DefaultConnection.",
+            "westcoast_cars",
+            SanitizeConnectionString(builder.Configuration.GetConnectionString("DefaultConnection")));
         throw;
     }
 }
@@ -239,7 +239,7 @@ app.MapControllers();
 
 app.Run();
 
-static string SanitizeConnectionString(string? connectionString)
+static string SanitizeConnectionString(string connectionString)
 {
     if (string.IsNullOrWhiteSpace(connectionString))
     {

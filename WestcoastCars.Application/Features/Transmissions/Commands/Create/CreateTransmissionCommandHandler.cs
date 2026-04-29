@@ -25,7 +25,8 @@ namespace WestcoastCars.Application.Features.Transmissions.Commands.Create
             var repository = _unitOfWork.Repository<TransmissionType>();
             if (repository is null) throw new InvalidOperationException("Repository for TransmissionType is not available.");
 
-            var existing = await repository.FirstOrDefaultAsync(m => m.Name.Equals(request.Name, System.StringComparison.OrdinalIgnoreCase));
+            var normalizedName = request.Name.ToUpper();
+            var existing = await repository.FirstOrDefaultAsync(m => m.Name.ToUpper() == normalizedName);
             if (existing != null)
             {
                 throw new ConflictException($"TransmissionType with name '{request.Name}' already exists.");

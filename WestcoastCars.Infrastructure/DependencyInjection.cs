@@ -1,8 +1,6 @@
-
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Infrastructure.Clients;
 using WestcoastCars.Infrastructure.Data;
@@ -29,73 +27,23 @@ public static class DependencyInjection
             client.DefaultRequestHeaders.UserAgent.ParseAdd("WestcoastCars/1.0");
         });
 
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        var connectionString = ResolvePostgreSqlConnectionString(configuration);
 
-        if (connectionString == "DataSource=:memory:" || connectionString?.Contains("Mode=Memory") == true)
+        if (IsSqliteInMemory(connectionString))
         {
             services.AddDbContext<WestcoastCarsContext>(options =>
                 options.UseSqlite(connectionString));
         }
         else
         {
-            // Prefer Railway-provided MySQL environment variables when present.
-            // This avoids relying on docker-compose style placeholders like ${MYSQL_PASSWORD} or service hosts like "db".
-            var host = Environment.GetEnvironmentVariable("MYSQLHOST");
-            var port = Environment.GetEnvironmentVariable("MYSQLPORT") ?? "3306";
-            var database = Environment.GetEnvironmentVariable("MYSQLDATABASE");
-            var user = Environment.GetEnvironmentVariable("MYSQLUSER");
-            var mysqlPassword = Environment.GetEnvironmentVariable("MYSQLPASSWORD");
-
-            if (!string.IsNullOrWhiteSpace(host) &&
-                !string.IsNullOrWhiteSpace(database) &&
-                !string.IsNullOrWhiteSpace(user) &&
-                !string.IsNullOrWhiteSpace(mysqlPassword))
-            {
-                connectionString = $"Server={host};Port={port};Database={database};Uid={user};Pwd={mysqlPassword};";
-            }
-
-            if (string.IsNullOrWhiteSpace(connectionString))
-            {
-                var mysqlUrl = Environment.GetEnvironmentVariable("MYSQL_URL");
-
-                if (!string.IsNullOrWhiteSpace(mysqlUrl) &&
-                    mysqlUrl.StartsWith("mysql://", StringComparison.OrdinalIgnoreCase))
-                {
-                    var uri = new Uri(mysqlUrl);
-                    var userInfo = uri.UserInfo.Split(':', 2);
-                    var uriUser = Uri.UnescapeDataString(userInfo[0]);
-                    var uriPassword = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : string.Empty;
-                    var uriDatabase = uri.AbsolutePath.Trim('/'); // "/db" -> "db"
-                    connectionString = $"Server={uri.Host};Port={uri.Port};Database={uriDatabase};Uid={uriUser};Pwd={uriPassword};";
-                }
-                else if (!string.IsNullOrWhiteSpace(mysqlUrl))
-                {
-                    connectionString = mysqlUrl;
-                }
-            }
-
-            var composePassword = Environment.GetEnvironmentVariable("MYSQL_PASSWORD");
-
-            if (connectionString is not null && composePassword is not null)
-            {
-                connectionString = connectionString.Replace("${MYSQL_PASSWORD}", composePassword);
-            }
-
-            if (string.IsNullOrWhiteSpace(connectionString))
-            {
-                throw new InvalidOperationException("ConnectionStrings:DefaultConnection is missing. Set ConnectionStrings__DefaultConnection or MYSQL_URL (or MYSQLHOST/MYSQLPORT/MYSQLDATABASE/MYSQLUSER/MYSQLPASSWORD).");
-            }
-
             services.AddDbContext<WestcoastCarsContext>(options =>
-                options.UseMySql(connectionString,
-                    new MySqlServerVersion(new Version(8, 0, 21)),
-                    mySqlOptions =>
-                    {
-                        mySqlOptions.EnableStringComparisonTranslations();
-                        mySqlOptions.EnableRetryOnFailure();
-                    }
-                ));
+                options.UseNpgsql(connectionString, postgresOptions =>
+                {
+                    postgresOptions.MigrationsHistoryTable("__EFMigrationsHistory_WestcoastCars");
+                    postgresOptions.EnableRetryOnFailure();
+                }));
         }
+
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IVehicleRepository, VehicleRepository>();
         services.AddScoped<IManufacturerRepository, ManufacturerRepository>();
@@ -106,5 +54,69 @@ public static class DependencyInjection
         services.AddHostedService<OutboxProcessor>();
 
         return services;
+    }
+
+    private static bool IsSqliteInMemory(string connectionString)
+    {
+        return connectionString == "DataSource=:memory:" ||
+            connectionString.Contains("Mode=Memory", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string ResolvePostgreSqlConnectionString(IConfiguration configuration)
+    {
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            var host = Environment.GetEnvironmentVariable("PGHOST");
+            var port = Environment.GetEnvironmentVariable("PGPORT") ?? "5432";
+            var database = Environment.GetEnvironmentVariable("PGDATABASE");
+            var user = Environment.GetEnvironmentVariable("PGUSER");
+            var password = Environment.GetEnvironmentVariable("PGPASSWORD");
+
+            if (!string.IsNullOrWhiteSpace(host) &&
+                !string.IsNullOrWhiteSpace(database) &&
+                !string.IsNullOrWhiteSpace(user) &&
+                !string.IsNullOrWhiteSpace(password))
+            {
+                connectionString = $"Host={host};Port={port};Database={database};Username={user};Password={password};";
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            var postgresUrl = Environment.GetEnvironmentVariable("POSTGRES_URL") ??
+                Environment.GetEnvironmentVariable("DATABASE_URL");
+
+            if (!string.IsNullOrWhiteSpace(postgresUrl) &&
+                (postgresUrl.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase) ||
+                 postgresUrl.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase)))
+            {
+                var uri = new Uri(postgresUrl);
+                var userInfo = uri.UserInfo.Split(':', 2);
+                var uriUser = Uri.UnescapeDataString(userInfo[0]);
+                var uriPassword = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : string.Empty;
+                var uriDatabase = uri.AbsolutePath.Trim('/');
+                connectionString = $"Host={uri.Host};Port={uri.Port};Database={uriDatabase};Username={uriUser};Password={uriPassword};";
+            }
+            else if (!string.IsNullOrWhiteSpace(postgresUrl))
+            {
+                connectionString = postgresUrl;
+            }
+        }
+
+        var composePassword = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD");
+
+        if (connectionString is not null && composePassword is not null)
+        {
+            connectionString = connectionString.Replace("${POSTGRES_PASSWORD}", composePassword);
+        }
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new InvalidOperationException("ConnectionStrings:DefaultConnection is missing. Set ConnectionStrings__DefaultConnection, POSTGRES_URL, DATABASE_URL, or PGHOST/PGPORT/PGDATABASE/PGUSER/PGPASSWORD.");
+        }
+
+        return connectionString;
     }
 }

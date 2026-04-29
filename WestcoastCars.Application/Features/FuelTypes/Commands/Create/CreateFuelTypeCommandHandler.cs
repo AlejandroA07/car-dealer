@@ -25,7 +25,8 @@ namespace WestcoastCars.Application.Features.FuelTypes.Commands.Create
             var repository = _unitOfWork.Repository<FuelType>();
             if (repository is null) throw new InvalidOperationException("Repository for FuelType is not available.");
 
-            var existing = await repository.FirstOrDefaultAsync(m => m.Name.Equals(request.Name, System.StringComparison.OrdinalIgnoreCase));
+            var normalizedName = request.Name.ToUpper();
+            var existing = await repository.FirstOrDefaultAsync(m => m.Name.ToUpper() == normalizedName);
             if (existing != null)
             {
                 throw new ConflictException($"FuelType with name '{request.Name}' already exists.");

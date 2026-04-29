@@ -18,24 +18,25 @@ namespace WestcoastCars.Application.Features.FuelTypes.Commands.Update
 
         public async Task Handle(UpdateFuelTypeCommand request, CancellationToken cancellationToken)
         {
-            var fuelTypeToUpdate = await _unitOfWork.Repository<FuelType>()?.GetByIdAsync(request.Id);
+            var repository = _unitOfWork.Repository<FuelType>();
+            if (repository is null) throw new InvalidOperationException("Repository for FuelType is not available.");
+
+            var fuelTypeToUpdate = await repository.GetByIdAsync(request.Id);
 
             if (fuelTypeToUpdate is null)
             {
                 throw new NotFoundException($"FuelType with id '{request.Id}' not found.");
             }
 
-            var existingRepository = _unitOfWork.Repository<FuelType>();
-            if (existingRepository is null) throw new InvalidOperationException("Repository for FuelType is not available.");
-
-            var existing = await existingRepository.FirstOrDefaultAsync(m => m.Name.Equals(request.Name, System.StringComparison.OrdinalIgnoreCase));
+            var normalizedName = request.Name.ToUpper();
+            var existing = await repository.FirstOrDefaultAsync(m => m.Name.ToUpper() == normalizedName);
             if (existing != null && existing.Id != request.Id)
             {
                 throw new ConflictException($"FuelType with name '{request.Name}' already exists.");
             }
 
             fuelTypeToUpdate!.Name = request.Name;
-            _unitOfWork.Repository<FuelType>()?.Update(fuelTypeToUpdate!);
+            repository.Update(fuelTypeToUpdate!);
 
             await _unitOfWork.CompleteAsync();
         }

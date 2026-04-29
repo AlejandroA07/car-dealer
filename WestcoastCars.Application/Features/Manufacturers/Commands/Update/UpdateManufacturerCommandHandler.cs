@@ -32,7 +32,8 @@ namespace WestcoastCars.Application.Features.Manufacturers.Commands.Update
             var existingRepository = _unitOfWork.Repository<Manufacturer>();
             if (existingRepository is null) throw new InvalidOperationException("Repository for Manufacturer is not available.");
 
-            var existing = await existingRepository.FirstOrDefaultAsync(m => m.Name.Equals(request.Name, System.StringComparison.OrdinalIgnoreCase));
+            var normalizedName = request.Name.ToUpper();
+            var existing = await existingRepository.FirstOrDefaultAsync(m => m.Name.ToUpper() == normalizedName);
             if (existing != null && existing.Id != request.Id)
             {
                 throw new ConflictException($"Manufacturer with name '{request.Name}' already exists.");
