@@ -13,10 +13,3 @@ services:
     ports: []
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-
-  auth-api:
-    ports: []
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Production
-      # Use the shared mounted key ring from docker-compose.yml (./dpkeys:/app/keys)
-      - DataProtectionPath=/app/keys

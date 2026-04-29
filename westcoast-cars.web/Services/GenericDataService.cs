@@ -39,6 +39,11 @@ public class GenericDataService<TList, TPost> : IGenericDataService<TList, TPost
             _logger.LogError(ex, "API is unavailable while fetching {endpoint}", _endpoint);
             return new List<TList>();
         }
+        catch (TaskCanceledException ex)
+        {
+            _logger.LogError(ex, "API request timed out while fetching {endpoint}", _endpoint);
+            return new List<TList>();
+        }
     }
 
     public async Task<bool> CreateAsync(TPost model)
@@ -64,6 +69,11 @@ public class GenericDataService<TList, TPost> : IGenericDataService<TList, TPost
             _logger.LogError(ex, "API is unavailable while creating {endpoint}", _endpoint);
             return false;
         }
+        catch (TaskCanceledException ex)
+        {
+            _logger.LogError(ex, "API request timed out while creating {endpoint}", _endpoint);
+            return false;
+        }
     }
 
     public async Task<bool> DeleteAsync(int id)
@@ -76,6 +86,11 @@ public class GenericDataService<TList, TPost> : IGenericDataService<TList, TPost
         catch (HttpRequestException ex)
         {
             _logger.LogError(ex, "API is unavailable while deleting {endpoint} with id {id}", _endpoint, id);
+            return false;
+        }
+        catch (TaskCanceledException ex)
+        {
+            _logger.LogError(ex, "API request timed out while deleting {endpoint} with id {id}", _endpoint, id);
             return false;
         }
     }

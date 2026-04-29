@@ -17,13 +17,15 @@ var serviceOptions = builder.Configuration.GetSection(ServiceOptions.SectionName
 builder.Services.AddHttpClient("ApiClient", client =>
 {
     client.BaseAddress = new Uri(serviceOptions.ApiUrl);
+    client.Timeout = TimeSpan.FromSeconds(3);
 })
 .AddHttpMessageHandler<AuthHandler>();
 
-// Configure the HttpClient for the Auth API.
+// Configure the HttpClient for auth endpoints hosted by the main API.
 builder.Services.AddHttpClient<IAuthService, AuthService>("AuthApiClient", client =>
 {
-    client.BaseAddress = new Uri(serviceOptions.AuthUrl);
+    client.BaseAddress = new Uri(serviceOptions.ApiUrl);
+    client.Timeout = TimeSpan.FromSeconds(3);
 });
 
 builder.Services.AddScoped<IVehicleService, VehicleService>();

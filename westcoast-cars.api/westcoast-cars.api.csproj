@@ -29,6 +29,10 @@
     <ProjectReference Include="..\WestcoastCars.Application\WestcoastCars.Application.csproj" />
     <ProjectReference Include="..\WestcoastCars.Contracts\WestcoastCars.Contracts.csproj" />
     <ProjectReference Include="..\WestcoastCars.Infrastructure\WestcoastCars.Infrastructure.csproj" />
+    <ProjectReference Include="..\westcoast-cars.auth\Application\WestcoastCars.Auth.Application.csproj" />
+    <ProjectReference Include="..\westcoast-cars.auth\Contracts\WestcoastCars.Auth.Contracts.csproj" />
+    <ProjectReference Include="..\westcoast-cars.auth\Domain\WestcoastCars.Auth.Domain.csproj" />
+    <ProjectReference Include="..\westcoast-cars.auth\Infrastructure\WestcoastCars.Auth.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

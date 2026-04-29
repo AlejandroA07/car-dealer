@@ -1,6 +1,7 @@
 using System.Reflection;
 using MediatR;
 using System.Text;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -15,6 +16,7 @@ using FluentValidation;
 using WestcoastCars.Application.Common.Behaviors;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.OpenApi.Models;
+using WestcoastCars.Auth.Infrastructure.Data;
 
 
 
@@ -30,9 +32,11 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
+WestcoastCars.Auth.Infrastructure.DependencyInjection.AddInfrastructure(builder.Services, builder.Configuration, builder.Environment);
 
 // Configure Options
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
+builder.Services.Configure<AdminOptions>(builder.Configuration.GetSection(AdminOptions.SectionName));
 
 // Configure data protection to persist keys from configuration.
 var keysPath = builder.Configuration["DataProtectionPath"] ?? "dpkeys";
@@ -56,6 +60,7 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 });
 
 builder.Services.AddSwaggerExamplesFromAssemblyOf<VehicleDtoExample>();
+builder.Services.AddSwaggerExamplesFromAssemblyOf<LoginRequestExample>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -75,6 +80,10 @@ builder.Services.AddSwaggerGen(c =>
     var contractsXmlPath = Path.Combine(AppContext.BaseDirectory, "WestcoastCars.Contracts.xml");
     if (File.Exists(contractsXmlPath))
         c.IncludeXmlComments(contractsXmlPath);
+
+    var authContractsXmlPath = Path.Combine(AppContext.BaseDirectory, "WestcoastCars.Auth.Contracts.xml");
+    if (File.Exists(authContractsXmlPath))
+        c.IncludeXmlComments(authContractsXmlPath);
 
     c.ExampleFilters();
 
@@ -156,6 +165,49 @@ using (var scope = app.Services.CreateScope())
             "Main API cannot start because the vehicle database is unavailable or migration/seeding failed. Database: {Database}. Connection: {ConnectionString}. Start MySQL, verify the 'westcoast_cars_db' database exists, and check ConnectionStrings:DefaultConnection.",
             "westcoast_cars_db",
             SanitizeConnectionString(builder.Configuration.GetConnectionString("DefaultConnection")));
+        throw;
+    }
+}
+
+// Apply auth database migrations and seed roles/users.
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+
+    try
+    {
+        var authContext = services.GetRequiredService<AuthDbContext>();
+
+        if (authContext.Database.IsRelational() && !authContext.Database.IsSqlite())
+        {
+            await authContext.Database.MigrateAsync();
+        }
+        else if (authContext.Database.IsSqlite())
+        {
+            await authContext.Database.EnsureCreatedAsync();
+        }
+
+        var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
+        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+        var adminOptions = builder.Configuration.GetSection(AdminOptions.SectionName).Get<AdminOptions>();
+        var adminPassword = adminOptions?.Password;
+
+        if (!string.IsNullOrEmpty(adminPassword))
+        {
+            await WestcoastCars.Auth.Infrastructure.SeedData.SeedRolesAndAdminUser(authContext, userManager, roleManager, adminPassword, logger);
+        }
+        else
+        {
+            logger.LogWarning("AdminSettings:Password not found. Skipping auth user seeding.");
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogCritical(ex,
+            "Main API cannot start because the auth database is unavailable or migration/seeding failed. Database: {Database}. Connection: {ConnectionString}. Start MySQL, verify the 'westcoast_auth' database exists, and check ConnectionStrings:AuthConnection.",
+            "westcoast_auth",
+            SanitizeConnectionString(builder.Configuration.GetConnectionString("AuthConnection")));
         throw;
     }
 }

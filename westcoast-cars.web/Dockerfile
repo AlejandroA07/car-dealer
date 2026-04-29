@@ -14,12 +14,10 @@ COPY ["westcoast-cars.api/westcoast-cars.api.csproj", "westcoast-cars.api/"]
 COPY ["westcoast-cars.api.tests/westcoast-cars.api.tests.csproj", "westcoast-cars.api.tests/"]
 
 # Auth projects
-COPY ["westcoast-cars.auth/Api/WestcoastCars.Auth.Api.csproj", "westcoast-cars.auth/Api/"]
 COPY ["westcoast-cars.auth/Application/WestcoastCars.Auth.Application.csproj", "westcoast-cars.auth/Application/"]
 COPY ["westcoast-cars.auth/Contracts/WestcoastCars.Auth.Contracts.csproj", "westcoast-cars.auth/Contracts/"]
 COPY ["westcoast-cars.auth/Domain/WestcoastCars.Auth.Domain.csproj", "westcoast-cars.auth/Domain/"]
 COPY ["westcoast-cars.auth/Infrastructure/WestcoastCars.Auth.Infrastructure.csproj", "westcoast-cars.auth/Infrastructure/"]
-COPY ["westcoast-cars.auth/WestcoastCars.Auth.Tests/WestcoastCars.Auth.Tests.csproj", "westcoast-cars.auth/WestcoastCars.Auth.Tests/"]
 
 # Web project
 COPY ["westcoast-cars.web/westcoast-cars.web.csproj", "westcoast-cars.web/"]

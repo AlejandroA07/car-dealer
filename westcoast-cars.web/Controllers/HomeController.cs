@@ -20,12 +20,27 @@ public class HomeController : Controller
 
     public async Task<IActionResult> Index()
     {
-        var manufacturers = await _manufacturerService.ListAllAsync();
-        var manufacturerList = manufacturers.Select(m => new SelectListItem { Value = m.Name, Text = m.Name }).ToList();
-        
-        var vehicles = await _vehicleService.ListVehiclesAsync();
-        // Take only top 4 for the home page
-        var topVehicles = vehicles.Take(4).ToList();
+        var manufacturerList = new List<SelectListItem>();
+        var topVehicles = new List<WestcoastCars.Contracts.DTOs.VehicleSummaryDto>();
+
+        try
+        {
+            var manufacturersTask = _manufacturerService.ListAllAsync();
+            var vehiclesTask = _vehicleService.ListVehiclesAsync();
+
+            await Task.WhenAll(manufacturersTask, vehiclesTask);
+
+            manufacturerList = manufacturersTask.Result
+                .Select(m => new SelectListItem { Value = m.Name, Text = m.Name })
+                .ToList();
+
+            // Take only top 4 for the home page
+            topVehicles = vehiclesTask.Result.Take(4).ToList();
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            _logger.LogError(ex, "API is unavailable while loading home page data");
+        }
 
         var viewModel = new VehicleListViewModel
         {
