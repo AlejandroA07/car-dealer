@@ -1,16 +1,15 @@
 # Westcoast Cars (Microservices)
 
-Westcoast Cars is a .NET 9 microservices-based sample application for a car dealership platform. It ships as a Docker Compose stack with a Web UI, a main API, and a dedicated authentication service.
+Westcoast Cars is a .NET 9 sample application for a car dealership platform. It ships as a Docker Compose stack with a Web UI, a main API, and MySQL databases. Authentication is hosted inside the main API.
 
 ## Architecture
 
 This repository runs as a Docker Compose stack:
 
 - **web** (`westcoast-cars.web`): ASP.NET Core MVC app (user-facing UI)
-- **api** (`westcoast-cars.api`): main REST API (inventory, manufacturers, etc.)
-- **auth-api** (`westcoast-cars.auth/Api`): authentication/authorization microservice (ASP.NET Core Identity + JWT)
+- **api** (`westcoast-cars.api`): REST API for inventory, service bookings, and authentication/authorization
 - **db**: MySQL for the main API
-- **auth-db**: MySQL for the auth service
+- **auth-db**: MySQL for ASP.NET Core Identity/auth tables
 
 ## Tech stack
 
@@ -29,8 +28,8 @@ This repository runs as a Docker Compose stack:
 Create `.env` in the repository root:
 
 - `MYSQL_PASSWORD` (MySQL root password used by the compose DB containers)
-- `JWT_SECRET` (must be the same for `api` and `auth-api`)
-- `ADMIN_PASSWORD` (used by `auth-api` to seed an admin user)
+- `JWT_SECRET` (used by `api` to sign and validate JWTs)
+- `ADMIN_PASSWORD` (used by `api` to seed an admin user)
 
 Example:
 ```bash
@@ -51,7 +50,6 @@ docker compose up --build
 
 Optional local endpoints (if exposed by your compose config):
 - API: `http://localhost:5001`
-- Auth API: `http://localhost:5003`
 
 ## Deployment (Oracle Cloud Always Free VM)
 
@@ -126,13 +124,12 @@ Open:
 
 ## Deployment (Railway)
 
-Railway can host the **entire stack** (microservices + MySQL) in one project:
+Railway can host the **entire stack** (web + API + MySQL) in one project:
 
 - `web` (public)
-- `api` (private)
-- `auth-api` (private)
+- `api` (private; includes auth endpoints)
 - `mysql-api` (MySQL for `api`)
-- `mysql-auth` (MySQL for `auth-api`)
+- `mysql-auth` (MySQL for Identity/auth tables)
 
 Railway provides private networking between services. Every service gets an internal DNS name like `api.railway.internal` for service-to-service HTTP calls.
 
@@ -143,15 +140,14 @@ Railway provides private networking between services. Every service gets an inte
    - Name one `mysql-api`
    - Name one `mysql-auth`
 
-### 2) Create the microservices as Docker services
+### 2) Create the Docker services
 
-Create three services from the same repo and set each to build from a different Dockerfile:
+Create two services from the same repo and set each to build from a different Dockerfile:
 
 - `web` (Dockerfile: `westcoast-cars.web/Dockerfile`)
 - `api` (Dockerfile: `westcoast-cars.api/Dockerfile`)
-- `auth-api` (Dockerfile: `westcoast-cars.auth/Api/Dockerfile`)
 
-Recommended: make only `web` publicly reachable and keep `api` + `auth-api` private (they’re still reachable from `web` via Railway private DNS).
+Recommended: make only `web` publicly reachable and keep `api` private. The web app reaches `api` via Railway private DNS.
 
 ### 3) Configure environment variables
 
@@ -161,23 +157,16 @@ Set these variables on each service:
 - `PORT=8080`
 - `ASPNETCORE_URLS=http://0.0.0.0:8080`
 - `Services__ApiUrl=http://api.railway.internal:8080`
-- `Services__AuthUrl=http://auth-api.railway.internal:8080`
 
 **`api`**
 - `PORT=8080`
 - `ASPNETCORE_URLS=http://0.0.0.0:8080`
 - `JwtSettings__Secret=<generate a strong random value>`
-- `ConnectionStrings__DefaultConnection=Server=<mysql-api host>;Port=<mysql-api port>;Database=<mysql-api database>;Uid=<mysql-api user>;Pwd=<mysql-api password>;`
-
-**`auth-api`**
-- `PORT=8080`
-- `ASPNETCORE_URLS=http://0.0.0.0:8080`
-- `JwtSettings__Secret=<same value as api>`
 - `AdminSettings__Password=<choose a strong password>`
-- `ConnectionStrings__DefaultConnection=Server=<mysql-auth host>;Port=<mysql-auth port>;Database=<mysql-auth database>;Uid=<mysql-auth user>;Pwd=<mysql-auth password>;`
+- `ConnectionStrings__DefaultConnection=Server=<mysql-api host>;Port=<mysql-api port>;Database=<mysql-api database>;Uid=<mysql-api user>;Pwd=<mysql-api password>;`
+- `ConnectionStrings__AuthConnection=Server=<mysql-auth host>;Port=<mysql-auth port>;Database=<mysql-auth database>;Uid=<mysql-auth user>;Pwd=<mysql-auth password>;`
 
 Tip: Railway MySQL services expose `MYSQLHOST`, `MYSQLPORT`, `MYSQLUSER`, `MYSQLPASSWORD`, `MYSQLDATABASE`, and `MYSQL_URL` variables that you can copy into the connection string.
-
 ## Local development (without Docker)
 
 ### Prerequisites
@@ -194,38 +183,29 @@ CREATE DATABASE westcoast_auth;
 
 ### Configure User Secrets
 
-You’ll need connection strings plus a shared JWT secret.
+You need connection strings plus a JWT secret and admin seed password.
 
 API:
 ```bash
 dotnet user-secrets init --project westcoast-cars.api/westcoast-cars.api.csproj
 dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost;Port=3306;Database=westcoast_cars_db;Uid=root;Pwd=YourLocalPassword;" --project westcoast-cars.api/westcoast-cars.api.csproj
+dotnet user-secrets set "ConnectionStrings:AuthConnection" "Server=localhost;Port=3307;Database=westcoast_auth;Uid=root;Pwd=YourLocalPassword;" --project westcoast-cars.api/westcoast-cars.api.csproj
 dotnet user-secrets set "JwtSettings:Secret" "<YOUR_GENERATED_SECRET>" --project westcoast-cars.api/westcoast-cars.api.csproj
-```
-
-Auth API (JWT secret must match the API secret):
-```bash
-dotnet user-secrets init --project westcoast-cars.auth/Api/WestcoastCars.Auth.Api.csproj
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost;Port=3306;Database=westcoast_auth;Uid=root;Pwd=YourLocalPassword;" --project westcoast-cars.auth/Api/WestcoastCars.Auth.Api.csproj
-dotnet user-secrets set "JwtSettings:Secret" "<YOUR_GENERATED_SECRET>" --project westcoast-cars.auth/Api/WestcoastCars.Auth.Api.csproj
-dotnet user-secrets set "AdminSettings:Password" "ChangeThisAdminPassword!" --project westcoast-cars.auth/Api/WestcoastCars.Auth.Api.csproj
+dotnet user-secrets set "AdminSettings:Password" "ChangeThisAdminPassword!" --project westcoast-cars.api/westcoast-cars.api.csproj
 ```
 
 Web:
 ```bash
 dotnet user-secrets init --project westcoast-cars.web/westcoast-cars.web.csproj
 dotnet user-secrets set "Services:ApiUrl" "http://localhost:5001" --project westcoast-cars.web/westcoast-cars.web.csproj
-dotnet user-secrets set "Services:AuthUrl" "http://localhost:5003" --project westcoast-cars.web/westcoast-cars.web.csproj
 ```
 
-### Run services (3 terminals)
+### Run services (2 terminals)
 
 ```bash
 dotnet run --project westcoast-cars.api/westcoast-cars.api.csproj
-dotnet run --project westcoast-cars.auth/Api/WestcoastCars.Auth.Api.csproj
 dotnet run --project westcoast-cars.web/westcoast-cars.web.csproj
 ```
-
 ## Tests
 
 ```bash

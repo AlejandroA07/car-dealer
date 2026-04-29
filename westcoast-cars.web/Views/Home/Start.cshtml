@@ -5,7 +5,10 @@
 
 <section class="home-hero" aria-labelledby="home-hero-title">
     <div class="home-hero-media">
-        <img src="~/images/landing.jpg" alt="Westcoast Cars bilhall med utvalda bilar" />
+        <picture>
+            <source srcset="~/images/landing.webp" type="image/webp" />
+            <img src="~/images/landing.jpg" alt="Westcoast Cars bilhall med utvalda bilar" width="1920" height="1280" fetchpriority="high" decoding="async" />
+        </picture>
         <div class="home-hero-overlay"></div>
     </div>
 

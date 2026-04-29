@@ -8,26 +8,13 @@ services:
     environment:
       - ASPNETCORE_URLS=http://+:8080
       - ConnectionStrings__DefaultConnection=Server=db;Port=3306;Database=westcoast_cars_db;Uid=root;Pwd=${MYSQL_PASSWORD}
+      - ConnectionStrings__AuthConnection=Server=auth-db;Port=3306;Database=westcoast_auth;Uid=root;Pwd=${MYSQL_PASSWORD}
       - apiImageUrl=http://api:8080/images/
       - JwtSettings__Secret=${JWT_SECRET}
+      - AdminSettings__Password=${ADMIN_PASSWORD}
     depends_on:
       db:
         condition: service_healthy
-
-  auth-api:
-    build:
-      context: .
-      dockerfile: westcoast-cars.auth/Api/Dockerfile
-    ports:
-      - "5003:8080"
-    environment:
-      - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__DefaultConnection=Server=auth-db;Port=3306;Database=westcoast_auth;Uid=root;Pwd=${MYSQL_PASSWORD}
-      - JwtSettings__Secret=${JWT_SECRET}
-      - AdminSettings__Password=${ADMIN_PASSWORD}
-    volumes:
-      - ./dpkeys:/app/keys
-    depends_on:
       auth-db:
         condition: service_healthy
 
@@ -37,11 +24,9 @@ services:
       dockerfile: westcoast-cars.web/Dockerfile
     environment:
       - ASPNETCORE_URLS=http://+:8080
-      - ApiBaseUrl=http://api:8080
-      - AuthApiBaseUrl=http://auth-api:8080
+      - Services__ApiUrl=http://api:8080
     depends_on:
       - api
-      - auth-api
     volumes:
       - ./dpkeys:/app/keys
 

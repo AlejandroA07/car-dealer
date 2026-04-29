@@ -21,21 +21,29 @@ public static class DependencyInjection
     {
         services.AddDbContext<AuthDbContext>(options =>
         {
-            var connectionString = configuration.GetConnectionString("DefaultConnection");
+            var connectionString = configuration.GetConnectionString("AuthConnection");
 
-            // Prefer Railway-provided MySQL environment variables when present.
-            var host = Environment.GetEnvironmentVariable("MYSQLHOST");
-            var port = Environment.GetEnvironmentVariable("MYSQLPORT") ?? "3306";
-            var database = Environment.GetEnvironmentVariable("MYSQLDATABASE");
-            var user = Environment.GetEnvironmentVariable("MYSQLUSER");
-            var mysqlPassword = Environment.GetEnvironmentVariable("MYSQLPASSWORD");
-
-            if (!string.IsNullOrWhiteSpace(host) &&
-                !string.IsNullOrWhiteSpace(database) &&
-                !string.IsNullOrWhiteSpace(user) &&
-                !string.IsNullOrWhiteSpace(mysqlPassword))
+            if (string.IsNullOrWhiteSpace(connectionString))
             {
-                connectionString = $"Server={host};Port={port};Database={database};Uid={user};Pwd={mysqlPassword};";
+                connectionString = configuration.GetConnectionString("DefaultConnection");
+            }
+
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                // Prefer Railway-provided MySQL environment variables only when no explicit auth connection string exists.
+                var host = Environment.GetEnvironmentVariable("MYSQLHOST");
+                var port = Environment.GetEnvironmentVariable("MYSQLPORT") ?? "3306";
+                var database = Environment.GetEnvironmentVariable("MYSQLDATABASE");
+                var user = Environment.GetEnvironmentVariable("MYSQLUSER");
+                var mysqlPassword = Environment.GetEnvironmentVariable("MYSQLPASSWORD");
+
+                if (!string.IsNullOrWhiteSpace(host) &&
+                    !string.IsNullOrWhiteSpace(database) &&
+                    !string.IsNullOrWhiteSpace(user) &&
+                    !string.IsNullOrWhiteSpace(mysqlPassword))
+                {
+                    connectionString = $"Server={host};Port={port};Database={database};Uid={user};Pwd={mysqlPassword};";
+                }
             }
 
             if (string.IsNullOrWhiteSpace(connectionString))
@@ -58,9 +66,22 @@ public static class DependencyInjection
                 }
             }
 
+            var composePassword = Environment.GetEnvironmentVariable("MYSQL_PASSWORD");
+
+            if (connectionString is not null && composePassword is not null)
+            {
+                connectionString = connectionString.Replace("${MYSQL_PASSWORD}", composePassword);
+            }
+
             if (string.IsNullOrWhiteSpace(connectionString))
             {
-                throw new InvalidOperationException("ConnectionStrings:DefaultConnection is missing. Set ConnectionStrings__DefaultConnection or MYSQL_URL (or MYSQLHOST/MYSQLPORT/MYSQLDATABASE/MYSQLUSER/MYSQLPASSWORD).");
+                throw new InvalidOperationException("ConnectionStrings:AuthConnection is missing. Set ConnectionStrings__AuthConnection, ConnectionStrings__DefaultConnection, MYSQL_URL, or MYSQLHOST/MYSQLPORT/MYSQLDATABASE/MYSQLUSER/MYSQLPASSWORD.");
+            }
+
+            if (connectionString == "DataSource=:memory:" || connectionString.Contains("Mode=Memory", StringComparison.OrdinalIgnoreCase))
+            {
+                options.UseSqlite(connectionString);
+                return;
             }
 
             if (environment.IsProduction())

@@ -1,7 +1,7 @@
 using Swashbuckle.AspNetCore.Filters;
 using WestcoastCars.Auth.Contracts.Auth;
 
-namespace WestcoastCars.Auth.Api.Swagger.Examples;
+namespace WestcoastCars.Api.Swagger.Examples;
 
 public class LoginRequestExample : IExamplesProvider<LoginRequest>
 {
@@ -10,3 +10,4 @@ public class LoginRequestExample : IExamplesProvider<LoginRequest>
         return new LoginRequest("user@westcoast-cars.com", "SecurePassword123!");
     }
 }
+

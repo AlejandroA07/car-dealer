@@ -1,7 +1,7 @@
 using Swashbuckle.AspNetCore.Filters;
 using WestcoastCars.Auth.Contracts.Auth;
 
-namespace WestcoastCars.Auth.Api.Swagger.Examples;
+namespace WestcoastCars.Api.Swagger.Examples;
 
 public class AuthenticationResponseExample : IExamplesProvider<AuthenticationResponse>
 {
@@ -16,3 +16,4 @@ public class AuthenticationResponseExample : IExamplesProvider<AuthenticationRes
         );
     }
 }
+

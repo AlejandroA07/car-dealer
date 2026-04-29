@@ -11,7 +11,7 @@ namespace WestcoastCars.Infrastructure.Data
         public DbSet<TransmissionType> TransmissionTypes { get; set; }
         public DbSet<ServiceBooking> ServiceBookings { get; set; }
         public DbSet<OutboxMessage> OutboxMessages { get; set; }
-        public WestcoastCarsContext(DbContextOptions options) : base(options){}
+        public WestcoastCarsContext(DbContextOptions<WestcoastCarsContext> options) : base(options){}
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

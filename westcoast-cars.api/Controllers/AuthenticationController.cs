@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using WestcoastCars.Auth.Application.Services;
 using WestcoastCars.Auth.Contracts.Auth;
 
-namespace WestcoastCars.Auth.Api.Controllers;
+namespace WestcoastCars.Api.Controllers;
 
 /// <summary>
 /// Handles user authentication and registration.
@@ -96,3 +96,4 @@ public class AuthenticationController : ControllerBase
         }
     }
 }
+
