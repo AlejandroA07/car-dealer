@@ -11,10 +11,5 @@ services:
 
   db:
     ports:
-      - "3306:3306"
-    container_name: westcoast-mysql
-
-  auth-db:
-    ports:
-      - "3307:3306"
-    container_name: westcoast-auth-mysql
+      - "5432:5432"
+    container_name: westcoast-postgres

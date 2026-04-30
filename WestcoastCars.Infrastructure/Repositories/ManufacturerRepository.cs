@@ -14,9 +14,11 @@ public class ManufacturerRepository : Repository<Manufacturer>, IManufacturerRep
 
     public async Task<Manufacturer?> FindByNameWithVehiclesAsync(string name)
     {
+        var normalizedName = name.ToUpper();
+
         return await _context.Manufacturers
             .Include(m => m.Vehicles)
-            .SingleOrDefaultAsync(m => m.Name.ToUpper() == name.ToUpper());
+            .SingleOrDefaultAsync(m => m.Name.ToUpper() == normalizedName);
     }
 }
 

@@ -14,11 +14,13 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
 
     public async Task<Vehicle?> FindByRegistrationNumberAsync(string regNo)
     {
+        var normalizedRegNo = regNo.ToUpper();
+
         return await _context.Vehicles
             .Include(v => v.Manufacturer)
             .Include(v => v.FuelType)
             .Include(v => v.TransmissionType)
-            .SingleOrDefaultAsync(v => v.RegistrationNumber != null && v.RegistrationNumber.ToUpper() == regNo.ToUpper());
+            .SingleOrDefaultAsync(v => v.RegistrationNumber != null && v.RegistrationNumber.ToUpper() == normalizedRegNo);
     }
 
     public async Task<IEnumerable<Vehicle>> SearchAsync(VehicleSearchDto search)
@@ -27,12 +29,14 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
 
         if (!string.IsNullOrWhiteSpace(search.Make))
         {
-            query = query.Where(v => v.Manufacturer.Name.Contains(search.Make));
+            var normalizedMake = search.Make.ToUpper();
+            query = query.Where(v => v.Manufacturer.Name.ToUpper().Contains(normalizedMake));
         }
 
         if (!string.IsNullOrWhiteSpace(search.Model))
         {
-            query = query.Where(v => v.Model.Contains(search.Model));
+            var normalizedModel = search.Model.ToUpper();
+            query = query.Where(v => v.Model.ToUpper().Contains(normalizedModel));
         }
 
         if (search.MinYear.HasValue)

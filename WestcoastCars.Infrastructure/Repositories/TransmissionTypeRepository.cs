@@ -21,8 +21,10 @@ public class TransmissionTypeRepository : Repository<TransmissionType>, ITransmi
 
     public async Task<IReadOnlyList<TransmissionType>> FindByNameWithVehiclesAsync(string name)
     {
+        var normalizedName = name.ToUpper();
+
         return await _context.TransmissionTypes
-            .Where(t => t.Name.ToUpper().StartsWith(name.ToUpper()))
+            .Where(t => t.Name.ToUpper().StartsWith(normalizedName))
             .Include(t => t.Vehicles)
             .ThenInclude(v => v.Manufacturer)
             .ToListAsync();

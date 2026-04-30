@@ -7,15 +7,12 @@ services:
       - "5001:8080"
     environment:
       - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__DefaultConnection=Server=db;Port=3306;Database=westcoast_cars_db;Uid=root;Pwd=${MYSQL_PASSWORD}
-      - ConnectionStrings__AuthConnection=Server=auth-db;Port=3306;Database=westcoast_auth;Uid=root;Pwd=${MYSQL_PASSWORD}
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=westcoast_cars;Username=postgres;Password=${POSTGRES_PASSWORD}
       - apiImageUrl=http://api:8080/images/
       - JwtSettings__Secret=${JWT_SECRET}
       - AdminSettings__Password=${ADMIN_PASSWORD}
     depends_on:
       db:
-        condition: service_healthy
-      auth-db:
         condition: service_healthy
 
   web:
@@ -31,35 +28,20 @@ services:
       - ./dpkeys:/app/keys
 
   db:
-    image: mysql:8.0
+    image: postgres:16-alpine
     ports:
-      - "3306:3306"
+      - "5432:5432"
     environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
-      - MYSQL_DATABASE=westcoast_cars_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=westcoast_cars
     volumes:
-      - mysql_data:/var/lib/mysql
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  auth-db:
-    image: mysql:8.0
-    environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
-      - MYSQL_DATABASE=westcoast_auth
-    volumes:
-      - mysql_auth_data:/var/lib/mysql
-    ports:
-      - "3307:3306"
-    healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d westcoast_cars"]
       interval: 10s
       timeout: 5s
       retries: 5
 
 volumes:
-  mysql_data:
-  mysql_auth_data:
+  postgres_data:
