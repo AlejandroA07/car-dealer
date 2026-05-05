@@ -117,6 +117,35 @@ namespace WestcoastCars.Infrastructure.Data
             }
         }
 
+        public static async Task EnsurePostgreSqlIdentitySequencesAsync(WestcoastCarsContext context)
+        {
+            if (!string.Equals(context.Database.ProviderName, "Npgsql.EntityFrameworkCore.PostgreSQL", StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            var seededTables = new[]
+            {
+                "Manufacturers",
+                "FuelTypes",
+                "TransmissionTypes",
+                "Vehicles"
+            };
+
+            foreach (var tableName in seededTables)
+            {
+                var sql = $"""
+                    SELECT setval(
+                        pg_get_serial_sequence('"{tableName}"', 'Id'),
+                        GREATEST(COALESCE((SELECT MAX("Id") FROM "{tableName}"), 0), 1),
+                        EXISTS (SELECT 1 FROM "{tableName}")
+                    );
+                    """;
+
+                await context.Database.ExecuteSqlRawAsync(sql);
+            }
+        }
+
         private class VehicleSeedDto
         {
             public int Id { get; set; }

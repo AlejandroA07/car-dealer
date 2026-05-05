@@ -11,6 +11,7 @@ namespace westcoast_cars.web.Services
     public class VehicleService : IVehicleService
     {
         private readonly HttpClient _httpClient;
+        private readonly HttpClient _longRunningHttpClient;
         private readonly ILogger<VehicleService> _logger;
         private readonly string _baseUrl;
         private readonly JsonSerializerOptions _options;
@@ -18,6 +19,7 @@ namespace westcoast_cars.web.Services
         public VehicleService(IHttpClientFactory httpClientFactory, IConfiguration config, ILogger<VehicleService> logger)
         {
             _httpClient = httpClientFactory.CreateClient("ApiClient");
+            _longRunningHttpClient = httpClientFactory.CreateClient("LongRunningApiClient");
             _logger = logger;
             _baseUrl = config["Services:ApiUrl"] ?? throw new InvalidOperationException("Services:ApiUrl is not configured");
             _options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
@@ -225,9 +227,9 @@ namespace westcoast_cars.web.Services
 
         public async Task<BlocketSyncViewModel> SyncBlocketAsync(BlocketSyncViewModel model)
         {
-            return await ExecuteWithApiFallback(async () =>
+            try
             {
-                var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}/api/v1/vehicles/import/blocket", new
+                var response = await _longRunningHttpClient.PostAsJsonAsync($"{_baseUrl}/api/v1/vehicles/import/blocket", new
                 {
                     limit = model.Limit,
                     orgId = model.OrgId,
@@ -287,14 +289,31 @@ namespace westcoast_cars.web.Services
                 result.Models = model.Models;
                 result.HasResult = true;
                 return result;
-            }, new BlocketSyncViewModel
+            }
+            catch (HttpRequestException ex)
             {
-                Limit = model.Limit,
-                OrgId = model.OrgId,
-                Locations = model.Locations,
-                Models = model.Models,
-                ErrorMessage = "The API is currently unavailable."
-            }, "syncing Blocket vehicles");
+                _logger.LogError(ex, "API is unavailable while syncing Blocket vehicles");
+                return new BlocketSyncViewModel
+                {
+                    Limit = model.Limit,
+                    OrgId = model.OrgId,
+                    Locations = model.Locations,
+                    Models = model.Models,
+                    ErrorMessage = "API:t kunde inte nås för Blocket-synkningen."
+                };
+            }
+            catch (TaskCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Blocket sync request timed out in web app while API may still be processing");
+                return new BlocketSyncViewModel
+                {
+                    Limit = model.Limit,
+                    OrgId = model.OrgId,
+                    Locations = model.Locations,
+                    Models = model.Models,
+                    InfoMessage = "Synkningen tar längre tid än väntat men API:t kan fortfarande arbeta i bakgrunden. Vänta en stund och kontrollera fordonslistan igen."
+                };
+            }
         }
 
     private async Task LoadDropdownData(VehicleBaseViewModel viewModel, VehicleDetailsDto vehicleToEdit)

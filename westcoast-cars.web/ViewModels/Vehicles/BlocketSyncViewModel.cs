@@ -26,5 +26,6 @@ public class BlocketSyncViewModel
     public int TotalSkipped { get; set; }
 
     public bool HasResult { get; set; }
+    public string? InfoMessage { get; set; }
     public string? ErrorMessage { get; set; }
 }

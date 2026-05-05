@@ -104,13 +104,17 @@ public class VehiclesController : Controller
 
             var result = await _vehicleService.SyncBlocketAsync(model);
 
-            if (string.IsNullOrWhiteSpace(result.ErrorMessage))
+            if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
             {
-                TempData["success"] = $"Blocket sync completed. Imported {result.TotalImported} vehicles.";
+                TempData["error"] = result.ErrorMessage;
+            }
+            else if (!string.IsNullOrWhiteSpace(result.InfoMessage))
+            {
+                TempData["info"] = result.InfoMessage;
             }
             else
             {
-                TempData["error"] = result.ErrorMessage;
+                TempData["success"] = $"Blocket sync completed. Imported {result.TotalImported} vehicles.";
             }
 
             return View("SyncBlocket", result);

@@ -3,7 +3,7 @@
 # - Uses the .NET SDK image which contains all tools needed to build the application.
 # - Restores NuGet packages and publishes the final application artifacts.
 # ====================================================================================
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0-noble AS build
 WORKDIR /src
 
 # Copy the solution file and all project files
@@ -45,7 +45,7 @@ RUN dotnet publish "westcoast-cars.api.csproj" -c Release -o /app/publish
 # - Uses the lightweight ASP.NET runtime image, which is optimized for running apps.
 # - This image is smaller and more secure as it doesn't contain the build SDK.
 # ====================================================================================
-FROM mcr.microsoft.com/dotnet/aspnet:9.0
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble
 WORKDIR /app
 
 # Copy the published build output from the 'build' stage

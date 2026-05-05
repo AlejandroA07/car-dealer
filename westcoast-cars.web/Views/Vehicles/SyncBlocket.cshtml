@@ -67,7 +67,11 @@
                         <h2>Senaste resultat</h2>
                     </div>
 
-                    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+                    @if (!string.IsNullOrWhiteSpace(Model.InfoMessage))
+                    {
+                        <p class="admin-utility-copy">@Model.InfoMessage</p>
+                    }
+                    else if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
                     {
                         <p class="vehicle-editor-validation">@Model.ErrorMessage</p>
                     }
