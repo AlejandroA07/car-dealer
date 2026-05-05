@@ -15,7 +15,7 @@ using WestcoastCars.Infrastructure;
 using FluentValidation;
 using WestcoastCars.Application.Common.Behaviors;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using WestcoastCars.Auth.Infrastructure.Data;
 
 
@@ -97,18 +97,11 @@ builder.Services.AddSwaggerGen(c =>
         Description = "Enter your JWT token in the format: {token}. Example: eyJhbGciOiJIUzI1NiIs..."
     });
 
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    c.AddSecurityRequirement(document => new OpenApiSecurityRequirement
     {
         {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            new string[] {}
+            new OpenApiSecuritySchemeReference("Bearer", document),
+            new List<string>()
         }
     });
 });
@@ -157,6 +150,7 @@ using (var scope = app.Services.CreateScope())
         await SeedData.LoadFuelTypeData(context);
         await SeedData.LoadTransmissionsData(context);
         await SeedData.LoadVehicleData(context);
+        await SeedData.EnsurePostgreSqlIdentitySequencesAsync(context);
     }
     catch (Exception ex)
     {

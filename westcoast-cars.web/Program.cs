@@ -21,6 +21,13 @@ builder.Services.AddHttpClient("ApiClient", client =>
 })
 .AddHttpMessageHandler<AuthHandler>();
 
+builder.Services.AddHttpClient("LongRunningApiClient", client =>
+{
+    client.BaseAddress = new Uri(serviceOptions.ApiUrl);
+    client.Timeout = TimeSpan.FromMinutes(2);
+})
+.AddHttpMessageHandler<AuthHandler>();
+
 // Configure the HttpClient for auth endpoints hosted by the main API.
 builder.Services.AddHttpClient<IAuthService, AuthService>("AuthApiClient", client =>
 {
