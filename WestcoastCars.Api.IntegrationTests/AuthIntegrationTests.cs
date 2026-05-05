@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
-using WestcoastCars.Auth.Contracts.Admin;
-using WestcoastCars.Auth.Contracts.Auth;
+using WestcoastCars.Contracts.Admin;
+using WestcoastCars.Contracts.Auth;
 
 namespace WestcoastCars.Api.IntegrationTests;
 

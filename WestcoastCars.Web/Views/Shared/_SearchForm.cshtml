@@ -1,0 +1,55 @@
+@model WestcoastCars.Web.ViewModels.Vehicles.VehicleListViewModel
+@{
+    var currentYear = DateTime.Now.Year;
+    var yearOptions = Enumerable.Range(0, 31).Select(offset => currentYear - offset);
+    var priceOptions = new[] { 50000, 100000, 150000, 200000, 300000, 400000, 500000, 750000, 1000000 };
+}
+
+<section class="filter-section" aria-label="Filtrera lager">
+    <div class="filter-shell">
+        <form asp-route="VehicleCatalog" method="get" class="filter-form">
+            <div class="filter-group">
+                <label for="Make">Märke</label>
+                <select id="Make" name="Make" asp-items="Model.Manufacturers" class="form-control">
+                    <option value="">Alla märken</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="Model">Modell</label>
+                <input id="Model" type="text" name="Model" value="@Model.Search.Model" class="form-control" placeholder="T.ex. V90" />
+            </div>
+            <div class="filter-group">
+                <label>Årsmodell</label>
+                <div class="range-field">
+                    <input type="text" inputmode="numeric" list="year-options" name="MinYear" value="@Model.Search.MinYear" placeholder="Från" aria-label="Årsmodell från" />
+                    <span aria-hidden="true">-</span>
+                    <input type="text" inputmode="numeric" list="year-options" name="MaxYear" value="@Model.Search.MaxYear" placeholder="Till" aria-label="Årsmodell till" />
+                </div>
+            </div>
+            <div class="filter-group">
+                <label>Pris</label>
+                <div class="range-field">
+                    <input type="text" inputmode="numeric" list="price-options" name="MinPrice" value="@Model.Search.MinPrice" placeholder="Från" aria-label="Pris från" />
+                    <span aria-hidden="true">-</span>
+                    <input type="text" inputmode="numeric" list="price-options" name="MaxPrice" value="@Model.Search.MaxPrice" placeholder="Till" aria-label="Pris till" />
+                </div>
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-filter"></i> Filtrera</button>
+            </div>
+        </form>
+    </div>
+
+    <datalist id="year-options">
+        @foreach (var year in yearOptions)
+        {
+            <option value="@year"></option>
+        }
+    </datalist>
+    <datalist id="price-options">
+        @foreach (var price in priceOptions)
+        {
+            <option value="@price"></option>
+        }
+    </datalist>
+</section>

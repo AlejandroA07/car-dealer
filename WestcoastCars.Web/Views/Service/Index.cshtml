@@ -1,0 +1,186 @@
+@model WestcoastCars.Web.ViewModels.ServiceBooking.ServiceBookingViewModel
+
+@{
+    ViewData["Title"] = "Boka service";
+}
+
+<section class="service-appointment-page">
+    <div class="site-container service-appointment-container">
+        <header class="service-appointment-header">
+            <h1>Servicebokning</h1>
+            <p>Boka underhåll eller reparation hos våra certifierade tekniker. Tydlig process, lugn dialog och omsorg om din bil.</p>
+        </header>
+
+        <div class="service-appointment-shell">
+            <aside class="service-appointment-aside" aria-label="Servicefördelar">
+                <div class="service-info-card">
+                    <span class="service-kicker">Nordisk kvalitet</span>
+                    <p>Varje service följer en tydlig kontroll med fokus på säkerhet, precision och personlig återkoppling.</p>
+
+                    <div class="service-benefit">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <div>
+                            <strong>Originaldelar</strong>
+                            <span>OEM-komponenter när det behövs.</span>
+                        </div>
+                    </div>
+
+                    <div class="service-benefit">
+                        <i class="fa-solid fa-car-side"></i>
+                        <div>
+                            <strong>Serviceklar bil</strong>
+                            <span>Vi bekräftar tiden innan besök.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="service-facility-card">
+                    <span>State-of-the-art verkstad</span>
+                </div>
+            </aside>
+
+            <form asp-action="Index" method="post" class="service-appointment-form">
+                <div asp-validation-summary="ModelOnly" class="service-validation-summary"></div>
+
+                <section class="service-form-section">
+                    <div class="service-section-title">
+                        <span>01</span>
+                        <h2>Bilinformation</h2>
+                    </div>
+
+                    <div class="service-field-grid">
+                        <label class="service-field">
+                            <span>Bilmodell</span>
+                            <input type="text" name="VehicleModelPlaceholder" placeholder="t.ex. Volvo XC90 Recharge" />
+                        </label>
+
+                        <label class="service-field">
+                            <span>Registreringsnummer / VIN</span>
+                            <input asp-for="VehicleRegistrationNumber" placeholder="ABC 1234" autocomplete="off" />
+                            <span asp-validation-for="VehicleRegistrationNumber" class="service-field-error"></span>
+                        </label>
+
+                        <label class="service-field service-field-wide">
+                            <span>Mätarställning ungefär</span>
+                            <input type="text" name="MileagePlaceholder" placeholder="45 000 km" inputmode="numeric" />
+                        </label>
+                    </div>
+                </section>
+
+                <section class="service-form-section">
+                    <div class="service-section-title">
+                        <span>02</span>
+                        <h2>Servicebehov</h2>
+                    </div>
+
+                    <div class="service-choice-grid">
+                        <label class="service-choice-card">
+                            <input asp-for="ServiceType" type="radio" value="Bas-service" />
+                            <span>
+                                <strong>Årlig service</strong>
+                                <small>Standardkontroll och oljebyte</small>
+                            </span>
+                            <i class="fa-regular fa-circle-check"></i>
+                        </label>
+
+                        <label class="service-choice-card">
+                            <input asp-for="ServiceType" type="radio" value="Diagnostik" />
+                            <span>
+                                <strong>Diagnostik</strong>
+                                <small>Motorlampa, ljud eller felkod</small>
+                            </span>
+                            <i class="fa-regular fa-circle"></i>
+                        </label>
+
+                        <label class="service-choice-card">
+                            <input asp-for="ServiceType" type="radio" value="Bromsservice" />
+                            <span>
+                                <strong>Däck & bromsar</strong>
+                                <small>Rotation, byte eller bromskontroll</small>
+                            </span>
+                            <i class="fa-regular fa-circle"></i>
+                        </label>
+
+                        <label class="service-choice-card">
+                            <input asp-for="ServiceType" type="radio" value="Kaross" />
+                            <span>
+                                <strong>Karossarbete</strong>
+                                <small>Lack, mindre skador eller restaurering</small>
+                            </span>
+                            <i class="fa-regular fa-circle"></i>
+                        </label>
+                    </div>
+                    <span asp-validation-for="ServiceType" class="service-field-error"></span>
+
+                    <label class="service-field service-notes-field">
+                        <span>Extra information</span>
+                        <textarea asp-for="Description" rows="4" placeholder="Berätta kort vad bilen behöver..."></textarea>
+                        <span asp-validation-for="Description" class="service-field-error"></span>
+                    </label>
+                </section>
+
+                <section class="service-form-section">
+                    <div class="service-section-title">
+                        <span>03</span>
+                        <h2>Önskad tid</h2>
+                    </div>
+
+                    <div class="service-field-grid">
+                        <label class="service-field">
+                            <span>Välj datum</span>
+                            <input asp-for="BookingDate" type="date" />
+                            <span asp-validation-for="BookingDate" class="service-field-error"></span>
+                        </label>
+
+                        <label class="service-field">
+                            <span>Tidsfönster</span>
+                            <select name="TimeSlotPlaceholder">
+                                <option>Morgon (08:00 - 12:00)</option>
+                                <option>Eftermiddag (12:00 - 16:00)</option>
+                                <option>Flexibel tid</option>
+                            </select>
+                        </label>
+                    </div>
+                </section>
+
+                <section class="service-form-section">
+                    <div class="service-section-title">
+                        <span>04</span>
+                        <h2>Kontaktuppgifter</h2>
+                    </div>
+
+                    <div class="service-field-grid">
+                        <label class="service-field">
+                            <span>Fullständigt namn</span>
+                            <input asp-for="CustomerName" placeholder="Erik Larsson" autocomplete="name" />
+                            <span asp-validation-for="CustomerName" class="service-field-error"></span>
+                        </label>
+
+                        <label class="service-field">
+                            <span>Telefonnummer</span>
+                            <input asp-for="CustomerPhone" placeholder="+46 00 000 00 00" autocomplete="tel" />
+                            <span asp-validation-for="CustomerPhone" class="service-field-error"></span>
+                        </label>
+
+                        <label class="service-field service-field-wide">
+                            <span>E-postadress</span>
+                            <input asp-for="CustomerEmail" type="email" placeholder="erik.larsson@example.com" autocomplete="email" />
+                            <span asp-validation-for="CustomerEmail" class="service-field-error"></span>
+                        </label>
+                    </div>
+                </section>
+
+                <div class="service-submit-row">
+                    <button type="submit" class="btn btn-primary service-submit-button">
+                        Skicka bokningsförfrågan <i class="fa-solid fa-calendar-check"></i>
+                    </button>
+                    <p>Genom att skicka godkänner du att vi kontaktar dig för att bekräfta serviceförfrågan.</p>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

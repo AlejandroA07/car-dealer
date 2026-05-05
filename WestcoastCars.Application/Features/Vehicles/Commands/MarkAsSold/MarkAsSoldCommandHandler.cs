@@ -4,8 +4,6 @@ using System.Threading.Tasks;
 using WestcoastCars.Application.Exceptions;
 using WestcoastCars.Application.Interfaces;
 
-using WestcoastCars.Domain.Events.Vehicles;
-
 namespace WestcoastCars.Application.Features.Vehicles.Commands.MarkAsSold
 {
     public class MarkAsSoldCommandHandler : IRequestHandler<MarkAsSoldCommand, Unit>
@@ -26,7 +24,6 @@ namespace WestcoastCars.Application.Features.Vehicles.Commands.MarkAsSold
             }
 
             vehicle.IsSold = true;
-            vehicle.AddDomainEvent(new VehicleSoldEvent(vehicle));
 
             _unitOfWork.VehicleRepository.Update(vehicle);
 

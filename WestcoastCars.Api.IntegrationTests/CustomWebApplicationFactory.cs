@@ -1,20 +1,26 @@
+using DotNet.Testcontainers.Builders;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Data.Sqlite;
+using Testcontainers.PostgreSql;
 
 namespace WestcoastCars.Api.IntegrationTests;
 
-public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProgram> where TProgram : class
+public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProgram>, IAsyncLifetime
+    where TProgram : class
 {
-    private SqliteConnection? _businessConnection;
+    private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder()
+        .WithImage("postgres:16-alpine")
+        .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(5432))
+        .Build();
+
+    async Task IAsyncLifetime.InitializeAsync()
+    {
+        await _dbContainer.StartAsync();
+    }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        var businessConnectionString = $"Data Source=TestDb_{Guid.NewGuid():N};Mode=Memory;Cache=Shared";
-        _businessConnection = new SqliteConnection(businessConnectionString);
-        _businessConnection.Open();
-
-        builder.UseSetting("ConnectionStrings:DefaultConnection", businessConnectionString);
+        builder.UseSetting("ConnectionStrings:DefaultConnection", _dbContainer.GetConnectionString());
         builder.UseSetting("JwtSettings:Secret", "super-secret-key-for-testing-purposes-only-123");
         builder.UseSetting("JwtSettings:Issuer", "WestcoastCars.Auth");
         builder.UseSetting("JwtSettings:Audience", "WestcoastCars.Auth");
@@ -22,13 +28,8 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
         builder.UseSetting("AdminSettings:Password", "Password123!");
     }
 
-    protected override void Dispose(bool disposing)
+    async Task IAsyncLifetime.DisposeAsync()
     {
-        if (disposing)
-        {
-            _businessConnection?.Close();
-            _businessConnection?.Dispose();
-        }
-        base.Dispose(disposing);
+        await _dbContainer.DisposeAsync();
     }
 }

@@ -136,6 +136,9 @@ public class SyncBlocketVehiclesCommandHandlerTests
         Assert.Equal(0, result.TotalPrepared);
         Assert.Empty(result.Vehicles);
         _blocketApiClientMock.Verify(client => client.GetCarAdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _manufacturerRepositoryMock.Verify(repository => repository.GetAllAsync(), Times.Never);
+        _fuelTypeRepositoryMock.Verify(repository => repository.GetAllAsync(), Times.Never);
+        _transmissionTypeRepositoryMock.Verify(repository => repository.GetAllAsync(), Times.Never);
     }
 
     [Fact]
@@ -240,22 +243,121 @@ public class SyncBlocketVehiclesCommandHandlerTests
         Assert.Equal(1, result.TotalSkipped);
     }
 
+    [Fact]
+    public async Task Handle_ShouldLoadLookupTablesOnceAndResolveExistingLookupsInMemory()
+    {
+        _blocketApiClientMock
+            .SetupSequence(client => client.SearchCarsAsync(It.IsAny<BlocketCarSearchRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new BlocketCarSearchResponse
+            {
+                Docs =
+                [
+                    new BlocketCarSearchItem { Id = "1" },
+                    new BlocketCarSearchItem { Id = "2" }
+                ]
+            })
+            .ReturnsAsync(new BlocketCarSearchResponse());
+
+        _blocketApiClientMock
+            .Setup(client => client.GetCarAdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new BlocketCarAdDetails());
+
+        _mapperMock
+            .Setup(mapper => mapper.Map(It.IsAny<BlocketCarSearchItem>(), It.IsAny<BlocketCarAdDetails>(), It.IsAny<DateTime>()))
+            .Returns<BlocketCarSearchItem, BlocketCarAdDetails, DateTime>((item, _, importedAt) => new BlocketVehicleImportData
+            {
+                ExternalListingId = item.Id,
+                Manufacturer = "VOLVO",
+                FuelType = "Petrol",
+                TransmissionType = "Automatic",
+                Model = $"Model {item.Id}",
+                ModelYear = "2024",
+                ImageUrl = "x",
+                Description = "x",
+                ImportedAt = importedAt
+            });
+
+        await _handler.Handle(new SyncBlocketVehiclesCommand { Limit = 2 }, CancellationToken.None);
+
+        _manufacturerRepositoryMock.Verify(repository => repository.GetAllAsync(), Times.Once);
+        _fuelTypeRepositoryMock.Verify(repository => repository.GetAllAsync(), Times.Once);
+        _transmissionTypeRepositoryMock.Verify(repository => repository.GetAllAsync(), Times.Once);
+        _manufacturerRepositoryMock.Verify(repository => repository.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Manufacturer, bool>>>()), Times.Never);
+        _fuelTypeRepositoryMock.Verify(repository => repository.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<Func<FuelType, bool>>>()), Times.Never);
+        _transmissionTypeRepositoryMock.Verify(repository => repository.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<Func<TransmissionType, bool>>>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Handle_ShouldCreateEachMissingLookupOnlyOncePerBatch()
+    {
+        _manufacturerRepositoryMock.Setup(repository => repository.GetAllAsync()).ReturnsAsync([]);
+        _fuelTypeRepositoryMock.Setup(repository => repository.GetAllAsync()).ReturnsAsync([]);
+        _transmissionTypeRepositoryMock.Setup(repository => repository.GetAllAsync()).ReturnsAsync([]);
+
+        _blocketApiClientMock
+            .SetupSequence(client => client.SearchCarsAsync(It.IsAny<BlocketCarSearchRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new BlocketCarSearchResponse
+            {
+                Docs =
+                [
+                    new BlocketCarSearchItem { Id = "1" },
+                    new BlocketCarSearchItem { Id = "2" }
+                ]
+            })
+            .ReturnsAsync(new BlocketCarSearchResponse());
+
+        _blocketApiClientMock
+            .Setup(client => client.GetCarAdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new BlocketCarAdDetails());
+
+        _mapperMock
+            .SetupSequence(mapper => mapper.Map(It.IsAny<BlocketCarSearchItem>(), It.IsAny<BlocketCarAdDetails>(), It.IsAny<DateTime>()))
+            .Returns(new BlocketVehicleImportData
+            {
+                ExternalListingId = "1",
+                Manufacturer = " Saab ",
+                FuelType = "Diesel",
+                TransmissionType = "Manual",
+                Model = "A",
+                ModelYear = "2024",
+                ImageUrl = "x",
+                Description = "x"
+            })
+            .Returns(new BlocketVehicleImportData
+            {
+                ExternalListingId = "2",
+                Manufacturer = "SAAB",
+                FuelType = " diesel ",
+                TransmissionType = "manual",
+                Model = "B",
+                ModelYear = "2024",
+                ImageUrl = "x",
+                Description = "x"
+            });
+
+        await _handler.Handle(new SyncBlocketVehiclesCommand { Limit = 2 }, CancellationToken.None);
+
+        _manufacturerRepositoryMock.Verify(repository => repository.AddAsync(It.Is<Manufacturer>(manufacturer => manufacturer.Name == "Saab")), Times.Once);
+        _fuelTypeRepositoryMock.Verify(repository => repository.AddAsync(It.Is<FuelType>(fuelType => fuelType.Name == "Diesel")), Times.Once);
+        _transmissionTypeRepositoryMock.Verify(repository => repository.AddAsync(It.Is<TransmissionType>(transmissionType => transmissionType.Name == "Manual")), Times.Once);
+    }
+
     private void SetupLookupRepositories()
     {
         _vehicleRepositoryMock
-            .Setup(repository => repository.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Vehicle, bool>>>()))
+            .Setup(repository => repository.GetAllAsync())
             .ReturnsAsync([]);
 
         _manufacturerRepositoryMock
-            .Setup(repository => repository.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Manufacturer, bool>>>()))
-            .ReturnsAsync(new Manufacturer { Id = 2, Name = "VOLVO" });
+            .Setup(repository => repository.GetAllAsync())
+            .ReturnsAsync([new Manufacturer { Id = 2, Name = "VOLVO" }]);
 
         _fuelTypeRepositoryMock
-            .Setup(repository => repository.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<Func<FuelType, bool>>>()))
-            .ReturnsAsync(new FuelType { Id = 2, Name = "Petrol" });
+            .Setup(repository => repository.GetAllAsync())
+            .ReturnsAsync([new FuelType { Id = 2, Name = "Petrol" }]);
 
         _transmissionTypeRepositoryMock
-            .Setup(repository => repository.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<Func<TransmissionType, bool>>>()))
-            .ReturnsAsync(new TransmissionType { Id = 2, Name = "Automatic" });
+            .Setup(repository => repository.GetAllAsync())
+            .ReturnsAsync([new TransmissionType { Id = 2, Name = "Automatic" }]);
     }
 }

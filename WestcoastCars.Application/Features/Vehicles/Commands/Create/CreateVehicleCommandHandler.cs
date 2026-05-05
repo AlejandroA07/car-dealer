@@ -6,8 +6,6 @@ using WestcoastCars.Application.Exceptions;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Domain.Entities;
 
-using WestcoastCars.Domain.Events.Vehicles;
-
 namespace WestcoastCars.Application.Features.Vehicles.Commands.Create
 {
     public class CreateVehicleCommandHandler : IRequestHandler<CreateVehicleCommand, int>
@@ -53,8 +51,6 @@ namespace WestcoastCars.Application.Features.Vehicles.Commands.Create
                 Description = request.Description,
                 ImageUrl = string.IsNullOrEmpty(request.ImageUrl) ? DefaultCarImageName : request.ImageUrl
             };
-
-            vehicle.AddDomainEvent(new VehicleCreatedEvent(vehicle));
 
             await _unitOfWork.VehicleRepository.AddAsync(vehicle);
 
