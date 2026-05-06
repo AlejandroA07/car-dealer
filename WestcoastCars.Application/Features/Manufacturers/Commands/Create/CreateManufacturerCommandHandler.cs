@@ -9,7 +9,7 @@ using WestcoastCars.Application.Exceptions;
 
 namespace WestcoastCars.Application.Features.Manufacturers.Commands.Create
 {
-    public class CreateManufacturerCommandHandler : IRequestHandler<CreateManufacturerCommand, NamedObjectDto?>
+    public class CreateManufacturerCommandHandler : IRequestHandler<CreateManufacturerCommand, NamedObjectDto>
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
@@ -20,7 +20,7 @@ namespace WestcoastCars.Application.Features.Manufacturers.Commands.Create
             _mapper = mapper;
         }
 
-        public async Task<NamedObjectDto?> Handle(CreateManufacturerCommand request, CancellationToken cancellationToken)
+        public async Task<NamedObjectDto> Handle(CreateManufacturerCommand request, CancellationToken cancellationToken)
         {
             var repository = _unitOfWork.Repository<Manufacturer>();
             if (repository is null) throw new InvalidOperationException("Repository for Manufacturer is not available.");
@@ -33,16 +33,10 @@ namespace WestcoastCars.Application.Features.Manufacturers.Commands.Create
             }
 
             var manufacturerToAdd = new Manufacturer { Name = request.Name };
+            await repository.AddAsync(manufacturerToAdd);
 
-            if (repository is null) throw new InvalidOperationException("Repository for Manufacturer is not available.");
-            await repository.AddAsync(manufacturerToAdd!);
-
-            if (await _unitOfWork.CompleteAsync() > 0)
-            {
-                return _mapper.Map<NamedObjectDto>(manufacturerToAdd!);
-            }
-
-            return null;
+            await _unitOfWork.CompleteOrThrowAsync("Failed to create manufacturer");
+            return _mapper.Map<NamedObjectDto>(manufacturerToAdd);
         }
     }
 }

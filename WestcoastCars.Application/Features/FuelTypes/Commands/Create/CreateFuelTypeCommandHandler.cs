@@ -9,7 +9,7 @@ using WestcoastCars.Application.Exceptions;
 
 namespace WestcoastCars.Application.Features.FuelTypes.Commands.Create
 {
-    public class CreateFuelTypeCommandHandler : IRequestHandler<CreateFuelTypeCommand, NamedObjectDto?>
+    public class CreateFuelTypeCommandHandler : IRequestHandler<CreateFuelTypeCommand, NamedObjectDto>
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
@@ -20,7 +20,7 @@ namespace WestcoastCars.Application.Features.FuelTypes.Commands.Create
             _mapper = mapper;
         }
 
-        public async Task<NamedObjectDto?> Handle(CreateFuelTypeCommand request, CancellationToken cancellationToken)
+        public async Task<NamedObjectDto> Handle(CreateFuelTypeCommand request, CancellationToken cancellationToken)
         {
             var repository = _unitOfWork.Repository<FuelType>();
             if (repository is null) throw new InvalidOperationException("Repository for FuelType is not available.");
@@ -33,14 +33,10 @@ namespace WestcoastCars.Application.Features.FuelTypes.Commands.Create
             }
 
             var fuelTypeToAdd = new FuelType { Name = request.Name };
-            await repository.AddAsync(fuelTypeToAdd!);
+            await repository.AddAsync(fuelTypeToAdd);
 
-            if (await _unitOfWork.CompleteAsync() > 0)
-            {
-                return _mapper.Map<NamedObjectDto>(fuelTypeToAdd!);
-            }
-
-            return null;
+            await _unitOfWork.CompleteOrThrowAsync("Failed to create fuel type");
+            return _mapper.Map<NamedObjectDto>(fuelTypeToAdd);
         }
     }
 }

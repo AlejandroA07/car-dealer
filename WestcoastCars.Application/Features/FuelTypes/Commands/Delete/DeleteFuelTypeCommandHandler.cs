@@ -30,7 +30,7 @@ namespace WestcoastCars.Application.Features.FuelTypes.Commands.Delete
 
             repository.Remove(fuelTypeToDelete!);
 
-            await _unitOfWork.CompleteAsync();
+            await _unitOfWork.CompleteOrThrowAsync("Failed to delete fuel type");
         }
     }
 }

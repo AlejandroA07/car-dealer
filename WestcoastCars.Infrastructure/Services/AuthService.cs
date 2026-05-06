@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using WestcoastCars.Application.Common.Interfaces.Authentication;
+using WestcoastCars.Application.Exceptions;
 using WestcoastCars.Application.Models.Authentication;
 using WestcoastCars.Application.Services;
 
@@ -66,7 +67,7 @@ public class AuthService : IAuthService
     {
         if (await _userManager.FindByEmailAsync(email) is not null)
         {
-            throw new Exception("User with given email already exists");
+            throw new ConflictException("User with given email already exists");
         }
 
         var user = new IdentityUser
@@ -79,8 +80,7 @@ public class AuthService : IAuthService
 
         if (!result.Succeeded)
         {
-            var errors = string.Join("\n", result.Errors.Select(e => e.Description));
-            throw new Exception($"User creation failed: {errors}");
+            throw new ValidationException("Identity", result.Errors.Select(e => e.Description));
         }
 
         await _userManager.AddClaimAsync(user, new Claim("firstName", firstName));

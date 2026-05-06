@@ -41,7 +41,7 @@ namespace WestcoastCars.Application.Features.Manufacturers.Commands.Update
 
             manufacturerToUpdate!.Name = request.Name;
 
-            await _unitOfWork.CompleteAsync();
+            await _unitOfWork.CompleteOrThrowAsync("Failed to update manufacturer");
         }
     }
 }

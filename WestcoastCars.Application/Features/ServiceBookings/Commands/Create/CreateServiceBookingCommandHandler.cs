@@ -1,6 +1,7 @@
 using MediatR;
 using System.Threading;
 using System.Threading.Tasks;
+using WestcoastCars.Application.Exceptions;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Domain.Entities;
 using WestcoastCars.Domain.Common.Enums;
@@ -33,12 +34,8 @@ namespace WestcoastCars.Application.Features.ServiceBookings.Commands.Create
 
             await _unitOfWork.ServiceBookingRepository.AddAsync(booking);
 
-            if (await _unitOfWork.CompleteAsync() > 0)
-            {
-                return booking.Id;
-            }
-
-            throw new System.Exception("Misslyckades att skapa servicebokning");
+            await _unitOfWork.CompleteOrThrowAsync("Failed to create service booking");
+            return booking.Id;
         }
     }
 }

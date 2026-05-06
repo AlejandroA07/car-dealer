@@ -31,7 +31,7 @@ namespace WestcoastCars.Application.Features.Manufacturers.Commands.Delete
 
             repository.Remove(manufacturerToDelete!);
 
-            await _unitOfWork.CompleteAsync();
+            await _unitOfWork.CompleteOrThrowAsync("Failed to delete manufacturer");
         }
     }
 }

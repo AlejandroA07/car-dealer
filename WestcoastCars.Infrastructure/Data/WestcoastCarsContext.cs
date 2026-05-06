@@ -12,7 +12,7 @@ namespace WestcoastCars.Infrastructure.Data
         public DbSet<FuelType> FuelTypes { get; set; }
         public DbSet<TransmissionType> TransmissionTypes { get; set; }
         public DbSet<ServiceBooking> ServiceBookings { get; set; }
-        public WestcoastCarsContext(DbContextOptions<WestcoastCarsContext> options) : base(options){}
+        public WestcoastCarsContext(DbContextOptions<WestcoastCarsContext> options) : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

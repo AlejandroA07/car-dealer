@@ -19,12 +19,13 @@ namespace WestcoastCars.Api.Controllers
             var exceptionHandlerFeature = HttpContext.Features.Get<IExceptionHandlerFeature>()!;
             var exception = exceptionHandlerFeature.Error;
 
-            var (statusCode, title) = exception switch
+            var (statusCode, title, detail) = exception switch
             {
-                NotFoundException => (StatusCodes.Status404NotFound, "Not Found"),
-                ConflictException => (StatusCodes.Status409Conflict, "Conflict"),
-                ValidationException => (StatusCodes.Status400BadRequest, "One or more validation errors occurred."),
-                _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred.")
+                NotFoundException => (StatusCodes.Status404NotFound, "Not Found", exception.Message),
+                ConflictException => (StatusCodes.Status409Conflict, "Conflict", exception.Message),
+                ValidationException => (StatusCodes.Status400BadRequest, "One or more validation errors occurred.", exception.Message),
+                PersistenceException => (StatusCodes.Status500InternalServerError, "An unexpected error occurred.", "A persistence error occurred."),
+                _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred.", "An unexpected error occurred.")
             };
 
             var problemDetails = new ProblemDetails
@@ -32,7 +33,7 @@ namespace WestcoastCars.Api.Controllers
                 Status = statusCode,
                 Title = title,
                 Instance = HttpContext.Request.Path,
-                Detail = exception.Message
+                Detail = detail
             };
 
             if (exception is ValidationException validationException)

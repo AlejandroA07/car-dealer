@@ -27,12 +27,8 @@ namespace WestcoastCars.Application.Features.Vehicles.Commands.MarkAsSold
 
             _unitOfWork.VehicleRepository.Update(vehicle);
 
-            if (await _unitOfWork.CompleteAsync() > 0)
-            {
-                return Unit.Value;
-            }
-
-            throw new Exception("Failed to mark vehicle as sold");
+            await _unitOfWork.CompleteOrThrowAsync("Failed to mark vehicle as sold");
+            return Unit.Value;
         }
     }
 }

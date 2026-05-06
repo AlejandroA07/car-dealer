@@ -38,7 +38,7 @@ namespace WestcoastCars.Application.Features.FuelTypes.Commands.Update
             fuelTypeToUpdate!.Name = request.Name;
             repository.Update(fuelTypeToUpdate!);
 
-            await _unitOfWork.CompleteAsync();
+            await _unitOfWork.CompleteOrThrowAsync("Failed to update fuel type");
         }
     }
 }

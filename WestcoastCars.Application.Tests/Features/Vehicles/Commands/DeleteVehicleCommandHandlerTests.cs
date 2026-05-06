@@ -27,8 +27,8 @@ public class DeleteVehicleCommandHandlerTests
     {
         // Arrange
         var vehicleId = 1;
-        var vehicle = new Vehicle 
-        { 
+        var vehicle = new Vehicle
+        {
             Id = vehicleId,
             RegistrationNumber = "TEST123",
             Model = "Test",
@@ -50,6 +50,31 @@ public class DeleteVehicleCommandHandlerTests
         Assert.Equal(Unit.Value, result);
         _vehicleRepositoryMock.Verify(r => r.Remove(vehicle), Times.Once);
         _unitOfWorkMock.Verify(u => u.CompleteAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_ShouldThrowPersistenceException_WhenSaveAffectsNoRows()
+    {
+        // Arrange
+        var vehicleId = 1;
+        var vehicle = new Vehicle
+        {
+            Id = vehicleId,
+            RegistrationNumber = "TEST123",
+            Model = "Test",
+            ModelYear = "2020",
+            ImageUrl = "test.png",
+            Description = "Test",
+            Manufacturer = new Manufacturer { Name = "Make" },
+            FuelType = new FuelType { Name = "Fuel" },
+            TransmissionType = new TransmissionType { Name = "Trans" }
+        };
+
+        _vehicleRepositoryMock.Setup(r => r.GetByIdAsync(vehicleId)).ReturnsAsync(vehicle);
+        _unitOfWorkMock.Setup(u => u.CompleteAsync()).ReturnsAsync(0);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<PersistenceException>(() => _handler.Handle(new DeleteVehicleCommand { Id = vehicleId }, CancellationToken.None));
     }
 
     [Fact]

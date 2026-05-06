@@ -26,7 +26,7 @@ namespace WestcoastCars.Application.Features.Vehicles.Commands.Update
             }
 
             // Validate registration number if it has changed
-            if (!string.IsNullOrEmpty(request.RegistrationNumber) && 
+            if (!string.IsNullOrEmpty(request.RegistrationNumber) &&
                 request.RegistrationNumber != vehicle.RegistrationNumber)
             {
                 var existingVehicle = await _unitOfWork.VehicleRepository.FindByRegistrationNumberAsync(request.RegistrationNumber);
@@ -66,12 +66,8 @@ namespace WestcoastCars.Application.Features.Vehicles.Commands.Update
 
             _unitOfWork.VehicleRepository.Update(vehicle);
 
-            if (await _unitOfWork.CompleteAsync() > 0)
-            {
-                return Unit.Value;
-            }
-
-            throw new Exception("Failed to update vehicle");
+            await _unitOfWork.CompleteOrThrowAsync("Failed to update vehicle");
+            return Unit.Value;
         }
     }
 }

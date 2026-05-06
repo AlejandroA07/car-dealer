@@ -88,6 +88,37 @@ public class UpdateVehicleCommandHandlerTests
     }
 
     [Fact]
+    public async Task Handle_ShouldThrowPersistenceException_WhenSaveAffectsNoRows()
+    {
+        // Arrange
+        var vehicleId = 1;
+        var command = new UpdateVehicleCommand
+        {
+            Id = vehicleId,
+            RegistrationNumber = "UPDATED",
+            ManufacturerId = 1,
+            FuelTypeId = 1,
+            TransmissionTypeId = 1,
+            Model = "New Model",
+            ModelYear = "2024",
+            Value = 500000,
+            Description = "New Description"
+        };
+
+        var existingVehicle = CreateTestVehicle(vehicleId, "OLD123");
+
+        _vehicleRepositoryMock.Setup(r => r.GetByIdAsync(vehicleId)).ReturnsAsync(existingVehicle);
+        _vehicleRepositoryMock.Setup(r => r.FindByRegistrationNumberAsync(command.RegistrationNumber)).ReturnsAsync((Vehicle?)null);
+        _manufacturerRepositoryMock.Setup(r => r.GetByIdAsync(command.ManufacturerId)).ReturnsAsync(new Manufacturer { Id = 1, Name = "Make" });
+        _fuelTypeRepositoryMock.Setup(r => r.GetByIdAsync(command.FuelTypeId)).ReturnsAsync(new FuelType { Id = 1, Name = "Fuel" });
+        _transmissionTypeRepositoryMock.Setup(r => r.GetByIdAsync(command.TransmissionTypeId)).ReturnsAsync(new TransmissionType { Id = 1, Name = "Trans" });
+        _unitOfWorkMock.Setup(u => u.CompleteAsync()).ReturnsAsync(0);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<PersistenceException>(() => _handler.Handle(command, CancellationToken.None));
+    }
+
+    [Fact]
     public async Task Handle_ShouldThrowNotFoundException_WhenVehicleDoesNotExist()
     {
         // Arrange

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using WestcoastCars.Application.Services;
 using WestcoastCars.Contracts.Auth;
 
@@ -31,29 +32,22 @@ public class AuthenticationController : ControllerBase
     [ProducesResponseType(400)]
     public async Task<IActionResult> Register(RegisterRequest request)
     {
-        try
-        {
-            var authResult = await _authService.RegisterAsync(
-                request.FirstName,
-                request.LastName,
-                request.Email,
-                request.Password
-            );
+        var authResult = await _authService.RegisterAsync(
+            request.FirstName,
+            request.LastName,
+            request.Email,
+            request.Password
+        );
 
-            var response = new AuthenticationResponse(
-                authResult.User.Id,
-                authResult.User.FirstName,
-                authResult.User.LastName,
-                authResult.User.Email,
-                authResult.Token
-            );
+        var response = new AuthenticationResponse(
+            authResult.User.Id,
+            authResult.User.FirstName,
+            authResult.User.LastName,
+            authResult.User.Email,
+            authResult.Token
+        );
 
-            return Ok(response);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        return Ok(response);
     }
 
     /// <summary>
@@ -68,32 +62,30 @@ public class AuthenticationController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> Login(LoginRequest request)
     {
-        try
-        {
-            var authResult = await _authService.LoginAsync(
-                request.Email,
-                request.Password
-            );
+        var authResult = await _authService.LoginAsync(
+            request.Email,
+            request.Password
+        );
 
-            if (authResult is null)
+        if (authResult is null)
+        {
+            return Unauthorized(new ProblemDetails
             {
-                return Unauthorized("Invalid credentials");
-            }
-
-            var response = new AuthenticationResponse(
-                authResult.User.Id,
-                authResult.User.FirstName,
-                authResult.User.LastName,
-                authResult.User.Email,
-                authResult.Token
-            );
-
-            return Ok(response);
+                Status = StatusCodes.Status401Unauthorized,
+                Title = "Unauthorized",
+                Detail = "Invalid credentials",
+                Instance = HttpContext.Request.Path
+            });
         }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+
+        var response = new AuthenticationResponse(
+            authResult.User.Id,
+            authResult.User.FirstName,
+            authResult.User.LastName,
+            authResult.User.Email,
+            authResult.Token
+        );
+
+        return Ok(response);
     }
 }
-

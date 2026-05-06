@@ -30,7 +30,7 @@ namespace WestcoastCars.Application.Features.Transmissions.Commands.Delete
 
             repository.Remove(transmissionTypeToDelete!);
 
-            await _unitOfWork.CompleteAsync();
+            await _unitOfWork.CompleteOrThrowAsync("Failed to delete transmission type");
         }
     }
 }
