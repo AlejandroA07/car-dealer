@@ -10,14 +10,14 @@ namespace WestcoastCars.Application.Tests.Features.Manufacturers.Commands;
 public class DeleteManufacturerCommandHandlerTests
 {
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
-    private readonly Mock<IRepository<Manufacturer>> _manufacturerRepositoryMock;
+    private readonly Mock<IManufacturerRepository> _manufacturerRepositoryMock;
     private readonly DeleteManufacturerCommandHandler _handler;
 
     public DeleteManufacturerCommandHandlerTests()
     {
         _unitOfWorkMock = new Mock<IUnitOfWork>();
-        _manufacturerRepositoryMock = new Mock<IRepository<Manufacturer>>();
-        _unitOfWorkMock.Setup(u => u.Repository<Manufacturer>()).Returns(_manufacturerRepositoryMock.Object);
+        _manufacturerRepositoryMock = new Mock<IManufacturerRepository>();
+        _unitOfWorkMock.Setup(u => u.ManufacturerRepository).Returns(_manufacturerRepositoryMock.Object);
         _handler = new DeleteManufacturerCommandHandler(_unitOfWorkMock.Object);
     }
 

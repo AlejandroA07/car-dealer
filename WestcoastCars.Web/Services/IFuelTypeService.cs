@@ -1,8 +1,7 @@
 using WestcoastCars.Web.ViewModels.FuelType;
 
-namespace WestcoastCars.Web.Services
+namespace WestcoastCars.Web.Services;
+
+public interface IFuelTypeService : IGenericDataService<FuelTypeListViewModel, FuelTypePostViewModel>
 {
-    public interface IFuelTypeService : IGenericDataService<FuelTypeListViewModel, FuelTypePostViewModel>
-    {
-    }
 }

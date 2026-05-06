@@ -1,11 +1,10 @@
 using System;
 
-namespace WestcoastCars.Application.Exceptions
+namespace WestcoastCars.Application.Exceptions;
+
+public class ConflictException : Exception
 {
-    public class ConflictException : Exception
+    public ConflictException(string message) : base(message)
     {
-        public ConflictException(string message) : base(message)
-        {
-        }
     }
 }

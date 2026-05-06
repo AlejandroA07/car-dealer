@@ -1,10 +1,9 @@
 using MediatR;
 using WestcoastCars.Contracts.DTOs;
 
-namespace WestcoastCars.Application.Features.Vehicles.Queries.GetByRegNo
+namespace WestcoastCars.Application.Features.Vehicles.Queries.GetByRegNo;
+
+public class GetVehicleByRegNoQuery : IRequest<VehicleDetailsDto>
 {
-    public class GetVehicleByRegNoQuery : IRequest<VehicleDetailsDto>
-    {
-        public string RegistrationNumber { get; set; } = string.Empty;
-    }
+    public string RegistrationNumber { get; set; } = string.Empty;
 }

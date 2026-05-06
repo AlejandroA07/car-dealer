@@ -1,6 +1,4 @@
 
-using WestcoastCars.Domain.Entities;
-
 namespace WestcoastCars.Application.Interfaces;
 
 public interface IUnitOfWork : IDisposable
@@ -10,6 +8,5 @@ public interface IUnitOfWork : IDisposable
     IFuelTypeRepository FuelTypeRepository { get; }
     ITransmissionTypeRepository TransmissionTypeRepository { get; }
     IServiceBookingRepository ServiceBookingRepository { get; }
-    IRepository<T>? Repository<T>() where T : BaseEntity;
     Task<int> CompleteAsync();
 }

@@ -1,8 +1,7 @@
 using WestcoastCars.Domain.Entities;
 
-namespace WestcoastCars.Application.Interfaces
+namespace WestcoastCars.Application.Interfaces;
+
+public interface IServiceBookingRepository : IRepository<ServiceBooking>
 {
-    public interface IServiceBookingRepository : IRepository<ServiceBooking>
-    {
-    }
 }

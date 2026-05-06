@@ -1,10 +1,9 @@
 using MediatR;
 using WestcoastCars.Contracts.DTOs;
 
-namespace WestcoastCars.Application.Features.Transmissions.Queries.GetById
+namespace WestcoastCars.Application.Features.Transmissions.Queries.GetById;
+
+public class GetTransmissionByIdQuery : IRequest<NamedObjectDto?>
 {
-    public class GetTransmissionByIdQuery : IRequest<NamedObjectDto?>
-    {
-        public int Id { get; set; }
-    }
+    public int Id { get; set; }
 }

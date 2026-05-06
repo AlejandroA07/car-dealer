@@ -1,47 +1,35 @@
 
 using MediatR;
-using System.Threading;
-using System.Threading.Tasks;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Domain.Entities;
 using WestcoastCars.Application.Exceptions;
 
-namespace WestcoastCars.Application.Features.Manufacturers.Commands.Update
+namespace WestcoastCars.Application.Features.Manufacturers.Commands.Update;
+
+public class UpdateManufacturerCommandHandler : IRequestHandler<UpdateManufacturerCommand>
 {
-    public class UpdateManufacturerCommandHandler : IRequestHandler<UpdateManufacturerCommand>
+    private readonly IUnitOfWork _unitOfWork;
+
+    public UpdateManufacturerCommandHandler(IUnitOfWork unitOfWork)
     {
-        private readonly IUnitOfWork _unitOfWork;
+        _unitOfWork = unitOfWork;
+    }
 
-        public UpdateManufacturerCommandHandler(IUnitOfWork unitOfWork)
+    public async Task Handle(UpdateManufacturerCommand request, CancellationToken cancellationToken)
+    {
+        var repository = _unitOfWork.ManufacturerRepository;
+
+        var manufacturerToUpdate = await repository.GetByIdAsync(request.Id);
+
+        if (manufacturerToUpdate is null)
         {
-            _unitOfWork = unitOfWork;
+            throw new NotFoundException($"Manufacturer with id '{request.Id}' not found.");
         }
 
-        public async Task Handle(UpdateManufacturerCommand request, CancellationToken cancellationToken)
-        {
-            var repository = _unitOfWork.Repository<Manufacturer>();
-            if (repository is null) throw new InvalidOperationException("Repository for Manufacturer is not available.");
+        await repository.ThrowIfNameExistsAsync(request.Name, nameof(Manufacturer), request.Id);
 
-            var manufacturerToUpdate = await repository.GetByIdAsync(request.Id);
+        manufacturerToUpdate.Name = request.Name;
 
-            if (manufacturerToUpdate is null)
-            {
-                throw new NotFoundException($"Manufacturer with id '{request.Id}' not found.");
-            }
-
-            var existingRepository = _unitOfWork.Repository<Manufacturer>();
-            if (existingRepository is null) throw new InvalidOperationException("Repository for Manufacturer is not available.");
-
-            var normalizedName = request.Name.ToUpper();
-            var existing = await existingRepository.FirstOrDefaultAsync(m => m.Name.ToUpper() == normalizedName);
-            if (existing != null && existing.Id != request.Id)
-            {
-                throw new ConflictException($"Manufacturer with name '{request.Name}' already exists.");
-            }
-
-            manufacturerToUpdate!.Name = request.Name;
-
-            await _unitOfWork.CompleteOrThrowAsync("Failed to update manufacturer");
-        }
+        await _unitOfWork.CompleteOrThrowAsync("Failed to update manufacturer");
     }
 }

@@ -3,63 +3,62 @@ using System.Threading.Tasks;
 using WestcoastCars.Web.Services;
 using WestcoastCars.Web.ViewModels.ServiceBooking;
 
-namespace WestcoastCars.Web.Controllers
+namespace WestcoastCars.Web.Controllers;
+
+public class ServiceController : Controller
 {
-    public class ServiceController : Controller
+    private readonly IServiceBookingService _bookingService;
+
+    public ServiceController(IServiceBookingService bookingService)
     {
-        private readonly IServiceBookingService _bookingService;
+        _bookingService = bookingService;
+    }
 
-        public ServiceController(IServiceBookingService bookingService)
+    [HttpGet]
+    public IActionResult Index()
+    {
+        return View(new ServiceBookingViewModel
         {
-            _bookingService = bookingService;
-        }
+            ServiceType = "Bas-service"
+        });
+    }
 
-        [HttpGet]
-        public IActionResult Index()
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Index(ServiceBookingViewModel model)
+    {
+        if (!ModelState.IsValid)
         {
-            return View(new ServiceBookingViewModel
-            {
-                ServiceType = "Bas-service"
-            });
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Index(ServiceBookingViewModel model)
-        {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
-            var success = await _bookingService.CreateBookingAsync(model);
-
-            if (success)
-            {
-                TempData["success"] = "Din bokning har mottagits! Vi kontaktar dig snart.";
-                return RedirectToAction(nameof(Confirmation));
-            }
-
-            TempData["error"] = "Ett fel uppstod när bokningen skulle skickas. Försök igen senare.";
             return View(model);
         }
 
-        [HttpGet]
-        public IActionResult Confirmation()
+        var success = await _bookingService.CreateBookingAsync(model);
+
+        if (success)
         {
-            return View();
+            TempData["success"] = "Din bokning har mottagits! Vi kontaktar dig snart.";
+            return RedirectToAction(nameof(Confirmation));
         }
 
-        [HttpGet("admin/bookings")]
-        public async Task<IActionResult> AdminList()
-        {
-            if (!User.IsInRole("Admin") && !User.IsInRole("Salesperson"))
-            {
-                return Forbid();
-            }
+        TempData["error"] = "Ett fel uppstod när bokningen skulle skickas. Försök igen senare.";
+        return View(model);
+    }
 
-            var bookings = await _bookingService.ListAllBookingsAsync();
-            return View(bookings);
+    [HttpGet]
+    public IActionResult Confirmation()
+    {
+        return View();
+    }
+
+    [HttpGet("admin/bookings")]
+    public async Task<IActionResult> AdminList()
+    {
+        if (!User.IsInRole("Admin") && !User.IsInRole("Salesperson"))
+        {
+            return Forbid();
         }
+
+        var bookings = await _bookingService.ListAllBookingsAsync();
+        return View(bookings);
     }
 }

@@ -1,44 +1,36 @@
 using MediatR;
-using System.Threading;
-using System.Threading.Tasks;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Domain.Entities;
 using WestcoastCars.Application.Exceptions;
 
-namespace WestcoastCars.Application.Features.FuelTypes.Commands.Update
+namespace WestcoastCars.Application.Features.FuelTypes.Commands.Update;
+
+public class UpdateFuelTypeCommandHandler : IRequestHandler<UpdateFuelTypeCommand>
 {
-    public class UpdateFuelTypeCommandHandler : IRequestHandler<UpdateFuelTypeCommand>
+    private readonly IUnitOfWork _unitOfWork;
+
+    public UpdateFuelTypeCommandHandler(IUnitOfWork unitOfWork)
     {
-        private readonly IUnitOfWork _unitOfWork;
+        _unitOfWork = unitOfWork;
+    }
 
-        public UpdateFuelTypeCommandHandler(IUnitOfWork unitOfWork)
+    public async Task Handle(UpdateFuelTypeCommand request, CancellationToken cancellationToken)
+    {
+        var repository = _unitOfWork.FuelTypeRepository;
+        if (repository is null) throw new InvalidOperationException("Repository for FuelType is not available.");
+
+        var fuelTypeToUpdate = await repository.GetByIdAsync(request.Id);
+
+        if (fuelTypeToUpdate is null)
         {
-            _unitOfWork = unitOfWork;
+            throw new NotFoundException($"FuelType with id '{request.Id}' not found.");
         }
 
-        public async Task Handle(UpdateFuelTypeCommand request, CancellationToken cancellationToken)
-        {
-            var repository = _unitOfWork.Repository<FuelType>();
-            if (repository is null) throw new InvalidOperationException("Repository for FuelType is not available.");
+        await repository.ThrowIfNameExistsAsync(request.Name, nameof(FuelType), request.Id);
 
-            var fuelTypeToUpdate = await repository.GetByIdAsync(request.Id);
+        fuelTypeToUpdate!.Name = request.Name;
+        repository.Update(fuelTypeToUpdate!);
 
-            if (fuelTypeToUpdate is null)
-            {
-                throw new NotFoundException($"FuelType with id '{request.Id}' not found.");
-            }
-
-            var normalizedName = request.Name.ToUpper();
-            var existing = await repository.FirstOrDefaultAsync(m => m.Name.ToUpper() == normalizedName);
-            if (existing != null && existing.Id != request.Id)
-            {
-                throw new ConflictException($"FuelType with name '{request.Name}' already exists.");
-            }
-
-            fuelTypeToUpdate!.Name = request.Name;
-            repository.Update(fuelTypeToUpdate!);
-
-            await _unitOfWork.CompleteOrThrowAsync("Failed to update fuel type");
-        }
+        await _unitOfWork.CompleteOrThrowAsync("Failed to update fuel type");
     }
 }

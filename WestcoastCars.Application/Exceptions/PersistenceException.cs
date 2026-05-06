@@ -1,11 +1,10 @@
 using System;
 
-namespace WestcoastCars.Application.Exceptions
+namespace WestcoastCars.Application.Exceptions;
+
+public class PersistenceException : Exception
 {
-    public class PersistenceException : Exception
+    public PersistenceException(string message) : base(message)
     {
-        public PersistenceException(string message) : base(message)
-        {
-        }
     }
 }

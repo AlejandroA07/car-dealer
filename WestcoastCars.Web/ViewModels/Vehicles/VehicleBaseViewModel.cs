@@ -2,13 +2,12 @@
 using Microsoft.AspNetCore.Mvc.Rendering;
 using WestcoastCars.Contracts.DTOs;
 
-namespace WestcoastCars.Web.ViewModels.Vehicles
+namespace WestcoastCars.Web.ViewModels.Vehicles;
+
+public class VehicleBaseViewModel
 {
-    public class VehicleBaseViewModel
-    {
-        public VehicleDto Vehicle { get; set; } = new VehicleDto();
-        public List<SelectListItem> Manufacturers { get; set; } = new();
-        public List<SelectListItem> FuelTypes { get; set; } = new();
-        public List<SelectListItem> TransmissionsTypes { get; set; } = new();
-    }
+    public VehicleDto Vehicle { get; set; } = new VehicleDto();
+    public List<SelectListItem> Manufacturers { get; set; } = new();
+    public List<SelectListItem> FuelTypes { get; set; } = new();
+    public List<SelectListItem> TransmissionTypes { get; set; } = new();
 }

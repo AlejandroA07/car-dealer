@@ -1,9 +1,8 @@
 using MediatR;
 
-namespace WestcoastCars.Application.Features.Vehicles.Commands.Delete
+namespace WestcoastCars.Application.Features.Vehicles.Commands.Delete;
+
+public class DeleteVehicleCommand : IRequest<Unit>
 {
-    public class DeleteVehicleCommand : IRequest<Unit>
-    {
-        public int Id { get; set; }
-    }
+    public int Id { get; set; }
 }

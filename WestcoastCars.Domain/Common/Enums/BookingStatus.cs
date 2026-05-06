@@ -1,10 +1,9 @@
-namespace WestcoastCars.Domain.Common.Enums
+namespace WestcoastCars.Domain.Common.Enums;
+
+public enum BookingStatus
 {
-    public enum BookingStatus
-    {
-        Pending,
-        Confirmed,
-        Cancelled,
-        Completed
-    }
+    Pending,
+    Confirmed,
+    Cancelled,
+    Completed
 }

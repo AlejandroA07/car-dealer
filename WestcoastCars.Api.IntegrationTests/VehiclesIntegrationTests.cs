@@ -31,16 +31,21 @@ public class VehiclesIntegrationTests : IntegrationTestBase
     public async Task AddVehicle_ShouldReturnCreated_WhenUserIsAdmin()
     {
         // Arrange
-        var client = CreateAuthenticatedClient("Admin");
+        var client = await CreateAuthenticatedClientAsync();
+
+        var manufacturers = await _client.GetFromJsonAsync<IEnumerable<NamedObjectDto>>("/api/v1/manufacturers");
+        var fuelTypes = await _client.GetFromJsonAsync<IEnumerable<NamedObjectDto>>("/api/v1/fueltypes");
+        var transmissions = await _client.GetFromJsonAsync<IEnumerable<NamedObjectDto>>("/api/v1/transmissions");
+
         var command = new CreateVehicleCommand
         {
             RegistrationNumber = "INTEG123",
-            ManufacturerId = 2,
+            ManufacturerId = manufacturers!.First().Id,
             Model = "V60",
             ModelYear = "2024",
             Mileage = 100,
-            FuelTypeId = 2,
-            TransmissionTypeId = 1,
+            FuelTypeId = fuelTypes!.First().Id,
+            TransmissionTypeId = transmissions!.First().Id,
             Value = 500000,
             Description = "Integration Test Vehicle"
         };

@@ -10,109 +10,108 @@ using WestcoastCars.Application.Features.Transmissions.Queries.ListAll;
 using WestcoastCars.Contracts.DTOs;
 using System.Threading.Tasks;
 
-namespace WestcoastCars.Api.Controllers
+namespace WestcoastCars.Api.Controllers;
+
+/// <summary>
+/// CRUD operations for transmission types.
+/// </summary>
+[ApiController]
+[Route("api/v1/transmissions")]
+[Tags("Transmissions")]
+public class TransmissionsController : ControllerBase
 {
-    /// <summary>
-    /// CRUD operations for transmission types.
-    /// </summary>
-    [ApiController]
-    [Route("api/v1/transmissions")]
-    [Tags("Transmissions")]
-    public class TransmissionsController : ControllerBase
+    private readonly IMediator _mediator;
+
+    public TransmissionsController(IMediator mediator)
     {
-        private readonly IMediator _mediator;
+        _mediator = mediator;
+    }
 
-        public TransmissionsController(IMediator mediator)
-        {
-            _mediator = mediator;
-        }
+    /// <summary>
+    /// Lists all transmission types.
+    /// </summary>
+    /// <returns>A collection of transmission types.</returns>
+    [HttpGet]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(IEnumerable<NamedObjectDto>), 200)]
+    public async Task<IActionResult> ListAll()
+    {
+        var result = await _mediator.Send(new ListAllTransmissionsQuery());
+        return Ok(result);
+    }
 
-        /// <summary>
-        /// Lists all transmission types.
-        /// </summary>
-        /// <returns>A collection of transmission types.</returns>
-        [HttpGet]
-        [AllowAnonymous]
-        [ProducesResponseType(typeof(IEnumerable<NamedObjectDto>), 200)]
-        public async Task<IActionResult> ListAll()
-        {
-            var result = await _mediator.Send(new ListAllTransmissionsQuery());
-            return Ok(result);
-        }
+    /// <summary>
+    /// Retrieves a transmission type by ID.
+    /// </summary>
+    /// <param name="id">The transmission type ID.</param>
+    /// <returns>The requested transmission type.</returns>
+    [HttpGet("{id}")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(NamedObjectDto), 200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> GetById(int id)
+    {
+        var result = await _mediator.Send(new GetTransmissionByIdQuery { Id = id });
+        return Ok(result);
+    }
 
-        /// <summary>
-        /// Retrieves a transmission type by ID.
-        /// </summary>
-        /// <param name="id">The transmission type ID.</param>
-        /// <returns>The requested transmission type.</returns>
-        [HttpGet("{id}")]
-        [AllowAnonymous]
-        [ProducesResponseType(typeof(NamedObjectDto), 200)]
-        [ProducesResponseType(404)]
-        public async Task<IActionResult> GetById(int id)
-        {
-            var result = await _mediator.Send(new GetTransmissionByIdQuery { Id = id });
-            return Ok(result);
-        }
+    /// <summary>
+    /// Creates a new transmission type. Requires Admin role.
+    /// </summary>
+    /// <param name="model">Transmission type data.</param>
+    /// <returns>The created transmission type.</returns>
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(NamedObjectDto), 201)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(403)]
+    public async Task<IActionResult> Add([FromBody] NamedObjectDto model)
+    {
+        var command = new CreateTransmissionCommand { Name = model.Name };
+        var result = await _mediator.Send(command);
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+    }
 
-        /// <summary>
-        /// Creates a new transmission type. Requires Admin role.
-        /// </summary>
-        /// <param name="model">Transmission type data.</param>
-        /// <returns>The created transmission type.</returns>
-        [HttpPost]
-        [Authorize(Roles = "Admin")]
-        [ProducesResponseType(typeof(NamedObjectDto), 201)]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(401)]
-        [ProducesResponseType(403)]
-        public async Task<IActionResult> Add([FromBody] NamedObjectDto model)
+    /// <summary>
+    /// Updates an existing transmission type. Requires Admin role.
+    /// </summary>
+    /// <param name="id">The ID of the transmission type to update.</param>
+    /// <param name="model">The update data.</param>
+    /// <returns>No content.</returns>
+    [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(403)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> Update(int id, [FromBody] NamedObjectDto model)
+    {
+        if (id != model.Id)
         {
-            var command = new CreateTransmissionCommand { Name = model.Name };
-            var result = await _mediator.Send(command);
-            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+            return BadRequest("ID mismatch");
         }
+        var command = new UpdateTransmissionCommand { Id = id, Name = model.Name };
+        await _mediator.Send(command);
+        return NoContent();
+    }
 
-        /// <summary>
-        /// Updates an existing transmission type. Requires Admin role.
-        /// </summary>
-        /// <param name="id">The ID of the transmission type to update.</param>
-        /// <param name="model">The update data.</param>
-        /// <returns>No content.</returns>
-        [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(401)]
-        [ProducesResponseType(403)]
-        [ProducesResponseType(404)]
-        public async Task<IActionResult> Update(int id, [FromBody] NamedObjectDto model)
-        {
-            if (id != model.Id)
-            {
-                return BadRequest("ID mismatch");
-            }
-            var command = new UpdateTransmissionCommand { Id = id, Name = model.Name };
-            await _mediator.Send(command);
-            return NoContent();
-        }
-
-        /// <summary>
-        /// Deletes a transmission type. Requires Admin role.
-        /// </summary>
-        /// <param name="id">The ID of the transmission type to delete.</param>
-        /// <returns>No content.</returns>
-        [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(401)]
-        [ProducesResponseType(403)]
-        [ProducesResponseType(404)]
-        public async Task<IActionResult> Delete(int id)
-        {
-            var command = new DeleteTransmissionCommand { Id = id };
-            await _mediator.Send(command);
-            return NoContent();
-        }
+    /// <summary>
+    /// Deletes a transmission type. Requires Admin role.
+    /// </summary>
+    /// <param name="id">The ID of the transmission type to delete.</param>
+    /// <returns>No content.</returns>
+    [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(403)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var command = new DeleteTransmissionCommand { Id = id };
+        await _mediator.Send(command);
+        return NoContent();
     }
 }

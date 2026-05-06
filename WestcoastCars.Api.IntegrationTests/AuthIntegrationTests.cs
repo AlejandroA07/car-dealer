@@ -103,13 +103,5 @@ public class AuthIntegrationTests : IntegrationTestBase
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
-    private async Task<AuthenticationResponse> LoginAsync(string email, string password)
-    {
-        var response = await _client.PostAsJsonAsync("/api/auth/login", new LoginRequest(email, password));
-        response.EnsureSuccessStatusCode();
-        var authResponse = await response.Content.ReadFromJsonAsync<AuthenticationResponse>();
-        Assert.NotNull(authResponse);
-        return authResponse;
-    }
 }
 

@@ -10,14 +10,14 @@ namespace WestcoastCars.Application.Tests.Features.Manufacturers.Commands;
 public class UpdateManufacturerCommandHandlerTests
 {
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
-    private readonly Mock<IRepository<Manufacturer>> _manufacturerRepositoryMock;
+    private readonly Mock<IManufacturerRepository> _manufacturerRepositoryMock;
     private readonly UpdateManufacturerCommandHandler _handler;
 
     public UpdateManufacturerCommandHandlerTests()
     {
         _unitOfWorkMock = new Mock<IUnitOfWork>();
-        _manufacturerRepositoryMock = new Mock<IRepository<Manufacturer>>();
-        _unitOfWorkMock.Setup(u => u.Repository<Manufacturer>()).Returns(_manufacturerRepositoryMock.Object);
+        _manufacturerRepositoryMock = new Mock<IManufacturerRepository>();
+        _unitOfWorkMock.Setup(u => u.ManufacturerRepository).Returns(_manufacturerRepositoryMock.Object);
         _handler = new UpdateManufacturerCommandHandler(_unitOfWorkMock.Object);
     }
 
@@ -40,6 +40,7 @@ public class UpdateManufacturerCommandHandlerTests
         // Assert
         Assert.Equal(command.Name, existingManufacturer.Name);
         _unitOfWorkMock.Verify(u => u.CompleteAsync(), Times.Once);
+        _unitOfWorkMock.VerifyGet(u => u.ManufacturerRepository, Times.Once);
     }
 
     [Fact]
@@ -68,6 +69,9 @@ public class UpdateManufacturerCommandHandlerTests
 
         // Act & Assert
         await Assert.ThrowsAsync<NotFoundException>(() => _handler.Handle(command, CancellationToken.None));
+        _manufacturerRepositoryMock.Verify(
+            r => r.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<Manufacturer, bool>>>()),
+            Times.Never);
     }
 
     [Fact]
@@ -85,5 +89,27 @@ public class UpdateManufacturerCommandHandlerTests
 
         // Act & Assert
         await Assert.ThrowsAsync<ConflictException>(() => _handler.Handle(command, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Handle_ShouldUpdateManufacturer_WhenExistingNameBelongsToSameManufacturer()
+    {
+        // Arrange
+        var manufacturerId = 1;
+        var command = new UpdateManufacturerCommand { Id = manufacturerId, Name = "Existing Name" };
+        var existingManufacturer = new Manufacturer { Id = manufacturerId, Name = "Old Name" };
+        var sameManufacturer = new Manufacturer { Id = manufacturerId, Name = "Existing Name" };
+
+        _manufacturerRepositoryMock.Setup(r => r.GetByIdAsync(manufacturerId)).ReturnsAsync(existingManufacturer);
+        _manufacturerRepositoryMock.Setup(r => r.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<Manufacturer, bool>>>()))
+            .ReturnsAsync(sameManufacturer);
+        _unitOfWorkMock.Setup(u => u.CompleteAsync()).ReturnsAsync(1);
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(command.Name, existingManufacturer.Name);
+        _unitOfWorkMock.Verify(u => u.CompleteAsync(), Times.Once);
     }
 }

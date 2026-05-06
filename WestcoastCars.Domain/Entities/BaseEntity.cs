@@ -1,7 +1,6 @@
-namespace WestcoastCars.Domain.Entities
+namespace WestcoastCars.Domain.Entities;
+
+public abstract class BaseEntity
 {
-    public abstract class BaseEntity
-    {
-        public int Id { get; set; }
-    }
+    public int Id { get; set; }
 }

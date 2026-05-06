@@ -131,7 +131,7 @@ partial class WestcoastCarsContextModelSnapshot : ModelSnapshot
             b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("integer");
             NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
             b.Property<DateTime>("BookingDate").HasColumnType("timestamp with time zone");
-            b.Property<DateTime>("CreatedAt").HasColumnType("timestamp with time zone");
+            b.Property<DateTime>("CreatedAt").HasDefaultValueSql("NOW()").HasColumnType("timestamp with time zone");
             b.Property<string>("CustomerEmail").IsRequired().HasColumnType("text");
             b.Property<string>("CustomerName").IsRequired().HasColumnType("text");
             b.Property<string>("CustomerPhone").IsRequired().HasColumnType("text");
@@ -169,7 +169,7 @@ partial class WestcoastCarsContextModelSnapshot : ModelSnapshot
             b.Property<string>("Model").IsRequired().HasColumnType("text");
             b.Property<string>("ModelYear").IsRequired().HasColumnType("text");
             b.Property<DateTime?>("PublishedAt").HasColumnType("timestamp with time zone");
-            b.Property<string>("RegistrationNumber").HasColumnType("text");
+            b.Property<string>("RegistrationNumber").IsRequired().HasColumnType("text");
             b.Property<string>("Source").HasColumnType("text");
             b.Property<string>("SourceUrl").HasColumnType("text");
             b.Property<int>("TransmissionTypeId").HasColumnType("integer");

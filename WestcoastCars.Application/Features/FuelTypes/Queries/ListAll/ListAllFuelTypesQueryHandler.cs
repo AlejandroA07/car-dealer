@@ -8,26 +8,25 @@ using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Contracts.DTOs;
 using WestcoastCars.Domain.Entities;
 
-namespace WestcoastCars.Application.Features.FuelTypes.Queries.ListAll
+namespace WestcoastCars.Application.Features.FuelTypes.Queries.ListAll;
+
+public class ListAllFuelTypesQueryHandler : IRequestHandler<ListAllFuelTypesQuery, IEnumerable<NamedObjectDto>>
 {
-    public class ListAllFuelTypesQueryHandler : IRequestHandler<ListAllFuelTypesQuery, IEnumerable<NamedObjectDto>>
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
+
+    public ListAllFuelTypesQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
     {
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IMapper _mapper;
+        _unitOfWork = unitOfWork;
+        _mapper = mapper;
+    }
 
-        public ListAllFuelTypesQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
-        {
-            _unitOfWork = unitOfWork;
-            _mapper = mapper;
-        }
+    public async Task<IEnumerable<NamedObjectDto>> Handle(ListAllFuelTypesQuery request, CancellationToken cancellationToken)
+    {
+        var repository = _unitOfWork.FuelTypeRepository;
+        if (repository is null) throw new InvalidOperationException("Repository for FuelType is not available.");
 
-        public async Task<IEnumerable<NamedObjectDto>> Handle(ListAllFuelTypesQuery request, CancellationToken cancellationToken)
-        {
-            var repository = _unitOfWork.Repository<FuelType>();
-            if (repository is null) throw new InvalidOperationException("Repository for FuelType is not available.");
-
-            var fuelTypes = await repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<NamedObjectDto>>(fuelTypes);
-        }
+        var fuelTypes = await repository.GetAllAsync();
+        return _mapper.Map<IEnumerable<NamedObjectDto>>(fuelTypes);
     }
 }

@@ -62,7 +62,8 @@ public class SyncBlocketVehiclesCommandHandler : IRequestHandler<SyncBlocketVehi
                 var mappedVehicle = _mapper.Map(searchItem, adDetails, importedAtUtc);
 
                 if (string.IsNullOrWhiteSpace(mappedVehicle.ExternalListingId) ||
-                    !seenExternalListingIds.Add(mappedVehicle.ExternalListingId))
+                    !seenExternalListingIds.Add(mappedVehicle.ExternalListingId) ||
+                    string.IsNullOrWhiteSpace(mappedVehicle.RegistrationNumber))
                 {
                     totalSkipped++;
                     continue;
@@ -128,7 +129,7 @@ public class SyncBlocketVehiclesCommandHandler : IRequestHandler<SyncBlocketVehi
 
             vehicles.Add(new Vehicle
             {
-                RegistrationNumber = preparedVehicle.RegistrationNumber,
+                RegistrationNumber = preparedVehicle.RegistrationNumber!,
                 Model = preparedVehicle.Model,
                 ModelYear = preparedVehicle.ModelYear,
                 Mileage = preparedVehicle.Mileage,

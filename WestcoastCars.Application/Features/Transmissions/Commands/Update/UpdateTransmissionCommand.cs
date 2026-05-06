@@ -1,10 +1,9 @@
 using MediatR;
 
-namespace WestcoastCars.Application.Features.Transmissions.Commands.Update
+namespace WestcoastCars.Application.Features.Transmissions.Commands.Update;
+
+public class UpdateTransmissionCommand : IRequest
 {
-    public class UpdateTransmissionCommand : IRequest
-    {
-        public int Id { get; set; }
-        public required string Name { get; set; }
-    }
+    public int Id { get; set; }
+    public required string Name { get; set; }
 }

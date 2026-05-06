@@ -88,14 +88,38 @@ public class VehiclesControllerTests
     public async Task Add_ShouldCreateVehicleAndReturnCreatedAtAction()
     {
         // Arrange
-        var command = new CreateVehicleCommand { RegistrationNumber = "NEWCAR1" };
+        var dto = new VehiclePostDto
+        {
+            RegistrationNumber = "NEWCAR1",
+            ManufacturerId = 1,
+            Model = "V60",
+            ModelYear = "2024",
+            Mileage = 1000,
+            FuelTypeId = 2,
+            TransmissionTypeId = 3,
+            Value = 450000,
+            Description = "Test",
+            IsSold = false,
+            ImageUrl = "test.png"
+        };
         var vehicle = new VehicleDetailsDto { Id = 1, RegistrationNumber = "NEWCAR1" };
 
-        _mediatorMock.Setup(m => m.Send(It.IsAny<CreateVehicleCommand>(), default)).ReturnsAsync(1);
+        _mediatorMock.Setup(m => m.Send(It.Is<CreateVehicleCommand>(command =>
+            command.RegistrationNumber == dto.RegistrationNumber &&
+            command.ManufacturerId == dto.ManufacturerId &&
+            command.Model == dto.Model &&
+            command.ModelYear == dto.ModelYear &&
+            command.Mileage == dto.Mileage &&
+            command.FuelTypeId == dto.FuelTypeId &&
+            command.TransmissionTypeId == dto.TransmissionTypeId &&
+            command.Value == dto.Value &&
+            command.Description == dto.Description &&
+            command.IsSold == dto.IsSold &&
+            command.ImageUrl == dto.ImageUrl), default)).ReturnsAsync(1);
         _mediatorMock.Setup(m => m.Send(It.IsAny<GetVehicleByIdQuery>(), default)).ReturnsAsync(vehicle);
 
         // Act
-        var result = await _controller.Add(command);
+        var result = await _controller.Add(dto);
 
         // Assert
         var createdAtAction = Assert.IsType<CreatedAtActionResult>(result);
@@ -108,14 +132,54 @@ public class VehiclesControllerTests
     public async Task UpdateVehicle_ShouldReturnNoContent_WhenUpdateIsSuccessful()
     {
         // Arrange
-        var command = new UpdateVehicleCommand { Id = 1, RegistrationNumber = "UPDATED" };
-        _mediatorMock.Setup(m => m.Send(It.IsAny<UpdateVehicleCommand>(), default)).ReturnsAsync(Unit.Value);
+        var dto = new VehicleUpdateDto
+        {
+            Id = 1,
+            RegistrationNumber = "UPDATED",
+            ManufacturerId = 1,
+            Model = "V60",
+            ModelYear = "2024",
+            Mileage = 1000,
+            FuelTypeId = 2,
+            TransmissionTypeId = 3,
+            Value = 450000,
+            Description = "Updated",
+            IsSold = true,
+            ImageUrl = "updated.png"
+        };
+        _mediatorMock.Setup(m => m.Send(It.Is<UpdateVehicleCommand>(command =>
+            command.Id == dto.Id &&
+            command.RegistrationNumber == dto.RegistrationNumber &&
+            command.ManufacturerId == dto.ManufacturerId &&
+            command.Model == dto.Model &&
+            command.ModelYear == dto.ModelYear &&
+            command.Mileage == dto.Mileage &&
+            command.FuelTypeId == dto.FuelTypeId &&
+            command.TransmissionTypeId == dto.TransmissionTypeId &&
+            command.Value == dto.Value &&
+            command.Description == dto.Description &&
+            command.IsSold == dto.IsSold &&
+            command.ImageUrl == dto.ImageUrl), default)).ReturnsAsync(Unit.Value);
 
         // Act
-        var result = await _controller.UpdateVehicle(1, command);
+        var result = await _controller.UpdateVehicle(1, dto);
 
         // Assert
         Assert.IsType<NoContentResult>(result);
+    }
+
+    [Fact]
+    public async Task UpdateVehicle_ShouldReturnBadRequest_WhenRouteIdDoesNotMatchDtoId()
+    {
+        // Arrange
+        var dto = new VehicleUpdateDto { Id = 2, RegistrationNumber = "UPDATED" };
+
+        // Act
+        var result = await _controller.UpdateVehicle(1, dto);
+
+        // Assert
+        Assert.IsType<BadRequestObjectResult>(result);
+        _mediatorMock.Verify(m => m.Send(It.IsAny<UpdateVehicleCommand>(), default), Times.Never);
     }
 
     [Fact]

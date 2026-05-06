@@ -1,7 +1,6 @@
-namespace WestcoastCars.Web.ViewModels.Manufacturer
+namespace WestcoastCars.Web.ViewModels.Manufacturer;
+
+public class ManufacturerListViewModel : BaseViewModel
 {
-    public class ManufacturerListViewModel : BaseViewModel
-    {
-        public int Id { get; set; }
-    }
+    public int Id { get; set; }
 }

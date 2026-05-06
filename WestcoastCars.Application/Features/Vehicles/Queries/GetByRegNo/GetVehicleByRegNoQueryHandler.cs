@@ -6,29 +6,28 @@ using WestcoastCars.Application.Exceptions;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Contracts.DTOs;
 
-namespace WestcoastCars.Application.Features.Vehicles.Queries.GetByRegNo
+namespace WestcoastCars.Application.Features.Vehicles.Queries.GetByRegNo;
+
+public class GetVehicleByRegNoQueryHandler : IRequestHandler<GetVehicleByRegNoQuery, VehicleDetailsDto>
 {
-    public class GetVehicleByRegNoQueryHandler : IRequestHandler<GetVehicleByRegNoQuery, VehicleDetailsDto>
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
+
+    public GetVehicleByRegNoQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
     {
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IMapper _mapper;
+        _unitOfWork = unitOfWork;
+        _mapper = mapper;
+    }
 
-        public GetVehicleByRegNoQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
+    public async Task<VehicleDetailsDto> Handle(GetVehicleByRegNoQuery request, CancellationToken cancellationToken)
+    {
+        var vehicle = await _unitOfWork.VehicleRepository.FindByRegistrationNumberAsync(request.RegistrationNumber);
+
+        if (vehicle == null)
         {
-            _unitOfWork = unitOfWork;
-            _mapper = mapper;
+            throw new NotFoundException($"Vehicle with registration number {request.RegistrationNumber} not found");
         }
 
-        public async Task<VehicleDetailsDto> Handle(GetVehicleByRegNoQuery request, CancellationToken cancellationToken)
-        {
-            var vehicle = await _unitOfWork.VehicleRepository.FindByRegistrationNumberAsync(request.RegistrationNumber);
-
-            if (vehicle == null)
-            {
-                throw new NotFoundException($"Vehicle with registration number {request.RegistrationNumber} not found");
-            }
-
-            return _mapper.Map<VehicleDetailsDto>(vehicle);
-        }
+        return _mapper.Map<VehicleDetailsDto>(vehicle);
     }
 }

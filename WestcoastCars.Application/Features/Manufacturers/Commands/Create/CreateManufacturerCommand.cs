@@ -1,10 +1,9 @@
 using MediatR;
 using WestcoastCars.Contracts.DTOs;
 
-namespace WestcoastCars.Application.Features.Manufacturers.Commands.Create
+namespace WestcoastCars.Application.Features.Manufacturers.Commands.Create;
+
+public class CreateManufacturerCommand : IRequest<NamedObjectDto>
 {
-    public class CreateManufacturerCommand : IRequest<NamedObjectDto>
-    {
-        public required string Name { get; set; }
-    }
+    public required string Name { get; set; }
 }

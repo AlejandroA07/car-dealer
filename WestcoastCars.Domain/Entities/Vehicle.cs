@@ -4,7 +4,7 @@ namespace WestcoastCars.Domain.Entities;
 
 public class Vehicle : BaseEntity
 {
-    public string? RegistrationNumber { get; set; }
+    public required string RegistrationNumber { get; set; }
     public required string Model { get; set; }
     public required string ModelYear { get; set; }
     public int Mileage { get; set; }
@@ -19,9 +19,7 @@ public class Vehicle : BaseEntity
     public DateTime? ImportedAt { get; set; }
     public string? Color { get; set; }
     public string? City { get; set; }
-    // Navigation property...
     public int ManufacturerId { get; set; }
-    // Composition...
     [ForeignKey("ManufacturerId")]
     public required Manufacturer Manufacturer { get; set; }
 

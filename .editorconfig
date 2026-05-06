@@ -9,7 +9,7 @@ trim_trailing_whitespace = true
 insert_final_newline = true
 
 # Namespace preference
-csharp_style_namespace_declarations = file_scoped:suggestion
+csharp_style_namespace_declarations = file_scoped:warning
 
 # Prefer var for built-in types and apparent types
 csharp_style_var_for_built_in_types = true:suggestion

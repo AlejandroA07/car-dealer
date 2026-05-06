@@ -12,17 +12,17 @@ namespace WestcoastCars.Application.Tests.Features.Manufacturers.Commands;
 public class CreateManufacturerCommandHandlerTests
 {
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
-    private readonly Mock<IRepository<Manufacturer>> _manufacturerRepositoryMock;
+    private readonly Mock<IManufacturerRepository> _manufacturerRepositoryMock;
     private readonly Mock<IMapper> _mapperMock;
     private readonly CreateManufacturerCommandHandler _handler;
 
     public CreateManufacturerCommandHandlerTests()
     {
         _unitOfWorkMock = new Mock<IUnitOfWork>();
-        _manufacturerRepositoryMock = new Mock<IRepository<Manufacturer>>();
+        _manufacturerRepositoryMock = new Mock<IManufacturerRepository>();
         _mapperMock = new Mock<IMapper>();
 
-        _unitOfWorkMock.Setup(u => u.Repository<Manufacturer>()).Returns(_manufacturerRepositoryMock.Object);
+        _unitOfWorkMock.Setup(u => u.ManufacturerRepository).Returns(_manufacturerRepositoryMock.Object);
 
         _handler = new CreateManufacturerCommandHandler(_unitOfWorkMock.Object, _mapperMock.Object);
     }

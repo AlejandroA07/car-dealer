@@ -1,41 +1,38 @@
 using MediatR;
-using System.Threading;
-using System.Threading.Tasks;
 using WestcoastCars.Application.Exceptions;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Domain.Entities;
 using WestcoastCars.Domain.Common.Enums;
 
-namespace WestcoastCars.Application.Features.ServiceBookings.Commands.Create
+namespace WestcoastCars.Application.Features.ServiceBookings.Commands.Create;
+
+public class CreateServiceBookingCommandHandler : IRequestHandler<CreateServiceBookingCommand, int>
 {
-    public class CreateServiceBookingCommandHandler : IRequestHandler<CreateServiceBookingCommand, int>
+    private readonly IUnitOfWork _unitOfWork;
+
+    public CreateServiceBookingCommandHandler(IUnitOfWork unitOfWork)
     {
-        private readonly IUnitOfWork _unitOfWork;
+        _unitOfWork = unitOfWork;
+    }
 
-        public CreateServiceBookingCommandHandler(IUnitOfWork unitOfWork)
+    public async Task<int> Handle(CreateServiceBookingCommand request, CancellationToken cancellationToken)
+    {
+        var booking = new ServiceBooking
         {
-            _unitOfWork = unitOfWork;
-        }
+            VehicleRegistrationNumber = request.VehicleRegistrationNumber,
+            ServiceType = request.ServiceType,
+            BookingDate = request.BookingDate,
+            CustomerName = request.CustomerName,
+            CustomerEmail = request.CustomerEmail,
+            CustomerPhone = request.CustomerPhone,
+            Description = request.Description,
+            Status = BookingStatus.Pending,
+            CreatedAt = DateTime.UtcNow
+        };
 
-        public async Task<int> Handle(CreateServiceBookingCommand request, CancellationToken cancellationToken)
-        {
-            var booking = new ServiceBooking
-            {
-                VehicleRegistrationNumber = request.VehicleRegistrationNumber,
-                ServiceType = request.ServiceType,
-                BookingDate = request.BookingDate,
-                CustomerName = request.CustomerName,
-                CustomerEmail = request.CustomerEmail,
-                CustomerPhone = request.CustomerPhone,
-                Description = request.Description,
-                Status = BookingStatus.Pending,
-                CreatedAt = DateTime.UtcNow
-            };
+        await _unitOfWork.ServiceBookingRepository.AddAsync(booking);
 
-            await _unitOfWork.ServiceBookingRepository.AddAsync(booking);
-
-            await _unitOfWork.CompleteOrThrowAsync("Failed to create service booking");
-            return booking.Id;
-        }
+        await _unitOfWork.CompleteOrThrowAsync("Failed to create service booking");
+        return booking.Id;
     }
 }

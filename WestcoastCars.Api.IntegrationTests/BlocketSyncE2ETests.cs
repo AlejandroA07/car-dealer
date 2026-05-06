@@ -25,7 +25,7 @@ public class BlocketSyncE2ETests : IntegrationTestBase
             return;
         }
 
-        var client = CreateAuthenticatedClient("Admin");
+        var client = await CreateAuthenticatedClientAsync();
 
         var response = await client.PostAsJsonAsync("/api/v1/vehicles/import/blocket", new SyncBlocketVehiclesCommand
         {

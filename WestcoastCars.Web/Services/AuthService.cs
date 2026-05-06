@@ -6,77 +6,76 @@ using WestcoastCars.Web.ViewModels.Auth;
 using Microsoft.Extensions.Logging;
 using WestcoastCars.Contracts.Auth;
 
-namespace WestcoastCars.Web.Services
+namespace WestcoastCars.Web.Services;
+
+public class AuthService : IAuthService
 {
-    public class AuthService : IAuthService
+    private readonly HttpClient _httpClient;
+    private readonly ILogger<AuthService> _logger;
+    private readonly JsonSerializerOptions _options;
+
+    public AuthService(HttpClient httpClient, ILogger<AuthService> logger)
     {
-        private readonly HttpClient _httpClient;
-        private readonly ILogger<AuthService> _logger;
-        private readonly JsonSerializerOptions _options;
+        _httpClient = httpClient;
+        _logger = logger;
+        _options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+    }
 
-        public AuthService(HttpClient httpClient, ILogger<AuthService> logger)
+    public async Task<LoginResult> LoginAsync(LoginViewModel model)
+    {
+        var loginRequest = new LoginRequest(model.Email, model.Password);
+        var jsonPayload = JsonSerializer.Serialize(loginRequest, _options);
+        var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+
+        _logger.LogInformation("Attempting to login user {Email}", model.Email);
+
+        try
         {
-            _httpClient = httpClient;
-            _logger = logger;
-            _options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        }
+            var response = await _httpClient.PostAsync("api/auth/login", content);
 
-        public async Task<LoginResult> LoginAsync(LoginViewModel model)
-        {
-            var loginRequest = new LoginRequest(model.Email, model.Password);
-            var jsonPayload = JsonSerializer.Serialize(loginRequest, _options);
-            var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-
-            _logger.LogInformation("Attempting to login user {Email}", model.Email);
-
-            try
+            if (response.IsSuccessStatusCode)
             {
-                var response = await _httpClient.PostAsync("api/auth/login", content);
+                var authResponseJson = await response.Content.ReadAsStringAsync();
+                var authResponse = JsonSerializer.Deserialize<AuthenticationResponse>(authResponseJson, _options);
 
-                if (response.IsSuccessStatusCode)
+                if (authResponse == null || string.IsNullOrEmpty(authResponse.Token))
                 {
-                    var authResponseJson = await response.Content.ReadAsStringAsync();
-                    var authResponse = JsonSerializer.Deserialize<AuthenticationResponse>(authResponseJson, _options);
-
-                    if (authResponse == null || string.IsNullOrEmpty(authResponse.Token))
-                    {
-                        _logger.LogError("Auth API returned success but payload was empty or missing token.");
-                        return LoginResult.Failure("Ogiltigt svar från inloggningstjänsten.");
-                    }
-
-                    _logger.LogInformation("Login successful for user {Email}", model.Email);
-                    return LoginResult.Success(authResponse.Token);
+                    _logger.LogError("Auth API returned success but payload was empty or missing token.");
+                    return LoginResult.Failure("Ogiltigt svar från inloggningstjänsten.");
                 }
 
-                var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogWarning("Login failed for user {Email}. Status: {StatusCode}, Error: {ErrorContent}", model.Email, response.StatusCode, errorContent);
-                return LoginResult.Failure($"Login failed: {response.ReasonPhrase} - {errorContent}");
+                _logger.LogInformation("Login successful for user {Email}", model.Email);
+                return LoginResult.Success(authResponse.Token);
             }
-            catch (HttpRequestException ex)
-            {
-                _logger.LogError(ex, "Auth API is unavailable while logging in user {Email}.", model.Email);
-                return LoginResult.Failure("Inloggningstjänsten är tillfälligt otillgänglig. Försök igen senare.");
-            }
-            catch (TaskCanceledException ex)
-            {
-                _logger.LogError(ex, "Auth API request timed out while logging in user {Email}.", model.Email);
-                return LoginResult.Failure("Inloggningstjänsten svarar inte just nu. Försök igen senare.");
-            }
-            catch (JsonException ex)
-            {
-                _logger.LogError(ex, "Auth API returned an invalid JSON response while logging in user {Email}.", model.Email);
-                return LoginResult.Failure("Ogiltigt svar från inloggningstjänsten.");
-            }
-        }
 
-        /// <summary>
-        /// Handles client-side logout operations (e.g., clearing cookies/tokens).
-        /// Note: This does not invalidate the JWT on the server as JWTs are stateless.
-        /// </summary>
-        public Task LogoutAsync()
-        {
-            _logger.LogInformation("User logged out from client-side.");
-            return Task.CompletedTask;
+            var errorContent = await response.Content.ReadAsStringAsync();
+            _logger.LogWarning("Login failed for user {Email}. Status: {StatusCode}, Error: {ErrorContent}", model.Email, response.StatusCode, errorContent);
+            return LoginResult.Failure($"Login failed: {response.ReasonPhrase} - {errorContent}");
         }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "Auth API is unavailable while logging in user {Email}.", model.Email);
+            return LoginResult.Failure("Inloggningstjänsten är tillfälligt otillgänglig. Försök igen senare.");
+        }
+        catch (TaskCanceledException ex)
+        {
+            _logger.LogError(ex, "Auth API request timed out while logging in user {Email}.", model.Email);
+            return LoginResult.Failure("Inloggningstjänsten svarar inte just nu. Försök igen senare.");
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogError(ex, "Auth API returned an invalid JSON response while logging in user {Email}.", model.Email);
+            return LoginResult.Failure("Ogiltigt svar från inloggningstjänsten.");
+        }
+    }
+
+    /// <summary>
+    /// Handles client-side logout operations (e.g., clearing cookies/tokens).
+    /// Note: This does not invalidate the JWT on the server as JWTs are stateless.
+    /// </summary>
+    public Task LogoutAsync()
+    {
+        _logger.LogInformation("User logged out from client-side.");
+        return Task.CompletedTask;
     }
 }

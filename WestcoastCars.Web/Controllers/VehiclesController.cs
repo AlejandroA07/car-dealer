@@ -201,7 +201,7 @@ public class VehiclesController : Controller
                 var dropdownData = await _vehicleService.GetVehicleForCreateAsync();
                 viewModel.Manufacturers = dropdownData.Manufacturers;
                 viewModel.FuelTypes = dropdownData.FuelTypes;
-                viewModel.TransmissionsTypes = dropdownData.TransmissionsTypes;
+                viewModel.TransmissionTypes = dropdownData.TransmissionTypes;
                 return View("Edit", viewModel);
             }
 
@@ -219,7 +219,7 @@ public class VehiclesController : Controller
             var dropdownDataFail = await _vehicleService.GetVehicleForCreateAsync();
             errorViewModel.Manufacturers = dropdownDataFail.Manufacturers;
             errorViewModel.FuelTypes = dropdownDataFail.FuelTypes;
-            errorViewModel.TransmissionsTypes = dropdownDataFail.TransmissionsTypes;
+            errorViewModel.TransmissionTypes = dropdownDataFail.TransmissionTypes;
             return View("Edit", errorViewModel);
         }
         catch (Exception ex)
@@ -231,7 +231,7 @@ public class VehiclesController : Controller
             var dropdownDataEx = await _vehicleService.GetVehicleForCreateAsync();
             viewModel.Manufacturers = dropdownDataEx.Manufacturers;
             viewModel.FuelTypes = dropdownDataEx.FuelTypes;
-            viewModel.TransmissionsTypes = dropdownDataEx.TransmissionsTypes;
+            viewModel.TransmissionTypes = dropdownDataEx.TransmissionTypes;
             return View("Edit", viewModel);
         }
     }
@@ -263,7 +263,7 @@ public class VehiclesController : Controller
                 var freshViewModel = await _vehicleService.GetVehicleForCreateAsync();
                 vehicleViewModel.Manufacturers = freshViewModel.Manufacturers;
                 vehicleViewModel.FuelTypes = freshViewModel.FuelTypes;
-                vehicleViewModel.TransmissionsTypes = freshViewModel.TransmissionsTypes;
+                vehicleViewModel.TransmissionTypes = freshViewModel.TransmissionTypes;
                 return View("Create", vehicleViewModel);
             }
 
@@ -280,7 +280,7 @@ public class VehiclesController : Controller
             var freshViewModelOnFail = await _vehicleService.GetVehicleForCreateAsync();
             vehicleViewModel.Manufacturers = freshViewModelOnFail.Manufacturers;
             vehicleViewModel.FuelTypes = freshViewModelOnFail.FuelTypes;
-            vehicleViewModel.TransmissionsTypes = freshViewModelOnFail.TransmissionsTypes;
+            vehicleViewModel.TransmissionTypes = freshViewModelOnFail.TransmissionTypes;
             return View("Create", vehicleViewModel);
         }
         catch (Exception ex)
@@ -291,7 +291,7 @@ public class VehiclesController : Controller
             var freshViewModelOnFail = await _vehicleService.GetVehicleForCreateAsync();
             vehicleViewModel.Manufacturers = freshViewModelOnFail.Manufacturers;
             vehicleViewModel.FuelTypes = freshViewModelOnFail.FuelTypes;
-            vehicleViewModel.TransmissionsTypes = freshViewModelOnFail.TransmissionsTypes;
+            vehicleViewModel.TransmissionTypes = freshViewModelOnFail.TransmissionTypes;
             return View("Create", vehicleViewModel);
         }
     }

@@ -7,52 +7,51 @@ using WestcoastCars.Application.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
-namespace WestcoastCars.Api.Controllers
+namespace WestcoastCars.Api.Controllers;
+
+[ApiController]
+[ApiExplorerSettings(IgnoreApi = true)]
+public class ErrorController : ControllerBase
 {
-    [ApiController]
-    [ApiExplorerSettings(IgnoreApi = true)]
-    public class ErrorController : ControllerBase
+    [Route("/error")]
+    public IActionResult HandleError([FromServices] IHostEnvironment hostEnvironment)
     {
-        [Route("/error")]
-        public IActionResult HandleError([FromServices] IHostEnvironment hostEnvironment)
+        var exceptionHandlerFeature = HttpContext.Features.Get<IExceptionHandlerFeature>()!;
+        var exception = exceptionHandlerFeature.Error;
+
+        var (statusCode, title, detail) = exception switch
         {
-            var exceptionHandlerFeature = HttpContext.Features.Get<IExceptionHandlerFeature>()!;
-            var exception = exceptionHandlerFeature.Error;
+            NotFoundException => (StatusCodes.Status404NotFound, "Not Found", exception.Message),
+            ConflictException => (StatusCodes.Status409Conflict, "Conflict", exception.Message),
+            ValidationException => (StatusCodes.Status400BadRequest, "One or more validation errors occurred.", exception.Message),
+            PersistenceException => (StatusCodes.Status500InternalServerError, "An unexpected error occurred.", "A persistence error occurred."),
+            _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred.", "An unexpected error occurred.")
+        };
 
-            var (statusCode, title, detail) = exception switch
-            {
-                NotFoundException => (StatusCodes.Status404NotFound, "Not Found", exception.Message),
-                ConflictException => (StatusCodes.Status409Conflict, "Conflict", exception.Message),
-                ValidationException => (StatusCodes.Status400BadRequest, "One or more validation errors occurred.", exception.Message),
-                PersistenceException => (StatusCodes.Status500InternalServerError, "An unexpected error occurred.", "A persistence error occurred."),
-                _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred.", "An unexpected error occurred.")
-            };
+        var problemDetails = new ProblemDetails
+        {
+            Status = statusCode,
+            Title = title,
+            Instance = HttpContext.Request.Path,
+            Detail = detail
+        };
 
-            var problemDetails = new ProblemDetails
-            {
-                Status = statusCode,
-                Title = title,
-                Instance = HttpContext.Request.Path,
-                Detail = detail
-            };
-
-            if (exception is ValidationException validationException)
-            {
-                problemDetails.Extensions["errors"] = validationException.Errors;
-            }
-
-            var traceId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
-            problemDetails.Extensions["traceId"] = traceId;
-
-            if (hostEnvironment.IsDevelopment())
-            {
-                problemDetails.Extensions["stackTrace"] = exception.StackTrace;
-            }
-
-            var logger = HttpContext.RequestServices.GetRequiredService<ILogger<ErrorController>>();
-            logger.LogError(exception, "An error occurred with traceId {TraceId}: {ErrorMessage}", traceId, exception.Message);
-
-            return StatusCode(problemDetails.Status.Value, problemDetails);
+        if (exception is ValidationException validationException)
+        {
+            problemDetails.Extensions["errors"] = validationException.Errors;
         }
+
+        var traceId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+        problemDetails.Extensions["traceId"] = traceId;
+
+        if (hostEnvironment.IsDevelopment())
+        {
+            problemDetails.Extensions["stackTrace"] = exception.StackTrace;
+        }
+
+        var logger = HttpContext.RequestServices.GetRequiredService<ILogger<ErrorController>>();
+        logger.LogError(exception, "An error occurred with traceId {TraceId}: {ErrorMessage}", traceId, exception.Message);
+
+        return StatusCode(problemDetails.Status.Value, problemDetails);
     }
 }

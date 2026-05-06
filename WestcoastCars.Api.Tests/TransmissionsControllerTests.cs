@@ -15,100 +15,98 @@ using System.Threading.Tasks;
 using Xunit;
 using WestcoastCars.Application.Exceptions;
 
-namespace WestcoastCars.Api.Tests
+namespace WestcoastCars.Api.Tests;
+
+public class TransmissionsControllerTests
 {
-    public class TransmissionsControllerTests
+    private readonly Mock<IMediator> _mediatorMock;
+    private readonly TransmissionsController _controller;
+
+    public TransmissionsControllerTests()
     {
-        private readonly Mock<IMediator> _mediatorMock;
-        private readonly TransmissionsController _controller;
+        _mediatorMock = new Mock<IMediator>();
+        _controller = new TransmissionsController(_mediatorMock.Object);
+    }
 
-        public TransmissionsControllerTests()
+    [Fact]
+    public async Task ListAll_ShouldReturnOkResult_WithListOfTransmissionTypes()
+    {
+        // Arrange
+        var transmissionTypes = new List<NamedObjectDto>
         {
-            _mediatorMock = new Mock<IMediator>();
-            _controller = new TransmissionsController(_mediatorMock.Object);
-        }
+            new NamedObjectDto { Id = 1, Name = "Manual" },
+            new NamedObjectDto { Id = 2, Name = "Automatic" }
+        };
+        _mediatorMock.Setup(m => m.Send(It.IsAny<ListAllTransmissionsQuery>(), default)).ReturnsAsync(transmissionTypes);
 
-        [Fact]
-        public async Task ListAll_ShouldReturnOkResult_WithListOfTransmissionTypes()
-        {
-            // Arrange
-            var transmissionTypes = new List<NamedObjectDto>
-            {
-                new NamedObjectDto { Id = 1, Name = "Manual" },
-                new NamedObjectDto { Id = 2, Name = "Automatic" }
-            };
-            _mediatorMock.Setup(m => m.Send(It.IsAny<ListAllTransmissionsQuery>(), default)).ReturnsAsync(transmissionTypes);
+        // Act
+        var result = await _controller.ListAll();
 
-            // Act
-            var result = await _controller.ListAll();
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var returnValue = Assert.IsType<List<NamedObjectDto>>(okResult.Value);
+        Assert.Equal(2, returnValue.Count);
+    }
 
-            // Assert
-            var okResult = Assert.IsType<OkObjectResult>(result);
-            var returnValue = Assert.IsType<List<NamedObjectDto>>(okResult.Value);
-            Assert.Equal(2, returnValue.Count);
-        }
+    [Fact]
+    public async Task GetById_ShouldReturnOkResult_WhenTransmissionTypeExists()
+    {
+        // Arrange
+        var transmissionType = new NamedObjectDto { Id = 1, Name = "Manual" };
+        _mediatorMock.Setup(m => m.Send(It.IsAny<GetTransmissionByIdQuery>(), default)).ReturnsAsync(transmissionType);
 
-        [Fact]
-        public async Task GetById_ShouldReturnOkResult_WhenTransmissionTypeExists()
-        {
-            // Arrange
-            var transmissionType = new NamedObjectDto { Id = 1, Name = "Manual" };
-            _mediatorMock.Setup(m => m.Send(It.IsAny<GetTransmissionByIdQuery>(), default)).ReturnsAsync(transmissionType);
+        // Act
+        var result = await _controller.GetById(1);
 
-            // Act
-            var result = await _controller.GetById(1);
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var returnValue = Assert.IsType<NamedObjectDto>(okResult.Value);
+        Assert.Equal("Manual", returnValue.Name);
+    }
 
-            // Assert
-            var okResult = Assert.IsType<OkObjectResult>(result);
-            var returnValue = Assert.IsType<NamedObjectDto>(okResult.Value);
-            Assert.Equal("Manual", returnValue.Name);
-        }
+    [Fact]
+    public async Task Add_ShouldReturnCreatedAtActionResult_WhenModelIsValid()
+    {
+        // Arrange
+        var newTransmissionTypeDto = new NamedObjectDto { Name = "CVT" };
+        var returnedTransmissionTypeDto = new NamedObjectDto { Id = 1, Name = "CVT" };
+        _mediatorMock.Setup(m => m.Send(It.IsAny<CreateTransmissionCommand>(), default)).ReturnsAsync(returnedTransmissionTypeDto);
 
-        [Fact]
-        public async Task Add_ShouldReturnCreatedAtActionResult_WhenModelIsValid()
-        {
-            // Arrange
-            var newTransmissionTypeDto = new NamedObjectDto { Name = "CVT" };
-            var returnedTransmissionTypeDto = new NamedObjectDto { Id = 1, Name = "CVT" };
-            _mediatorMock.Setup(m => m.Send(It.IsAny<CreateTransmissionCommand>(), default)).ReturnsAsync(returnedTransmissionTypeDto);
+        // Act
+        var result = await _controller.Add(newTransmissionTypeDto);
 
-            // Act
-            var result = await _controller.Add(newTransmissionTypeDto);
+        // Assert
+        var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(result);
+        Assert.Equal("GetById", createdAtActionResult.ActionName);
+        var returnValue = Assert.IsType<NamedObjectDto>(createdAtActionResult.Value);
+        Assert.Equal(newTransmissionTypeDto.Name, returnValue.Name);
+    }
 
-            // Assert
-            var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(result);
-            Assert.Equal("GetById", createdAtActionResult.ActionName);
-            var returnValue = Assert.IsType<NamedObjectDto>(createdAtActionResult.Value);
-            Assert.Equal(newTransmissionTypeDto.Name, returnValue.Name);
-        }
+    [Fact]
+    public async Task Update_ShouldReturnNoContent_WhenUpdateIsSuccessful()
+    {
+        // Arrange
+        int transmissionTypeId = 1;
+        var transmissionTypeDto = new NamedObjectDto { Id = transmissionTypeId, Name = "UpdatedName" };
+        _mediatorMock.Setup(m => m.Send(It.IsAny<UpdateTransmissionCommand>(), default)).Returns(Task.FromResult(Unit.Value));
 
-        [Fact]
-        public async Task Update_ShouldReturnNoContent_WhenUpdateIsSuccessful()
-        {
-            // Arrange
-            int transmissionTypeId = 1;
-            var transmissionTypeDto = new NamedObjectDto { Id = transmissionTypeId, Name = "UpdatedName" };
-            _mediatorMock.Setup(m => m.Send(It.IsAny<UpdateTransmissionCommand>(), default)).Returns(Task.FromResult(Unit.Value));
+        // Act
+        var result = await _controller.Update(transmissionTypeId, transmissionTypeDto);
 
-            // Act
-            var result = await _controller.Update(transmissionTypeId, transmissionTypeDto);
+        // Assert
+        Assert.IsType<NoContentResult>(result);
+    }
 
-            // Assert
-            Assert.IsType<NoContentResult>(result);
-        }
+    [Fact]
+    public async Task Delete_ShouldReturnNoContent_WhenTransmissionTypeExists()
+    {
+        // Arrange
+        _mediatorMock.Setup(m => m.Send(It.IsAny<DeleteTransmissionCommand>(), default)).Returns(Task.FromResult(Unit.Value));
 
-        [Fact]
-        public async Task Delete_ShouldReturnNoContent_WhenTransmissionTypeExists()
-        {
-            // Arrange
-            _mediatorMock.Setup(m => m.Send(It.IsAny<DeleteTransmissionCommand>(), default)).Returns(Task.FromResult(Unit.Value));
+        // Act
+        var result = await _controller.Delete(1);
 
-            // Act
-            var result = await _controller.Delete(1);
-
-            // Assert
-            Assert.IsType<NoContentResult>(result);
-        }
+        // Assert
+        Assert.IsType<NoContentResult>(result);
     }
 }
-

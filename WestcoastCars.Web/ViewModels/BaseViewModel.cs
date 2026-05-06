@@ -1,12 +1,11 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
-namespace WestcoastCars.Web.ViewModels
+namespace WestcoastCars.Web.ViewModels;
+
+public class BaseViewModel
 {
-    public class BaseViewModel
-    {
-        [Required(ErrorMessage = "Namn måste anges")]
-        [DisplayName("Namn")]
-        public string Name { get; set; } = string.Empty;
-    }
+    [Required(ErrorMessage = "Namn måste anges")]
+    [DisplayName("Namn")]
+    public string Name { get; set; } = string.Empty;
 }

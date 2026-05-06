@@ -1,8 +1,7 @@
 using WestcoastCars.Contracts.DTOs;
 
-namespace WestcoastCars.Contracts.DTOs
+namespace WestcoastCars.Contracts.DTOs;
+
+public class VehicleUpdateDto : VehicleDto
 {
-    public class VehicleUpdateDto : VehicleDto
-    {
-    }
 }

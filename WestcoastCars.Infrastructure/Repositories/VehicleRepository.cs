@@ -20,7 +20,7 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
             .Include(v => v.Manufacturer)
             .Include(v => v.FuelType)
             .Include(v => v.TransmissionType)
-            .SingleOrDefaultAsync(v => v.RegistrationNumber != null && v.RegistrationNumber.ToUpper() == normalizedRegNo);
+            .SingleOrDefaultAsync(v => v.RegistrationNumber.ToUpper() == normalizedRegNo);
     }
 
     public async Task<IEnumerable<Vehicle>> SearchAsync(VehicleSearchDto search)
@@ -41,14 +41,12 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
 
         if (search.MinYear.HasValue)
         {
-            var minYearStr = search.MinYear.Value.ToString();
-            query = query.Where(v => v.ModelYear.CompareTo(minYearStr) >= 0);
+            query = query.Where(v => Convert.ToInt32(v.ModelYear) >= search.MinYear.Value);
         }
 
         if (search.MaxYear.HasValue)
         {
-            var maxYearStr = search.MaxYear.Value.ToString();
-            query = query.Where(v => v.ModelYear.CompareTo(maxYearStr) <= 0);
+            query = query.Where(v => Convert.ToInt32(v.ModelYear) <= search.MaxYear.Value);
         }
 
         if (search.MinPrice.HasValue)
@@ -74,7 +72,7 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
             .ToListAsync();
     }
 
-    public new async Task<Vehicle?> GetByIdAsync(int id)
+    public override async Task<Vehicle?> GetByIdAsync(int id)
     {
         return await _context.Vehicles
             .Include(v => v.Manufacturer)
@@ -83,7 +81,7 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
             .SingleOrDefaultAsync(v => v.Id == id);
     }
 
-    public new async Task<IEnumerable<Vehicle>> GetAllAsync()
+    public override async Task<IEnumerable<Vehicle>> GetAllAsync()
     {
         return await _context.Vehicles
             .Include(v => v.Manufacturer)

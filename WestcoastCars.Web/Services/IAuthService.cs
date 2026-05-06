@@ -1,11 +1,10 @@
 using System.Threading.Tasks;
 using WestcoastCars.Web.ViewModels.Auth;
 
-namespace WestcoastCars.Web.Services
+namespace WestcoastCars.Web.Services;
+
+public interface IAuthService
 {
-    public interface IAuthService
-    {
-        Task<LoginResult> LoginAsync(LoginViewModel model);
-        Task LogoutAsync();
-    }
+    Task<LoginResult> LoginAsync(LoginViewModel model);
+    Task LogoutAsync();
 }

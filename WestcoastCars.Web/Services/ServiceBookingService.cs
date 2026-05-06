@@ -6,45 +6,44 @@ using Microsoft.Extensions.Logging;
 using WestcoastCars.Web.ViewModels.ServiceBooking;
 using WestcoastCars.Contracts.DTOs;
 
-namespace WestcoastCars.Web.Services
+namespace WestcoastCars.Web.Services;
+
+public class ServiceBookingService : IServiceBookingService
 {
-    public class ServiceBookingService : IServiceBookingService
+    private readonly HttpClient _httpClient;
+    private readonly ILogger<ServiceBookingService> _logger;
+
+    public ServiceBookingService(IHttpClientFactory httpClientFactory, ILogger<ServiceBookingService> logger)
     {
-        private readonly HttpClient _httpClient;
-        private readonly ILogger<ServiceBookingService> _logger;
+        _httpClient = httpClientFactory.CreateClient("ApiClient");
+        _logger = logger;
+    }
 
-        public ServiceBookingService(IHttpClientFactory httpClientFactory, ILogger<ServiceBookingService> logger)
+    public async Task<bool> CreateBookingAsync(ServiceBookingViewModel model)
+    {
+        try
         {
-            _httpClient = httpClientFactory.CreateClient("ApiClient");
-            _logger = logger;
+            var response = await _httpClient.PostAsJsonAsync("api/v1/service-bookings", model);
+            return response.IsSuccessStatusCode;
         }
-
-        public async Task<bool> CreateBookingAsync(ServiceBookingViewModel model)
+        catch (System.Exception ex)
         {
-            try
-            {
-                var response = await _httpClient.PostAsJsonAsync("api/v1/service-bookings", model);
-                return response.IsSuccessStatusCode;
-            }
-            catch (System.Exception ex)
-            {
-                _logger.LogError(ex, "Error creating service booking");
-                return false;
-            }
+            _logger.LogError(ex, "Error creating service booking");
+            return false;
         }
+    }
 
-        public async Task<IEnumerable<ServiceBookingSummaryDto>> ListAllBookingsAsync()
+    public async Task<IEnumerable<ServiceBookingSummaryDto>> ListAllBookingsAsync()
+    {
+        try
         {
-            try
-            {
-                var response = await _httpClient.GetFromJsonAsync<IEnumerable<ServiceBookingSummaryDto>>("api/v1/service-bookings");
-                return response ?? new List<ServiceBookingSummaryDto>();
-            }
-            catch (System.Exception ex)
-            {
-                _logger.LogError(ex, "Error listing all service bookings");
-                return new List<ServiceBookingSummaryDto>();
-            }
+            var response = await _httpClient.GetFromJsonAsync<IEnumerable<ServiceBookingSummaryDto>>("api/v1/service-bookings");
+            return response ?? new List<ServiceBookingSummaryDto>();
+        }
+        catch (System.Exception ex)
+        {
+            _logger.LogError(ex, "Error listing all service bookings");
+            return new List<ServiceBookingSummaryDto>();
         }
     }
 }
