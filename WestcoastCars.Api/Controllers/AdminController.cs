@@ -38,22 +38,14 @@ public class AdminController : ControllerBase
     [ProducesResponseType(403)]
     public async Task<IActionResult> CreateUser(CreateUserRequest request)
     {
-        try
-        {
-            var authResult = await _adminService.CreateUserAsync(
-                request.FirstName,
-                request.LastName,
-                request.Email,
-                request.Password,
-                request.Role
-            );
+        var authResult = await _adminService.CreateUserAsync(
+            request.FirstName,
+            request.LastName,
+            request.Email,
+            request.Password,
+            request.Role
+        );
 
-            return Ok(new { Message = "User created successfully", UserId = authResult.User.Id });
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        return Ok(new { Message = "User created successfully", UserId = authResult.User.Id });
     }
 }
-

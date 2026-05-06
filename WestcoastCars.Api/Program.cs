@@ -66,9 +66,9 @@ builder.Services.AddSwaggerExamplesFromAssemblyOf<LoginRequestExample>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo 
-    { 
-        Title = "Westcoast Cars API", 
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Westcoast Cars API",
         Version = "v1",
         Description = "API for managing vehicle inventory, manufacturers, and service bookings."
     });
@@ -142,7 +142,7 @@ using (var scope = app.Services.CreateScope())
         {
             await context.Database.EnsureCreatedAsync();
         }
-        
+
         await SeedData.LoadManufacturerData(context);
         await SeedData.LoadFuelTypeData(context);
         await SeedData.LoadTransmissionsData(context);

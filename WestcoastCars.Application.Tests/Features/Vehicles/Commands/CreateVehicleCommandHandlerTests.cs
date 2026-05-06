@@ -57,7 +57,7 @@ public class CreateVehicleCommandHandlerTests
             .ReturnsAsync(new FuelType { Id = 1, Name = "Diesel" });
         _transmissionTypeRepositoryMock.Setup(r => r.GetByIdAsync(command.TransmissionTypeId))
             .ReturnsAsync(new TransmissionType { Id = 1, Name = "Automatic" });
-        
+
         _unitOfWorkMock.Setup(u => u.CompleteAsync()).ReturnsAsync(1);
 
         // Act
@@ -70,12 +70,44 @@ public class CreateVehicleCommandHandlerTests
     }
 
     [Fact]
+    public async Task Handle_ShouldThrowPersistenceException_WhenSaveAffectsNoRows()
+    {
+        // Arrange
+        var command = new CreateVehicleCommand
+        {
+            RegistrationNumber = "NEW123",
+            ManufacturerId = 1,
+            FuelTypeId = 1,
+            TransmissionTypeId = 1,
+            Model = "V60",
+            ModelYear = "2024",
+            Value = 450000,
+            Description = "Test description",
+            ImageUrl = "test.png"
+        };
+
+        _vehicleRepositoryMock.Setup(r => r.FindByRegistrationNumberAsync(command.RegistrationNumber))
+            .ReturnsAsync((Vehicle?)null);
+        _manufacturerRepositoryMock.Setup(r => r.GetByIdAsync(command.ManufacturerId))
+            .ReturnsAsync(new Manufacturer { Id = 1, Name = "Volvo" });
+        _fuelTypeRepositoryMock.Setup(r => r.GetByIdAsync(command.FuelTypeId))
+            .ReturnsAsync(new FuelType { Id = 1, Name = "Diesel" });
+        _transmissionTypeRepositoryMock.Setup(r => r.GetByIdAsync(command.TransmissionTypeId))
+            .ReturnsAsync(new TransmissionType { Id = 1, Name = "Automatic" });
+
+        _unitOfWorkMock.Setup(u => u.CompleteAsync()).ReturnsAsync(0);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<PersistenceException>(() => _handler.Handle(command, CancellationToken.None));
+    }
+
+    [Fact]
     public async Task Handle_ShouldThrowConflictException_WhenVehicleAlreadyExists()
     {
         // Arrange
         var command = new CreateVehicleCommand { RegistrationNumber = "EXISTING" };
-        var existingVehicle = new Vehicle 
-        { 
+        var existingVehicle = new Vehicle
+        {
             RegistrationNumber = "EXISTING",
             Model = "Test",
             ModelYear = "2020",

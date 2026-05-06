@@ -32,6 +32,7 @@ public class UpdateManufacturerCommandHandlerTests
         _manufacturerRepositoryMock.Setup(r => r.GetByIdAsync(manufacturerId)).ReturnsAsync(existingManufacturer);
         _manufacturerRepositoryMock.Setup(r => r.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<Manufacturer, bool>>>()))
             .ReturnsAsync((Manufacturer?)null);
+        _unitOfWorkMock.Setup(u => u.CompleteAsync()).ReturnsAsync(1);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
@@ -39,6 +40,23 @@ public class UpdateManufacturerCommandHandlerTests
         // Assert
         Assert.Equal(command.Name, existingManufacturer.Name);
         _unitOfWorkMock.Verify(u => u.CompleteAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_ShouldThrowPersistenceException_WhenSaveAffectsNoRows()
+    {
+        // Arrange
+        var manufacturerId = 1;
+        var command = new UpdateManufacturerCommand { Id = manufacturerId, Name = "Updated Name" };
+        var existingManufacturer = new Manufacturer { Id = manufacturerId, Name = "Old Name" };
+
+        _manufacturerRepositoryMock.Setup(r => r.GetByIdAsync(manufacturerId)).ReturnsAsync(existingManufacturer);
+        _manufacturerRepositoryMock.Setup(r => r.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<Manufacturer, bool>>>()))
+            .ReturnsAsync((Manufacturer?)null);
+        _unitOfWorkMock.Setup(u => u.CompleteAsync()).ReturnsAsync(0);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<PersistenceException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
     [Fact]

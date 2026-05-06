@@ -198,32 +198,32 @@ namespace WestcoastCars.Web.Services
         }
 
         public async Task<List<VehicleSummaryDto>> SearchVehiclesAsync(VehicleSearchDto search)
-    {
-        var queryParams = new Dictionary<string, string?>();
-        if (!string.IsNullOrWhiteSpace(search.Make)) queryParams["Make"] = search.Make;
-        if (!string.IsNullOrWhiteSpace(search.Model)) queryParams["Model"] = search.Model;
-        if (search.MinYear.HasValue) queryParams["MinYear"] = search.MinYear.Value.ToString();
-        if (search.MaxYear.HasValue) queryParams["MaxYear"] = search.MaxYear.Value.ToString();
-        if (search.MinPrice.HasValue) queryParams["MinPrice"] = search.MinPrice.Value.ToString();
-        if (search.MaxPrice.HasValue) queryParams["MaxPrice"] = search.MaxPrice.Value.ToString();
-        if (search.IsSold.HasValue) queryParams["IsSold"] = search.IsSold.Value.ToString();
-
-        return await ExecuteWithApiFallback(async () =>
         {
-            var url = QueryHelpers.AddQueryString($"{_baseUrl}/api/v1/vehicles/search", queryParams);
+            var queryParams = new Dictionary<string, string?>();
+            if (!string.IsNullOrWhiteSpace(search.Make)) queryParams["Make"] = search.Make;
+            if (!string.IsNullOrWhiteSpace(search.Model)) queryParams["Model"] = search.Model;
+            if (search.MinYear.HasValue) queryParams["MinYear"] = search.MinYear.Value.ToString();
+            if (search.MaxYear.HasValue) queryParams["MaxYear"] = search.MaxYear.Value.ToString();
+            if (search.MinPrice.HasValue) queryParams["MinPrice"] = search.MinPrice.Value.ToString();
+            if (search.MaxPrice.HasValue) queryParams["MaxPrice"] = search.MaxPrice.Value.ToString();
+            if (search.IsSold.HasValue) queryParams["IsSold"] = search.IsSold.Value.ToString();
 
-            var response = await _httpClient.GetAsync(url);
-
-            if (!response.IsSuccessStatusCode)
+            return await ExecuteWithApiFallback(async () =>
             {
-                _logger.LogError($"Error searching vehicles: {response.StatusCode}");
-                return new List<VehicleSummaryDto>();
-            }
+                var url = QueryHelpers.AddQueryString($"{_baseUrl}/api/v1/vehicles/search", queryParams);
 
-            var json = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<List<VehicleSummaryDto>>(json, _options) ?? new List<VehicleSummaryDto>();
-        }, new List<VehicleSummaryDto>(), "searching vehicles");
-    }
+                var response = await _httpClient.GetAsync(url);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError($"Error searching vehicles: {response.StatusCode}");
+                    return new List<VehicleSummaryDto>();
+                }
+
+                var json = await response.Content.ReadAsStringAsync();
+                return JsonSerializer.Deserialize<List<VehicleSummaryDto>>(json, _options) ?? new List<VehicleSummaryDto>();
+            }, new List<VehicleSummaryDto>(), "searching vehicles");
+        }
 
         public async Task<BlocketSyncViewModel> SyncBlocketAsync(BlocketSyncViewModel model)
         {
@@ -316,14 +316,14 @@ namespace WestcoastCars.Web.Services
             }
         }
 
-    private async Task LoadDropdownData(VehicleBaseViewModel viewModel, VehicleDetailsDto vehicleToEdit)
+        private async Task LoadDropdownData(VehicleBaseViewModel viewModel, VehicleDetailsDto vehicleToEdit)
         {
             try
             {
                 var manufacturersTask = _httpClient.GetStringAsync($"{_baseUrl}/api/v1/manufacturers");
                 var fuelTypesTask = _httpClient.GetStringAsync($"{_baseUrl}/api/v1/fueltypes");
                 var transmissionsTask = _httpClient.GetStringAsync($"{_baseUrl}/api/v1/transmissions");
-                
+
                 await Task.WhenAll(manufacturersTask, fuelTypesTask, transmissionsTask);
 
                 var manufacturers = JsonSerializer.Deserialize<List<NamedObjectDto>>(await manufacturersTask, _options) ?? new List<NamedObjectDto>();
@@ -354,7 +354,7 @@ namespace WestcoastCars.Web.Services
                 var manufacturersTask = _httpClient.GetStringAsync($"{_baseUrl}/api/v1/manufacturers");
                 var fuelTypesTask = _httpClient.GetStringAsync($"{_baseUrl}/api/v1/fueltypes");
                 var transmissionsTask = _httpClient.GetStringAsync($"{_baseUrl}/api/v1/transmissions");
-                
+
                 await Task.WhenAll(manufacturersTask, fuelTypesTask, transmissionsTask);
 
                 var manufacturers = JsonSerializer.Deserialize<List<NamedObjectDto>>(await manufacturersTask, _options) ?? new List<NamedObjectDto>();

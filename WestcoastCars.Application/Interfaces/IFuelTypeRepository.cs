@@ -7,4 +7,3 @@ public interface IFuelTypeRepository : IRepository<FuelType>
 {
     Task<FuelType?> FindByNameWithVehiclesAsync(string name);
 }
-

@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using WestcoastCars.Api.Controllers;
@@ -21,7 +22,7 @@ public class AuthenticationControllerTests
     [Fact]
     public async Task Login_ShouldReturnOk_WhenLoginIsSuccessful()
     {
-        var controller = new AuthenticationController(_authServiceMock.Object);
+        var controller = CreateController();
         var authResult = new AuthenticationResult(
             new AuthenticatedUser(Guid.NewGuid(), "John", "Doe", "john.doe@example.com"),
             "some-jwt-token"
@@ -42,7 +43,7 @@ public class AuthenticationControllerTests
     [Fact]
     public async Task Login_ShouldReturnUnauthorized_WhenCredentialsAreInvalid()
     {
-        var controller = new AuthenticationController(_authServiceMock.Object);
+        var controller = CreateController();
 
         _authServiceMock
             .Setup(service => service.LoginAsync("john.doe@example.com", "WrongPassword!"))
@@ -50,28 +51,31 @@ public class AuthenticationControllerTests
 
         var result = await controller.Login(new LoginRequest("john.doe@example.com", "WrongPassword!"));
 
-        Assert.IsType<UnauthorizedObjectResult>(result);
+        var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
+        var problemDetails = Assert.IsType<ProblemDetails>(unauthorizedResult.Value);
+        Assert.Equal(StatusCodes.Status401Unauthorized, problemDetails.Status);
+        Assert.Equal("Unauthorized", problemDetails.Title);
+        Assert.Equal("Invalid credentials", problemDetails.Detail);
     }
 
     [Fact]
-    public async Task Login_ShouldReturnBadRequest_WhenLoginThrows()
+    public async Task Login_ShouldPropagateException_WhenLoginThrows()
     {
-        var controller = new AuthenticationController(_authServiceMock.Object);
+        var controller = CreateController();
+        var exception = new Exception("Auth failed.");
 
         _authServiceMock
             .Setup(service => service.LoginAsync(It.IsAny<string>(), It.IsAny<string>()))
-            .ThrowsAsync(new Exception("Auth failed."));
+            .ThrowsAsync(exception);
 
-        var result = await controller.Login(new LoginRequest("john.doe@example.com", "Password123!"));
-
-        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-        AssertBadRequestMessage(badRequestResult, "Auth failed.");
+        var actual = await Assert.ThrowsAsync<Exception>(() => controller.Login(new LoginRequest("john.doe@example.com", "Password123!")));
+        Assert.Same(exception, actual);
     }
 
     [Fact]
     public async Task Register_ShouldReturnOk_WhenRegistrationIsSuccessful()
     {
-        var controller = new AuthenticationController(_authServiceMock.Object);
+        var controller = CreateController();
         var authResult = new AuthenticationResult(
             new AuthenticatedUser(Guid.NewGuid(), "Jane", "Doe", "jane.doe@example.com"),
             "registered-jwt-token"
@@ -90,26 +94,28 @@ public class AuthenticationControllerTests
     }
 
     [Fact]
-    public async Task Register_ShouldReturnBadRequest_WhenRegistrationFails()
+    public async Task Register_ShouldPropagateException_WhenRegistrationFails()
     {
-        var controller = new AuthenticationController(_authServiceMock.Object);
+        var controller = CreateController();
+        var exception = new Exception("User already exists.");
 
         _authServiceMock
             .Setup(service => service.RegisterAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
-            .ThrowsAsync(new Exception("User already exists."));
+            .ThrowsAsync(exception);
 
-        var result = await controller.Register(new RegisterRequest("Jane", "Doe", "jane.doe@example.com", "Password123!"));
-
-        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-        AssertBadRequestMessage(badRequestResult, "User already exists.");
+        var actual = await Assert.ThrowsAsync<Exception>(() => controller.Register(new RegisterRequest("Jane", "Doe", "jane.doe@example.com", "Password123!")));
+        Assert.Same(exception, actual);
     }
 
-    private static void AssertBadRequestMessage(BadRequestObjectResult badRequestResult, string expectedMessage)
+    private AuthenticationController CreateController()
     {
-        Assert.NotNull(badRequestResult.Value);
-        var messageProperty = badRequestResult.Value.GetType().GetProperty("message");
-        Assert.NotNull(messageProperty);
-        Assert.Equal(expectedMessage, messageProperty.GetValue(badRequestResult.Value));
+        return new AuthenticationController(_authServiceMock.Object)
+        {
+            ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            }
+        };
     }
 }
 
@@ -147,25 +153,16 @@ public class AdminControllerTests
     }
 
     [Fact]
-    public async Task CreateUser_ShouldReturnBadRequest_WhenServiceFails()
+    public async Task CreateUser_ShouldPropagateException_WhenServiceFails()
     {
         var controller = new AdminController(_adminServiceMock.Object);
+        var exception = new Exception("Invalid role.");
 
         _adminServiceMock
             .Setup(service => service.CreateUserAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
-            .ThrowsAsync(new Exception("Invalid role."));
+            .ThrowsAsync(exception);
 
-        var result = await controller.CreateUser(new CreateUserRequest("Sales", "User", "sales@example.com", "Password123!", "Invalid"));
-
-        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-        AssertBadRequestMessage(badRequestResult, "Invalid role.");
-    }
-
-    private static void AssertBadRequestMessage(BadRequestObjectResult badRequestResult, string expectedMessage)
-    {
-        Assert.NotNull(badRequestResult.Value);
-        var messageProperty = badRequestResult.Value.GetType().GetProperty("message");
-        Assert.NotNull(messageProperty);
-        Assert.Equal(expectedMessage, messageProperty.GetValue(badRequestResult.Value));
+        var actual = await Assert.ThrowsAsync<Exception>(() => controller.CreateUser(new CreateUserRequest("Sales", "User", "sales@example.com", "Password123!", "Invalid")));
+        Assert.Same(exception, actual);
     }
 }

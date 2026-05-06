@@ -9,7 +9,7 @@ using WestcoastCars.Application.Exceptions;
 
 namespace WestcoastCars.Application.Features.Transmissions.Commands.Create
 {
-    public class CreateTransmissionCommandHandler : IRequestHandler<CreateTransmissionCommand, NamedObjectDto?>
+    public class CreateTransmissionCommandHandler : IRequestHandler<CreateTransmissionCommand, NamedObjectDto>
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
@@ -20,7 +20,7 @@ namespace WestcoastCars.Application.Features.Transmissions.Commands.Create
             _mapper = mapper;
         }
 
-        public async Task<NamedObjectDto?> Handle(CreateTransmissionCommand request, CancellationToken cancellationToken)
+        public async Task<NamedObjectDto> Handle(CreateTransmissionCommand request, CancellationToken cancellationToken)
         {
             var repository = _unitOfWork.Repository<TransmissionType>();
             if (repository is null) throw new InvalidOperationException("Repository for TransmissionType is not available.");
@@ -33,14 +33,10 @@ namespace WestcoastCars.Application.Features.Transmissions.Commands.Create
             }
 
             var transmissionTypeToAdd = new TransmissionType { Name = request.Name };
-            await repository.AddAsync(transmissionTypeToAdd!);
+            await repository.AddAsync(transmissionTypeToAdd);
 
-            if (await _unitOfWork.CompleteAsync() > 0)
-            {
-                return _mapper.Map<NamedObjectDto>(transmissionTypeToAdd!);
-            }
-
-            return null;
+            await _unitOfWork.CompleteOrThrowAsync("Failed to create transmission type");
+            return _mapper.Map<NamedObjectDto>(transmissionTypeToAdd);
         }
     }
 }

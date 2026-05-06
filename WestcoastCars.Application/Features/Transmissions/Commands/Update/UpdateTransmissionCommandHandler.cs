@@ -38,7 +38,7 @@ namespace WestcoastCars.Application.Features.Transmissions.Commands.Update
             transmissionTypeToUpdate!.Name = request.Name;
             repository.Update(transmissionTypeToUpdate!);
 
-            await _unitOfWork.CompleteAsync();
+            await _unitOfWork.CompleteOrThrowAsync("Failed to update transmission type");
         }
     }
 }

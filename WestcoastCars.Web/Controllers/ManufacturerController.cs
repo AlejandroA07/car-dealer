@@ -63,20 +63,20 @@ namespace WestcoastCars.Web.Controllers
                 TempData["error"] = "API Error: Could not create manufacturer";
                 model.Manufacturers = await _manufacturerService.ListAllAsync();
                 return View(model);
-                }
-                catch (Exception ex)
-                {
+            }
+            catch (Exception ex)
+            {
                 _logger.LogError(ex, "Error in Create POST");
                 TempData["error"] = "An unexpected error occurred";
                 return View("Errors");
-                }
-                }
+            }
+        }
 
-                [HttpGet("Delete/{id}")]
-                public async Task<IActionResult> Delete(int id)
-                {
-                try
-                {
+        [HttpGet("Delete/{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            try
+            {
                 var result = await _manufacturerService.DeleteAsync(id);
                 if (result)
                 {
@@ -85,13 +85,13 @@ namespace WestcoastCars.Web.Controllers
                 }
                 TempData["error"] = "Could not delete manufacturer";
                 return View("Errors");
-                }
-                catch (Exception ex)
-                {
+            }
+            catch (Exception ex)
+            {
                 _logger.LogError(ex, "Error in Delete");
                 TempData["error"] = "An unexpected error occurred";
                 return View("Errors");
-                }
-                }
+            }
+        }
     }
 }

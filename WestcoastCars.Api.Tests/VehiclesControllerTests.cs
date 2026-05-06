@@ -90,7 +90,7 @@ public class VehiclesControllerTests
         // Arrange
         var command = new CreateVehicleCommand { RegistrationNumber = "NEWCAR1" };
         var vehicle = new VehicleDetailsDto { Id = 1, RegistrationNumber = "NEWCAR1" };
-        
+
         _mediatorMock.Setup(m => m.Send(It.IsAny<CreateVehicleCommand>(), default)).ReturnsAsync(1);
         _mediatorMock.Setup(m => m.Send(It.IsAny<GetVehicleByIdQuery>(), default)).ReturnsAsync(vehicle);
 

@@ -54,12 +54,8 @@ namespace WestcoastCars.Application.Features.Vehicles.Commands.Create
 
             await _unitOfWork.VehicleRepository.AddAsync(vehicle);
 
-            if (await _unitOfWork.CompleteAsync() > 0)
-            {
-                return vehicle.Id;
-            }
-
-            throw new Exception("Failed to create vehicle");
+            await _unitOfWork.CompleteOrThrowAsync("Failed to create vehicle");
+            return vehicle.Id;
         }
     }
 }

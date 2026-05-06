@@ -21,6 +21,17 @@ namespace WestcoastCars.Application.Exceptions
                 .ToDictionary(failureGroup => failureGroup.Key, failureGroup => failureGroup.ToArray());
         }
 
+        public ValidationException(IDictionary<string, string[]> errors)
+            : this()
+        {
+            Errors = errors;
+        }
+
+        public ValidationException(string propertyName, IEnumerable<string> errors)
+            : this(new Dictionary<string, string[]> { [propertyName] = errors.ToArray() })
+        {
+        }
+
         public IDictionary<string, string[]> Errors { get; }
     }
 }

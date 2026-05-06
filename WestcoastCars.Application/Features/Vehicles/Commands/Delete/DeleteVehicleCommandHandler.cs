@@ -25,12 +25,8 @@ namespace WestcoastCars.Application.Features.Vehicles.Commands.Delete
 
             _unitOfWork.VehicleRepository.Remove(vehicle);
 
-            if (await _unitOfWork.CompleteAsync() > 0)
-            {
-                return Unit.Value;
-            }
-
-            throw new Exception("Failed to delete vehicle");
+            await _unitOfWork.CompleteOrThrowAsync("Failed to delete vehicle");
+            return Unit.Value;
         }
     }
 }

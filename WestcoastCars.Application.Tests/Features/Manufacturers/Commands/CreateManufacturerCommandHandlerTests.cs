@@ -32,7 +32,6 @@ public class CreateManufacturerCommandHandlerTests
     {
         // Arrange
         var command = new CreateManufacturerCommand { Name = "Volvo" };
-        var manufacturer = new Manufacturer { Id = 1, Name = "Volvo" };
         var expectedDto = new NamedObjectDto { Id = 1, Name = "Volvo" };
 
         _manufacturerRepositoryMock.Setup(r => r.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<Manufacturer, bool>>>()))
@@ -48,6 +47,20 @@ public class CreateManufacturerCommandHandlerTests
         Assert.Equal(expectedDto.Name, result.Name);
         _manufacturerRepositoryMock.Verify(r => r.AddAsync(It.IsAny<Manufacturer>()), Times.Once);
         _unitOfWorkMock.Verify(u => u.CompleteAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_ShouldThrowPersistenceException_WhenSaveAffectsNoRows()
+    {
+        // Arrange
+        var command = new CreateManufacturerCommand { Name = "Volvo" };
+
+        _manufacturerRepositoryMock.Setup(r => r.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<Manufacturer, bool>>>()))
+            .ReturnsAsync((Manufacturer?)null);
+        _unitOfWorkMock.Setup(u => u.CompleteAsync()).ReturnsAsync(0);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<PersistenceException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
     [Fact]

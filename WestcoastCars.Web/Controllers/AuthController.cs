@@ -61,7 +61,7 @@ namespace WestcoastCars.Web.Controllers
 
                 var handler = new JwtSecurityTokenHandler();
                 var jwtToken = handler.ReadJwtToken(result.Token);
-                
+
                 var roleClaims = jwtToken.Claims.Where(c => c.Type == "role" || c.Type == ClaimTypes.Role);
                 foreach (var roleClaim in roleClaims)
                 {
