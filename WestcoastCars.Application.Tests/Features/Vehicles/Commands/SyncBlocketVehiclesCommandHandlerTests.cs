@@ -59,6 +59,7 @@ public class SyncBlocketVehiclesCommandHandlerTests
             .Returns<BlocketCarSearchItem, BlocketCarAdDetails, DateTime>((item, _, importedAt) => new BlocketVehicleImportData
             {
                 ExternalListingId = item.Id,
+                RegistrationNumber = $"REG{item.Id}",
                 ImportedAt = importedAt,
                 Manufacturer = "VOLVO",
                 Model = $"Model {item.Id}",
@@ -105,6 +106,7 @@ public class SyncBlocketVehiclesCommandHandlerTests
             .Returns<BlocketCarSearchItem, BlocketCarAdDetails, DateTime>((item, _, importedAt) => new BlocketVehicleImportData
             {
                 ExternalListingId = item.Id,
+                RegistrationNumber = $"REG{item.Id}",
                 ImportedAt = importedAt,
                 Manufacturer = "AUDI",
                 Model = $"Model {item.Id}",
@@ -146,8 +148,8 @@ public class SyncBlocketVehiclesCommandHandlerTests
     {
         var existingVehicles = new List<Vehicle>
         {
-            new() { Id = 1, Source = "Blocket", Model = "Old", ModelYear = "2020", ImageUrl = "x", Description = "x", Manufacturer = new Manufacturer { Name = "VOLVO" }, FuelType = new FuelType { Name = "Petrol" }, TransmissionType = new TransmissionType { Name = "Automatic" } },
-            new() { Id = 2, Source = null, Model = "Manual", ModelYear = "2021", ImageUrl = "x", Description = "x", Manufacturer = new Manufacturer { Name = "VOLVO" }, FuelType = new FuelType { Name = "Petrol" }, TransmissionType = new TransmissionType { Name = "Automatic" } }
+            new() { Id = 1, Source = "Blocket", RegistrationNumber = "OLD001", Model = "Old", ModelYear = "2020", ImageUrl = "x", Description = "x", Manufacturer = new Manufacturer { Name = "VOLVO" }, FuelType = new FuelType { Name = "Petrol" }, TransmissionType = new TransmissionType { Name = "Automatic" } },
+            new() { Id = 2, Source = null, RegistrationNumber = "MAN001", Model = "Manual", ModelYear = "2021", ImageUrl = "x", Description = "x", Manufacturer = new Manufacturer { Name = "VOLVO" }, FuelType = new FuelType { Name = "Petrol" }, TransmissionType = new TransmissionType { Name = "Automatic" } }
         };
 
         _vehicleRepositoryMock
@@ -179,6 +181,7 @@ public class SyncBlocketVehiclesCommandHandlerTests
             .Returns(new BlocketVehicleImportData
             {
                 ExternalListingId = "10",
+                RegistrationNumber = "REG10",
                 Manufacturer = "VOLVO",
                 FuelType = "Petrol",
                 TransmissionType = "Automatic",
@@ -233,9 +236,9 @@ public class SyncBlocketVehiclesCommandHandlerTests
 
         _mapperMock
             .SetupSequence(mapper => mapper.Map(It.IsAny<BlocketCarSearchItem>(), It.IsAny<BlocketCarAdDetails>(), It.IsAny<DateTime>()))
-            .Returns(new BlocketVehicleImportData { ExternalListingId = "1", Manufacturer = "VOLVO", FuelType = "Petrol", TransmissionType = "Automatic", Model = "A", ModelYear = "2024", ImageUrl = "x", Description = "x" })
-            .Returns(new BlocketVehicleImportData { ExternalListingId = "1", Manufacturer = "VOLVO", FuelType = "Petrol", TransmissionType = "Automatic", Model = "B", ModelYear = "2024", ImageUrl = "x", Description = "x" })
-            .Returns(new BlocketVehicleImportData { ExternalListingId = "2", Manufacturer = "VOLVO", FuelType = "Petrol", TransmissionType = "Automatic", Model = "C", ModelYear = "2024", ImageUrl = "x", Description = "x" });
+            .Returns(new BlocketVehicleImportData { ExternalListingId = "1", RegistrationNumber = "REG1", Manufacturer = "VOLVO", FuelType = "Petrol", TransmissionType = "Automatic", Model = "A", ModelYear = "2024", ImageUrl = "x", Description = "x" })
+            .Returns(new BlocketVehicleImportData { ExternalListingId = "1", RegistrationNumber = "REG1", Manufacturer = "VOLVO", FuelType = "Petrol", TransmissionType = "Automatic", Model = "B", ModelYear = "2024", ImageUrl = "x", Description = "x" })
+            .Returns(new BlocketVehicleImportData { ExternalListingId = "2", RegistrationNumber = "REG2", Manufacturer = "VOLVO", FuelType = "Petrol", TransmissionType = "Automatic", Model = "C", ModelYear = "2024", ImageUrl = "x", Description = "x" });
 
         var result = await _handler.Handle(new SyncBlocketVehiclesCommand { Limit = 3 }, CancellationToken.None);
 
@@ -267,6 +270,7 @@ public class SyncBlocketVehiclesCommandHandlerTests
             .Returns<BlocketCarSearchItem, BlocketCarAdDetails, DateTime>((item, _, importedAt) => new BlocketVehicleImportData
             {
                 ExternalListingId = item.Id,
+                RegistrationNumber = $"REG{item.Id}",
                 Manufacturer = "VOLVO",
                 FuelType = "Petrol",
                 TransmissionType = "Automatic",
@@ -315,6 +319,7 @@ public class SyncBlocketVehiclesCommandHandlerTests
             .Returns(new BlocketVehicleImportData
             {
                 ExternalListingId = "1",
+                RegistrationNumber = "REG1",
                 Manufacturer = " Saab ",
                 FuelType = "Diesel",
                 TransmissionType = "Manual",
@@ -326,6 +331,7 @@ public class SyncBlocketVehiclesCommandHandlerTests
             .Returns(new BlocketVehicleImportData
             {
                 ExternalListingId = "2",
+                RegistrationNumber = "REG2",
                 Manufacturer = "SAAB",
                 FuelType = " diesel ",
                 TransmissionType = "manual",
