@@ -1,12 +1,16 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using WestcoastCars.Application.Common.Interfaces.Authentication;
+using WestcoastCars.Application.Common.Interfaces.Services;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Infrastructure.Clients;
+using WestcoastCars.Infrastructure.Authentication;
 using WestcoastCars.Infrastructure.Data;
 using WestcoastCars.Infrastructure.Options;
 using WestcoastCars.Infrastructure.Repositories;
-using WestcoastCars.Infrastructure.BackgroundJobs;
+using WestcoastCars.Infrastructure.Services;
 using System;
 
 namespace WestcoastCars.Infrastructure;
@@ -51,7 +55,23 @@ public static class DependencyInjection
         services.AddScoped<ITransmissionTypeRepository, TransmissionTypeRepository>();
         services.AddScoped<IServiceBookingRepository, ServiceBookingRepository>();
 
-        services.AddHostedService<OutboxProcessor>();
+        services.AddIdentity<IdentityUser, IdentityRole>(options =>
+        {
+            options.Password.RequireDigit = true;
+            options.Password.RequireLowercase = true;
+            options.Password.RequireUppercase = true;
+            options.Password.RequireNonAlphanumeric = false;
+            options.Password.RequiredLength = 6;
+        })
+        .AddEntityFrameworkStores<WestcoastCarsContext>()
+        .AddDefaultTokenProviders();
+
+        services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
+
+        services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
+        services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
+        services.AddScoped<WestcoastCars.Application.Services.IAuthService, AuthService>();
+        services.AddScoped<WestcoastCars.Application.Services.IAdminService, AdminService>();
 
         return services;
     }

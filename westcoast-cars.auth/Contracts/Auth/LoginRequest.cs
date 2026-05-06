@@ -1,6 +1,0 @@
-namespace WestcoastCars.Auth.Contracts.Auth;
-
-public record LoginRequest(
-    string Email,
-    string Password
-);

@@ -6,14 +6,13 @@ Westcoast Cars is a .NET 9 sample application for a car dealership platform. It 
 
 This repository runs as a Docker Compose stack:
 
-- **web** (`westcoast-cars.web`): ASP.NET Core MVC app (user-facing UI)
-- **api** (`westcoast-cars.api`): REST API for inventory, service bookings, and authentication/authorization
-- **db**: PostgreSQL database used by both EF Core contexts
+- **web** (`WestcoastCars.Web`): ASP.NET Core MVC app (user-facing UI)
+- **api** (`WestcoastCars.Api`): REST API for inventory, service bookings, and authentication/authorization
+- **db**: PostgreSQL database used by EF Core
 
-The API keeps two EF Core contexts for code isolation:
+The API uses one EF Core context:
 
-- `WestcoastCarsContext`: business data in the default PostgreSQL schema
-- `AuthDbContext`: ASP.NET Core Identity/auth data in the `auth` schema
+- `WestcoastCarsContext`: business tables and ASP.NET Core Identity tables in the default PostgreSQL schema
 
 ## Tech stack
 
@@ -141,8 +140,8 @@ Railway provides private networking between services. Every service gets an inte
 
 Create two services from the same repo and set each to build from a different Dockerfile:
 
-- `web` (Dockerfile: `westcoast-cars.web/Dockerfile`)
-- `api` (Dockerfile: `westcoast-cars.api/Dockerfile`)
+- `web` (Dockerfile: `WestcoastCars.Web/Dockerfile`)
+- `api` (Dockerfile: `WestcoastCars.Api/Dockerfile`)
 
 Recommended: make only `web` publicly reachable and keep `api` private. The web app reaches `api` via Railway private DNS.
 
@@ -185,23 +184,23 @@ You need one connection string plus a JWT secret and admin seed password.
 
 API:
 ```bash
-dotnet user-secrets init --project westcoast-cars.api/westcoast-cars.api.csproj
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=westcoast_cars;Username=postgres;Password=YourLocalPassword;" --project westcoast-cars.api/westcoast-cars.api.csproj
-dotnet user-secrets set "JwtSettings:Secret" "<YOUR_GENERATED_SECRET>" --project westcoast-cars.api/westcoast-cars.api.csproj
-dotnet user-secrets set "AdminSettings:Password" "ChangeThisAdminPassword!" --project westcoast-cars.api/westcoast-cars.api.csproj
+dotnet user-secrets init --project WestcoastCars.Api/WestcoastCars.Api.csproj
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=westcoast_cars;Username=postgres;Password=YourLocalPassword;" --project WestcoastCars.Api/WestcoastCars.Api.csproj
+dotnet user-secrets set "JwtSettings:Secret" "<YOUR_GENERATED_SECRET>" --project WestcoastCars.Api/WestcoastCars.Api.csproj
+dotnet user-secrets set "AdminSettings:Password" "ChangeThisAdminPassword!" --project WestcoastCars.Api/WestcoastCars.Api.csproj
 ```
 
 Web:
 ```bash
-dotnet user-secrets init --project westcoast-cars.web/westcoast-cars.web.csproj
-dotnet user-secrets set "Services:ApiUrl" "http://localhost:5001" --project westcoast-cars.web/westcoast-cars.web.csproj
+dotnet user-secrets init --project WestcoastCars.Web/WestcoastCars.Web.csproj
+dotnet user-secrets set "Services:ApiUrl" "http://localhost:5001" --project WestcoastCars.Web/WestcoastCars.Web.csproj
 ```
 
 ### Run services (2 terminals)
 
 ```bash
-dotnet run --project westcoast-cars.api/westcoast-cars.api.csproj
-dotnet run --project westcoast-cars.web/westcoast-cars.web.csproj
+dotnet run --project WestcoastCars.Api/WestcoastCars.Api.csproj
+dotnet run --project WestcoastCars.Web/WestcoastCars.Web.csproj
 ```
 
 ## Tests
@@ -220,7 +219,7 @@ POST /api/v1/vehicles/import/blocket
 
 Requirements:
 - Authenticated user with `Admin` or `Salesperson` role
-- `BlocketApi` settings configured in `westcoast-cars.api/appsettings*.json`
+- `BlocketApi` settings configured in `WestcoastCars.Api/appsettings*.json`
 - `JwtSettings__Secret` configured consistently for the API and auth service
 
 Example payload:

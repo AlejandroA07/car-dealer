@@ -1,0 +1,73 @@
+@model WestcoastCars.Web.ViewModels.Auth.LoginViewModel
+
+@{
+    ViewData["Title"] = "Logga in";
+    ViewData["HideChrome"] = true;
+    Layout = "_Layout";
+}
+
+<section class="auth-login-page">
+    <div class="auth-login-shell">
+        <div class="auth-login-panel">
+            <div class="auth-login-card">
+                <div class="auth-brand-block">
+                    <h1>Westcoast Cars</h1>
+                    <p>Nordisk enkelhet i varje steg</p>
+                </div>
+
+                <div class="auth-login-heading">
+                    <h2>Logga in</h2>
+                </div>
+
+                <form asp-controller="Auth" asp-action="Login" asp-route-returnurl="@Model.ReturnUrl" method="post" class="auth-login-form" novalidate>
+                    <input asp-for="ReturnUrl" type="hidden" />
+
+                    <div asp-validation-summary="ModelOnly" class="auth-validation-summary"></div>
+
+                    <div class="auth-field">
+                        <label asp-for="Email">E-postadress</label>
+                        <input asp-for="Email" type="email" autocomplete="username" placeholder="namn@exempel.com" />
+                        <span asp-validation-for="Email" class="auth-field-error"></span>
+                    </div>
+
+                    <div class="auth-field">
+                        <div class="auth-label-row">
+                            <label asp-for="Password">Lösenord</label>
+                            <span>Glömt lösenord?</span>
+                        </div>
+                        <input asp-for="Password" type="password" autocomplete="current-password" placeholder="••••••••" />
+                        <span asp-validation-for="Password" class="auth-field-error"></span>
+                    </div>
+
+                    <label class="auth-remember-row">
+                        <input asp-for="RememberMe" type="checkbox" />
+                        <span>Kom ihåg mig i 30 dagar</span>
+                    </label>
+
+                    <button type="submit" class="auth-submit-button">
+                        Logga in <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </form>
+
+                <div class="auth-catalog-link">
+                    <span>Intresserad av vårt lager?</span>
+                    <a asp-route="VehicleCatalog">Visa katalog</a>
+                </div>
+
+                <p class="auth-copyright">© 2026 Westcoast Cars. Alla rättigheter förbehållna.</p>
+            </div>
+        </div>
+
+        <aside class="auth-login-visual" aria-label="Westcoast Cars">
+            <div>
+                <span class="auth-visual-chip">Nordic engineering</span>
+                <h2>Horisonten väntar.</h2>
+                <p>Upplev tydlighet, kvalitet och personlig service med Westcoast Cars.</p>
+            </div>
+        </aside>
+    </div>
+</section>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

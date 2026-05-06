@@ -103,12 +103,28 @@ public class SyncBlocketVehiclesCommandHandler : IRequestHandler<SyncBlocketVehi
     private async Task<List<Vehicle>> BuildVehicleEntitiesAsync(IEnumerable<BlocketVehicleImportData> preparedVehicles)
     {
         var vehicles = new List<Vehicle>();
+        var preparedVehicleList = preparedVehicles as IReadOnlyCollection<BlocketVehicleImportData> ?? preparedVehicles.ToList();
 
-        foreach (var preparedVehicle in preparedVehicles)
+        if (preparedVehicleList.Count == 0)
         {
-            var manufacturer = await GetOrCreateManufacturerAsync(preparedVehicle.Manufacturer);
-            var fuelType = await GetOrCreateFuelTypeAsync(preparedVehicle.FuelType);
-            var transmissionType = await GetOrCreateTransmissionTypeAsync(preparedVehicle.TransmissionType);
+            return vehicles;
+        }
+
+        var manufacturersByName = BuildLookupDictionary(
+            await _unitOfWork.ManufacturerRepository.GetAllAsync(),
+            manufacturer => manufacturer.Name);
+        var fuelTypesByName = BuildLookupDictionary(
+            await _unitOfWork.FuelTypeRepository.GetAllAsync(),
+            fuelType => fuelType.Name);
+        var transmissionTypesByName = BuildLookupDictionary(
+            await _unitOfWork.TransmissionTypeRepository.GetAllAsync(),
+            transmissionType => transmissionType.Name);
+
+        foreach (var preparedVehicle in preparedVehicleList)
+        {
+            var manufacturer = await GetOrCreateManufacturerAsync(preparedVehicle.Manufacturer, manufacturersByName);
+            var fuelType = await GetOrCreateFuelTypeAsync(preparedVehicle.FuelType, fuelTypesByName);
+            var transmissionType = await GetOrCreateTransmissionTypeAsync(preparedVehicle.TransmissionType, transmissionTypesByName);
 
             vehicles.Add(new Vehicle
             {
@@ -136,51 +152,45 @@ public class SyncBlocketVehiclesCommandHandler : IRequestHandler<SyncBlocketVehi
         return vehicles;
     }
 
-    private async Task<Manufacturer> GetOrCreateManufacturerAsync(string manufacturerName)
+    private async Task<Manufacturer> GetOrCreateManufacturerAsync(string manufacturerName, IDictionary<string, Manufacturer> manufacturersByName)
     {
         var normalizedName = NormalizeLookupName(manufacturerName, "Unknown");
-        var existingManufacturer = await _unitOfWork.ManufacturerRepository
-            .FirstOrDefaultAsync(manufacturer => manufacturer.Name.ToUpper() == normalizedName.ToUpper());
-
-        if (existingManufacturer is not null)
+        if (manufacturersByName.TryGetValue(normalizedName, out var existingManufacturer))
         {
             return existingManufacturer;
         }
 
         var manufacturer = new Manufacturer { Name = normalizedName };
         await _unitOfWork.ManufacturerRepository.AddAsync(manufacturer);
+        manufacturersByName[normalizedName] = manufacturer;
         return manufacturer;
     }
 
-    private async Task<FuelType> GetOrCreateFuelTypeAsync(string fuelTypeName)
+    private async Task<FuelType> GetOrCreateFuelTypeAsync(string fuelTypeName, IDictionary<string, FuelType> fuelTypesByName)
     {
         var normalizedName = NormalizeLookupName(fuelTypeName, "Unknown");
-        var existingFuelType = await _unitOfWork.FuelTypeRepository
-            .FirstOrDefaultAsync(fuelType => fuelType.Name.ToUpper() == normalizedName.ToUpper());
-
-        if (existingFuelType is not null)
+        if (fuelTypesByName.TryGetValue(normalizedName, out var existingFuelType))
         {
             return existingFuelType;
         }
 
         var fuelType = new FuelType { Name = normalizedName };
         await _unitOfWork.FuelTypeRepository.AddAsync(fuelType);
+        fuelTypesByName[normalizedName] = fuelType;
         return fuelType;
     }
 
-    private async Task<TransmissionType> GetOrCreateTransmissionTypeAsync(string transmissionTypeName)
+    private async Task<TransmissionType> GetOrCreateTransmissionTypeAsync(string transmissionTypeName, IDictionary<string, TransmissionType> transmissionTypesByName)
     {
         var normalizedName = NormalizeLookupName(transmissionTypeName, "Unknown");
-        var existingTransmissionType = await _unitOfWork.TransmissionTypeRepository
-            .FirstOrDefaultAsync(transmissionType => transmissionType.Name.ToUpper() == normalizedName.ToUpper());
-
-        if (existingTransmissionType is not null)
+        if (transmissionTypesByName.TryGetValue(normalizedName, out var existingTransmissionType))
         {
             return existingTransmissionType;
         }
 
         var transmissionType = new TransmissionType { Name = normalizedName };
         await _unitOfWork.TransmissionTypeRepository.AddAsync(transmissionType);
+        transmissionTypesByName[normalizedName] = transmissionType;
         return transmissionType;
     }
 
@@ -197,5 +207,24 @@ public class SyncBlocketVehiclesCommandHandler : IRequestHandler<SyncBlocketVehi
     private static string NormalizeLookupName(string? value, string fallbackValue)
     {
         return string.IsNullOrWhiteSpace(value) ? fallbackValue : value.Trim();
+    }
+
+    private static Dictionary<string, TLookup> BuildLookupDictionary<TLookup>(
+        IEnumerable<TLookup> lookups,
+        Func<TLookup, string?> nameSelector)
+    {
+        var dictionary = new Dictionary<string, TLookup>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var lookup in lookups)
+        {
+            var name = NormalizeLookupName(nameSelector(lookup), "Unknown");
+
+            if (!dictionary.ContainsKey(name))
+            {
+                dictionary.Add(name, lookup);
+            }
+        }
+
+        return dictionary;
     }
 }
