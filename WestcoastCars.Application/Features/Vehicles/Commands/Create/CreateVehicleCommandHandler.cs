@@ -1,4 +1,3 @@
-using AutoMapper;
 using MediatR;
 using WestcoastCars.Application.Exceptions;
 using WestcoastCars.Application.Interfaces;
@@ -18,13 +17,6 @@ public class CreateVehicleCommandHandler : IRequestHandler<CreateVehicleCommand,
 
     public async Task<int> Handle(CreateVehicleCommand request, CancellationToken cancellationToken)
     {
-        // Check if vehicle already exists
-        var existing = await _unitOfWork.VehicleRepository.FindByRegistrationNumberAsync(request.RegistrationNumber);
-        if (existing != null)
-        {
-            throw new ConflictException($"Vehicle with registration number {request.RegistrationNumber} already exists");
-        }
-
         // Validate related entities
         var manufacturer = await _unitOfWork.ManufacturerRepository.GetByIdAsync(request.ManufacturerId);
         if (manufacturer == null) throw new NotFoundException($"Manufacturer with ID {request.ManufacturerId} not found");

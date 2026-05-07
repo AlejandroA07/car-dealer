@@ -157,7 +157,7 @@ public class SyncBlocketVehiclesCommandHandlerTests
             .ReturnsAsync([]);
 
         _vehicleRepositoryMock
-            .Setup(repository => repository.GetAllAsync())
+            .Setup(repository => repository.GetAllForReplacementAsync())
             .ReturnsAsync(existingVehicles);
 
         _blocketApiClientMock
@@ -195,6 +195,8 @@ public class SyncBlocketVehiclesCommandHandlerTests
 
         Assert.Equal(2, result.TotalReplaced);
         Assert.Equal(1, result.TotalImported);
+        _vehicleRepositoryMock.Verify(repository => repository.GetAllAsync(), Times.Never);
+        _vehicleRepositoryMock.Verify(repository => repository.GetAllForReplacementAsync(), Times.Once);
         _vehicleRepositoryMock.Verify(repository => repository.RemoveRange(It.Is<IEnumerable<Vehicle>>(vehicles => vehicles.Count() == 2)), Times.Once);
         _vehicleRepositoryMock.Verify(repository => repository.AddRangeAsync(It.Is<IEnumerable<Vehicle>>(vehicles => vehicles.Count() == 1)), Times.Once);
         _unitOfWorkMock.Verify(unitOfWork => unitOfWork.CompleteAsync(), Times.Once);
@@ -351,7 +353,7 @@ public class SyncBlocketVehiclesCommandHandlerTests
     private void SetupLookupRepositories()
     {
         _vehicleRepositoryMock
-            .Setup(repository => repository.GetAllAsync())
+            .Setup(repository => repository.GetAllForReplacementAsync())
             .ReturnsAsync([]);
 
         _manufacturerRepositoryMock

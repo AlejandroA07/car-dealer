@@ -76,7 +76,7 @@ public class SyncBlocketVehiclesCommandHandler : IRequestHandler<SyncBlocketVehi
         }
 
         var importedVehicles = await BuildVehicleEntitiesAsync(preparedVehicles);
-        var existingVehicles = (await _unitOfWork.VehicleRepository.GetAllAsync()).ToList();
+        var existingVehicles = (await _unitOfWork.VehicleRepository.GetAllForReplacementAsync()).ToList();
 
         _unitOfWork.VehicleRepository.RemoveRange(existingVehicles);
 

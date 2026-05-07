@@ -22,8 +22,6 @@ public class CreateTransmissionCommandHandler : IRequestHandler<CreateTransmissi
         var repository = _unitOfWork.TransmissionTypeRepository;
         if (repository is null) throw new InvalidOperationException("Repository for TransmissionType is not available.");
 
-        await repository.ThrowIfNameExistsAsync(request.Name, nameof(TransmissionType));
-
         var transmissionTypeToAdd = new TransmissionType { Name = request.Name };
         await repository.AddAsync(transmissionTypeToAdd);
 

@@ -8,35 +8,69 @@ namespace WestcoastCars.Infrastructure.Repositories;
 
 public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
 {
+    private const int DefaultPageSize = 20;
+    private const int MaxPageSize = 100;
+
     public VehicleRepository(WestcoastCarsContext context) : base(context)
     {
     }
 
     public async Task<Vehicle?> FindByRegistrationNumberAsync(string regNo)
     {
-        var normalizedRegNo = regNo.ToUpper();
+        var isPostgreSql = IsPostgreSql();
+        var normalizedRegNo = regNo.ToLowerInvariant();
 
-        return await _context.Vehicles
+        var query = _context.Vehicles
+            .AsNoTracking()
+            .Where(v => v.RegistrationNumber != null)
             .Include(v => v.Manufacturer)
             .Include(v => v.FuelType)
-            .Include(v => v.TransmissionType)
-            .SingleOrDefaultAsync(v => v.RegistrationNumber.ToUpper() == normalizedRegNo);
+            .Include(v => v.TransmissionType);
+
+        return isPostgreSql
+            ? await query.SingleOrDefaultAsync(v => v.RegistrationNumber == regNo)
+            : await query.SingleOrDefaultAsync(v => v.RegistrationNumber.ToLower() == normalizedRegNo);
     }
 
-    public async Task<IEnumerable<Vehicle>> SearchAsync(VehicleSearchDto search)
+    public async Task<PagedResult<Vehicle>> GetAllPagedAsync(PagedQueryDto pagination)
     {
-        var query = _context.Vehicles.AsQueryable();
+        var query = _context.Vehicles.AsNoTracking().AsQueryable();
+        return await ToPagedResultAsync(query, pagination.Page, pagination.PageSize);
+    }
+
+    public async Task<PagedResult<Vehicle>> GetUnsoldAsync(PagedQueryDto pagination)
+    {
+        var query = _context.Vehicles
+            .AsNoTracking()
+            .Where(v => !v.IsSold);
+
+        return await ToPagedResultAsync(query, pagination.Page, pagination.PageSize);
+    }
+
+    public async Task<IEnumerable<Vehicle>> GetAllForReplacementAsync()
+    {
+        return await _context.Vehicles.ToListAsync();
+    }
+
+    public async Task<PagedResult<Vehicle>> SearchAsync(VehicleSearchDto search)
+    {
+        var query = _context.Vehicles.AsNoTracking().AsQueryable();
+        var isPostgreSql = IsPostgreSql();
 
         if (!string.IsNullOrWhiteSpace(search.Make))
         {
-            var normalizedMake = search.Make.ToUpper();
-            query = query.Where(v => v.Manufacturer.Name.ToUpper().Contains(normalizedMake));
+            var makePattern = $"%{EscapeLikePattern(search.Make)}%";
+            query = isPostgreSql
+                ? query.Where(v => EF.Functions.ILike(v.Manufacturer.Name, makePattern, "\\"))
+                : query.Where(v => EF.Functions.Like(v.Manufacturer.Name.ToLower(), makePattern.ToLower()));
         }
 
         if (!string.IsNullOrWhiteSpace(search.Model))
         {
-            var normalizedModel = search.Model.ToUpper();
-            query = query.Where(v => v.Model.ToUpper().Contains(normalizedModel));
+            var modelPattern = $"%{EscapeLikePattern(search.Model)}%";
+            query = isPostgreSql
+                ? query.Where(v => EF.Functions.ILike(v.Model, modelPattern, "\\"))
+                : query.Where(v => EF.Functions.Like(v.Model.ToLower(), modelPattern.ToLower()));
         }
 
         if (search.MinYear.HasValue)
@@ -64,17 +98,14 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
             query = query.Where(v => v.IsSold == search.IsSold.Value);
         }
 
-        return await query
-            .Include(v => v.Manufacturer)
-
-            .Include(v => v.FuelType)
-            .Include(v => v.TransmissionType)
-            .ToListAsync();
+        return await ToPagedResultAsync(query, search.Page, search.PageSize);
     }
 
     public override async Task<Vehicle?> GetByIdAsync(int id)
     {
         return await _context.Vehicles
+            .AsNoTracking()
+            .Where(v => v.RegistrationNumber != null)
             .Include(v => v.Manufacturer)
             .Include(v => v.FuelType)
             .Include(v => v.TransmissionType)
@@ -84,9 +115,53 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
     public override async Task<IEnumerable<Vehicle>> GetAllAsync()
     {
         return await _context.Vehicles
+            .AsNoTracking()
+            .Where(v => v.RegistrationNumber != null)
             .Include(v => v.Manufacturer)
             .Include(v => v.FuelType)
             .Include(v => v.TransmissionType)
             .ToListAsync();
     }
+
+    private async Task<PagedResult<Vehicle>> ToPagedResultAsync(IQueryable<Vehicle> query, int page, int pageSize)
+    {
+        query = query.Where(v => v.RegistrationNumber != null);
+
+        var normalizedPage = page < 1 ? 1 : page;
+        var normalizedPageSize = pageSize < 1
+            ? DefaultPageSize
+            : Math.Min(pageSize, MaxPageSize);
+
+        var totalCount = await query.CountAsync();
+        var totalPages = Math.Max(1, (int)Math.Ceiling(totalCount / (double)normalizedPageSize));
+        var normalizedPageNumber = Math.Min(normalizedPage, totalPages);
+        var items = await query
+            .OrderBy(v => v.Id)
+            .Include(v => v.Manufacturer)
+            .Include(v => v.FuelType)
+            .Include(v => v.TransmissionType)
+            .Skip((normalizedPageNumber - 1) * normalizedPageSize)
+            .Take(normalizedPageSize)
+            .ToListAsync();
+
+        return new PagedResult<Vehicle>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            Page = normalizedPageNumber,
+            PageSize = normalizedPageSize
+        };
+    }
+
+    private static string EscapeLikePattern(string value) =>
+        value
+            .Replace("\\", "\\\\")
+            .Replace("%", "\\%")
+            .Replace("_", "\\_");
+
+    private bool IsPostgreSql() =>
+        string.Equals(
+            _context.Database.ProviderName,
+            "Npgsql.EntityFrameworkCore.PostgreSQL",
+            StringComparison.Ordinal);
 }

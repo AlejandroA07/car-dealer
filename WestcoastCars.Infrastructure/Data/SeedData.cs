@@ -22,7 +22,12 @@ public static class SeedData
 
         if (manufacturers is not null && manufacturers.Count > 0)
         {
-            await context.Manufacturers.AddRangeAsync(manufacturers);
+            var distinctManufacturers = manufacturers
+                .GroupBy(manufacturer => manufacturer.Name, StringComparer.OrdinalIgnoreCase)
+                .Select(group => group.First())
+                .ToList();
+
+            await context.Manufacturers.AddRangeAsync(distinctManufacturers);
             await context.SaveChangesAsync();
         }
     }
@@ -91,7 +96,12 @@ public static class SeedData
 
         if (fueltypes is not null && fueltypes.Count > 0)
         {
-            await context.FuelTypes.AddRangeAsync(fueltypes);
+            var distinctFuelTypes = fueltypes
+                .GroupBy(fuelType => fuelType.Name, StringComparer.OrdinalIgnoreCase)
+                .Select(group => group.First())
+                .ToList();
+
+            await context.FuelTypes.AddRangeAsync(distinctFuelTypes);
             await context.SaveChangesAsync();
         }
     }
@@ -112,7 +122,12 @@ public static class SeedData
 
         if (transmissions is not null && transmissions.Count > 0)
         {
-            await context.TransmissionTypes.AddRangeAsync(transmissions);
+            var distinctTransmissions = transmissions
+                .GroupBy(transmission => transmission.Name, StringComparer.OrdinalIgnoreCase)
+                .Select(group => group.First())
+                .ToList();
+
+            await context.TransmissionTypes.AddRangeAsync(distinctTransmissions);
             await context.SaveChangesAsync();
         }
     }

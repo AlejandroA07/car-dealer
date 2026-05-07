@@ -41,7 +41,7 @@ public class VehiclesController : ControllerBase
     /// <response code="200">Returns matching vehicles.</response>
     [HttpGet("search")]
     [AllowAnonymous]
-    [ProducesResponseType(typeof(IEnumerable<VehicleSummaryDto>), 200)]
+    [ProducesResponseType(typeof(PagedResult<VehicleSummaryDto>), 200)]
     public async Task<IActionResult> Search([FromQuery] VehicleSearchDto search)
     {
         _logger.LogInformation("Searching vehicles with criteria: {@Search}", search);
@@ -55,11 +55,15 @@ public class VehiclesController : ControllerBase
     /// <returns>A collection of unsold vehicles.</returns>
     [HttpGet("list")]
     [AllowAnonymous]
-    [ProducesResponseType(typeof(IEnumerable<VehicleSummaryDto>), 200)]
-    public async Task<IActionResult> ListAll()
+    [ProducesResponseType(typeof(PagedResult<VehicleSummaryDto>), 200)]
+    public async Task<IActionResult> ListAll([FromQuery] PagedQueryDto pagination)
     {
         _logger.LogInformation("Retrieving list of unsold vehicles via MediatR");
-        var result = await _mediator.Send(new ListAllVehiclesQuery());
+        var result = await _mediator.Send(new ListAllVehiclesQuery
+        {
+            Page = pagination.Page,
+            PageSize = pagination.PageSize
+        });
         return Ok(result);
     }
 
@@ -69,13 +73,17 @@ public class VehiclesController : ControllerBase
     /// <returns>A collection of all vehicles.</returns>
     [HttpGet("list-all")]
     [Authorize(Roles = "Admin,Salesperson")]
-    [ProducesResponseType(typeof(IEnumerable<VehicleSummaryDto>), 200)]
+    [ProducesResponseType(typeof(PagedResult<VehicleSummaryDto>), 200)]
     [ProducesResponseType(401)]
     [ProducesResponseType(403)]
-    public async Task<IActionResult> ListAllIncludingSold()
+    public async Task<IActionResult> ListAllIncludingSold([FromQuery] PagedQueryDto pagination)
     {
         _logger.LogInformation("Retrieving list of ALL vehicles (including sold) via MediatR");
-        var result = await _mediator.Send(new ListAllVehiclesIncludingSoldQuery());
+        var result = await _mediator.Send(new ListAllVehiclesIncludingSoldQuery
+        {
+            Page = pagination.Page,
+            PageSize = pagination.PageSize
+        });
         return Ok(result);
     }
 

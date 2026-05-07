@@ -20,6 +20,9 @@ partial class WestcoastCarsContextModelSnapshot : ModelSnapshot
             .HasAnnotation("Relational:MaxIdentifierLength", 63)
             .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
+        modelBuilder.HasPostgresExtension("citext");
+        modelBuilder.HasPostgresExtension("pg_trgm");
+
         modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
         {
             b.Property<string>("Id").HasColumnType("text");
@@ -112,8 +115,9 @@ partial class WestcoastCarsContextModelSnapshot : ModelSnapshot
         {
             b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("integer");
             NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-            b.Property<string>("Name").IsRequired().HasColumnType("text");
+            b.Property<string>("Name").IsRequired().HasColumnType("citext");
             b.HasKey("Id");
+            b.HasIndex("Name").IsUnique().HasDatabaseName("IX_FuelTypes_Name");
             b.ToTable("FuelTypes");
         });
 
@@ -123,6 +127,7 @@ partial class WestcoastCarsContextModelSnapshot : ModelSnapshot
             NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
             b.Property<string>("Name").IsRequired().HasColumnType("text");
             b.HasKey("Id");
+            b.HasIndex("Name").HasDatabaseName("IX_Manufacturers_Name_Trgm").HasMethod("GIN").HasOperators("gin_trgm_ops");
             b.ToTable("Manufacturers");
         });
 
@@ -147,8 +152,9 @@ partial class WestcoastCarsContextModelSnapshot : ModelSnapshot
         {
             b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("integer");
             NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-            b.Property<string>("Name").IsRequired().HasColumnType("text");
+            b.Property<string>("Name").IsRequired().HasColumnType("citext");
             b.HasKey("Id");
+            b.HasIndex("Name").IsUnique().HasDatabaseName("IX_TransmissionTypes_Name");
             b.ToTable("TransmissionTypes");
         });
 
@@ -169,7 +175,7 @@ partial class WestcoastCarsContextModelSnapshot : ModelSnapshot
             b.Property<string>("Model").IsRequired().HasColumnType("text");
             b.Property<string>("ModelYear").IsRequired().HasColumnType("text");
             b.Property<DateTime?>("PublishedAt").HasColumnType("timestamp with time zone");
-            b.Property<string>("RegistrationNumber").IsRequired().HasColumnType("text");
+            b.Property<string>("RegistrationNumber").IsRequired().HasColumnType("citext");
             b.Property<string>("Source").HasColumnType("text");
             b.Property<string>("SourceUrl").HasColumnType("text");
             b.Property<int>("TransmissionTypeId").HasColumnType("integer");
@@ -177,7 +183,10 @@ partial class WestcoastCarsContextModelSnapshot : ModelSnapshot
             b.HasKey("Id");
             b.HasIndex("ExternalListingId");
             b.HasIndex("FuelTypeId");
+            b.HasIndex("IsSold");
             b.HasIndex("ManufacturerId");
+            b.HasIndex("Model").HasDatabaseName("IX_Vehicles_Model").HasMethod("GIN").HasOperators("gin_trgm_ops");
+            b.HasIndex("RegistrationNumber").IsUnique().HasDatabaseName("IX_Vehicles_RegistrationNumber");
             b.HasIndex("Source");
             b.HasIndex("TransmissionTypeId");
             b.ToTable("Vehicles");

@@ -1,7 +1,6 @@
 using MediatR;
 using WestcoastCars.Application.Exceptions;
 using WestcoastCars.Application.Interfaces;
-using WestcoastCars.Domain.Entities;
 
 namespace WestcoastCars.Application.Features.Vehicles.Commands.Update;
 
@@ -26,11 +25,6 @@ public class UpdateVehicleCommandHandler : IRequestHandler<UpdateVehicleCommand,
         if (!string.IsNullOrEmpty(request.RegistrationNumber) &&
             request.RegistrationNumber != vehicle.RegistrationNumber)
         {
-            var existingVehicle = await _unitOfWork.VehicleRepository.FindByRegistrationNumberAsync(request.RegistrationNumber);
-            if (existingVehicle != null && existingVehicle.Id != request.Id)
-            {
-                throw new ConflictException($"Registration number {request.RegistrationNumber} already exists");
-            }
             vehicle.RegistrationNumber = request.RegistrationNumber;
         }
 

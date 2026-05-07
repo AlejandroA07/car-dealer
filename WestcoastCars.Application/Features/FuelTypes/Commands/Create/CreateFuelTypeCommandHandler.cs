@@ -22,8 +22,6 @@ public class CreateFuelTypeCommandHandler : IRequestHandler<CreateFuelTypeComman
         var repository = _unitOfWork.FuelTypeRepository;
         if (repository is null) throw new InvalidOperationException("Repository for FuelType is not available.");
 
-        await repository.ThrowIfNameExistsAsync(request.Name, nameof(FuelType));
-
         var fuelTypeToAdd = new FuelType { Name = request.Name };
         await repository.AddAsync(fuelTypeToAdd);
 

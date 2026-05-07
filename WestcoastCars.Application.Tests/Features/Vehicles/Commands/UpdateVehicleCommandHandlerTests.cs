@@ -1,10 +1,10 @@
+using MediatR;
 using Moq;
 using WestcoastCars.Application.Exceptions;
 using WestcoastCars.Application.Features.Vehicles.Commands.Update;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Domain.Entities;
 using Xunit;
-using MediatR;
 
 namespace WestcoastCars.Application.Tests.Features.Vehicles.Commands;
 
@@ -70,7 +70,6 @@ public class UpdateVehicleCommandHandlerTests
         var existingVehicle = CreateTestVehicle(vehicleId, "OLD123");
 
         _vehicleRepositoryMock.Setup(r => r.GetByIdAsync(vehicleId)).ReturnsAsync(existingVehicle);
-        _vehicleRepositoryMock.Setup(r => r.FindByRegistrationNumberAsync(command.RegistrationNumber)).ReturnsAsync((Vehicle?)null);
         _manufacturerRepositoryMock.Setup(r => r.GetByIdAsync(command.ManufacturerId)).ReturnsAsync(new Manufacturer { Id = 1, Name = "Make" });
         _fuelTypeRepositoryMock.Setup(r => r.GetByIdAsync(command.FuelTypeId)).ReturnsAsync(new FuelType { Id = 1, Name = "Fuel" });
         _transmissionTypeRepositoryMock.Setup(r => r.GetByIdAsync(command.TransmissionTypeId)).ReturnsAsync(new TransmissionType { Id = 1, Name = "Trans" });
@@ -108,7 +107,6 @@ public class UpdateVehicleCommandHandlerTests
         var existingVehicle = CreateTestVehicle(vehicleId, "OLD123");
 
         _vehicleRepositoryMock.Setup(r => r.GetByIdAsync(vehicleId)).ReturnsAsync(existingVehicle);
-        _vehicleRepositoryMock.Setup(r => r.FindByRegistrationNumberAsync(command.RegistrationNumber)).ReturnsAsync((Vehicle?)null);
         _manufacturerRepositoryMock.Setup(r => r.GetByIdAsync(command.ManufacturerId)).ReturnsAsync(new Manufacturer { Id = 1, Name = "Make" });
         _fuelTypeRepositoryMock.Setup(r => r.GetByIdAsync(command.FuelTypeId)).ReturnsAsync(new FuelType { Id = 1, Name = "Fuel" });
         _transmissionTypeRepositoryMock.Setup(r => r.GetByIdAsync(command.TransmissionTypeId)).ReturnsAsync(new TransmissionType { Id = 1, Name = "Trans" });
@@ -127,21 +125,5 @@ public class UpdateVehicleCommandHandlerTests
 
         // Act & Assert
         await Assert.ThrowsAsync<NotFoundException>(() => _handler.Handle(command, CancellationToken.None));
-    }
-
-    [Fact]
-    public async Task Handle_ShouldThrowConflictException_WhenRegistrationNumberExistsForOtherVehicle()
-    {
-        // Arrange
-        var vehicleId = 1;
-        var command = new UpdateVehicleCommand { Id = vehicleId, RegistrationNumber = "EXISTING" };
-        var existingVehicle = CreateTestVehicle(vehicleId, "OLD");
-        var otherVehicle = CreateTestVehicle(2, "EXISTING");
-
-        _vehicleRepositoryMock.Setup(r => r.GetByIdAsync(vehicleId)).ReturnsAsync(existingVehicle);
-        _vehicleRepositoryMock.Setup(r => r.FindByRegistrationNumberAsync(command.RegistrationNumber)).ReturnsAsync(otherVehicle);
-
-        // Act & Assert
-        await Assert.ThrowsAsync<ConflictException>(() => _handler.Handle(command, CancellationToken.None));
     }
 }

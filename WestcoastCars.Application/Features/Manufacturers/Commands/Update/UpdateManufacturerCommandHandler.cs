@@ -1,8 +1,7 @@
 
 using MediatR;
-using WestcoastCars.Application.Interfaces;
-using WestcoastCars.Domain.Entities;
 using WestcoastCars.Application.Exceptions;
+using WestcoastCars.Application.Interfaces;
 
 namespace WestcoastCars.Application.Features.Manufacturers.Commands.Update;
 
@@ -25,8 +24,6 @@ public class UpdateManufacturerCommandHandler : IRequestHandler<UpdateManufactur
         {
             throw new NotFoundException($"Manufacturer with id '{request.Id}' not found.");
         }
-
-        await repository.ThrowIfNameExistsAsync(request.Name, nameof(Manufacturer), request.Id);
 
         manufacturerToUpdate.Name = request.Name;
 

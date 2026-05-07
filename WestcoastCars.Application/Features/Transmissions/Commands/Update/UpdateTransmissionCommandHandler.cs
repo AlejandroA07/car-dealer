@@ -26,8 +26,6 @@ public class UpdateTransmissionCommandHandler : IRequestHandler<UpdateTransmissi
             throw new NotFoundException($"TransmissionType with id '{request.Id}' not found.");
         }
 
-        await repository.ThrowIfNameExistsAsync(request.Name, nameof(TransmissionType), request.Id);
-
         transmissionTypeToUpdate!.Name = request.Name;
         repository.Update(transmissionTypeToUpdate!);
 

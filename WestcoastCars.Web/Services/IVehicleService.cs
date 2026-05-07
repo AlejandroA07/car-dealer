@@ -5,7 +5,7 @@ namespace WestcoastCars.Web.Services;
 
 public interface IVehicleService
 {
-    Task<List<VehicleSummaryDto>> ListVehiclesAsync();
+    Task<PagedResult<VehicleSummaryDto>> ListVehiclesAsync(int page = 1, int pageSize = 20);
     Task<List<VehicleSummaryDto>> ListAllVehiclesAsync();
     Task<VehicleDetailsDto?> GetVehicleByIdAsync(int id);
     Task<bool> DeleteVehicleAsync(int id);
@@ -13,6 +13,6 @@ public interface IVehicleService
     Task<bool> UpdateVehicleAsync(int id, VehicleDto vehicle);
     Task<VehicleBaseViewModel> GetVehicleForCreateAsync();
     Task<bool> CreateVehicleAsync(VehicleBaseViewModel vehicleViewModel);
-    Task<List<VehicleSummaryDto>> SearchVehiclesAsync(VehicleSearchDto search);
+    Task<PagedResult<VehicleSummaryDto>> SearchVehiclesAsync(VehicleSearchDto search);
     Task<BlocketSyncViewModel> SyncBlocketAsync(BlocketSyncViewModel model);
 }

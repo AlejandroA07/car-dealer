@@ -1,15 +1,24 @@
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+using WestcoastCars.Infrastructure.Data;
 
 #nullable disable
 
 namespace WestcoastCars.Infrastructure.Migrations;
 
+[DbContext(typeof(WestcoastCarsContext))]
 [Migration("20260506000000_FixDomainEntityConsistency")]
 public partial class FixDomainEntityConsistency : Migration
 {
     protected override void Up(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.Sql("""UPDATE "Vehicles" SET "RegistrationNumber" = '' WHERE "RegistrationNumber" IS NULL;""");
+        migrationBuilder.Sql(
+            """
+            UPDATE "Vehicles"
+            SET "RegistrationNumber" = 'MISSING-' || "Id"::text
+            WHERE "RegistrationNumber" IS NULL
+               OR btrim("RegistrationNumber") = '';
+            """);
 
         migrationBuilder.AlterColumn<string>(
             name: "RegistrationNumber",

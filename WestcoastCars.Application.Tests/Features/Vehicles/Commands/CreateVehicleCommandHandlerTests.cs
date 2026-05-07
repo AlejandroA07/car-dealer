@@ -49,8 +49,6 @@ public class CreateVehicleCommandHandlerTests
             ImageUrl = "test.png"
         };
 
-        _vehicleRepositoryMock.Setup(r => r.FindByRegistrationNumberAsync(command.RegistrationNumber))
-            .ReturnsAsync((Vehicle?)null);
         _manufacturerRepositoryMock.Setup(r => r.GetByIdAsync(command.ManufacturerId))
             .ReturnsAsync(new Manufacturer { Id = 1, Name = "Volvo" });
         _fuelTypeRepositoryMock.Setup(r => r.GetByIdAsync(command.FuelTypeId))
@@ -86,8 +84,6 @@ public class CreateVehicleCommandHandlerTests
             ImageUrl = "test.png"
         };
 
-        _vehicleRepositoryMock.Setup(r => r.FindByRegistrationNumberAsync(command.RegistrationNumber))
-            .ReturnsAsync((Vehicle?)null);
         _manufacturerRepositoryMock.Setup(r => r.GetByIdAsync(command.ManufacturerId))
             .ReturnsAsync(new Manufacturer { Id = 1, Name = "Volvo" });
         _fuelTypeRepositoryMock.Setup(r => r.GetByIdAsync(command.FuelTypeId))
@@ -102,36 +98,10 @@ public class CreateVehicleCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ShouldThrowConflictException_WhenVehicleAlreadyExists()
-    {
-        // Arrange
-        var command = new CreateVehicleCommand { RegistrationNumber = "EXISTING" };
-        var existingVehicle = new Vehicle
-        {
-            RegistrationNumber = "EXISTING",
-            Model = "Test",
-            ModelYear = "2020",
-            ImageUrl = "test.png",
-            Description = "Test",
-            Manufacturer = new Manufacturer { Name = "Test" },
-            FuelType = new FuelType { Name = "Test" },
-            TransmissionType = new TransmissionType { Name = "Test" }
-        };
-
-        _vehicleRepositoryMock.Setup(r => r.FindByRegistrationNumberAsync(command.RegistrationNumber))
-            .ReturnsAsync(existingVehicle);
-
-        // Act & Assert
-        await Assert.ThrowsAsync<ConflictException>(() => _handler.Handle(command, CancellationToken.None));
-    }
-
-    [Fact]
     public async Task Handle_ShouldThrowNotFoundException_WhenManufacturerDoesNotExist()
     {
         // Arrange
         var command = new CreateVehicleCommand { RegistrationNumber = "NEW123", ManufacturerId = 99 };
-        _vehicleRepositoryMock.Setup(r => r.FindByRegistrationNumberAsync(command.RegistrationNumber))
-            .ReturnsAsync((Vehicle?)null);
         _manufacturerRepositoryMock.Setup(r => r.GetByIdAsync(command.ManufacturerId))
             .ReturnsAsync((Manufacturer?)null);
 

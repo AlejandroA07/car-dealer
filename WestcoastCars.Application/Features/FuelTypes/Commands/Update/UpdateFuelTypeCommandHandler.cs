@@ -26,8 +26,6 @@ public class UpdateFuelTypeCommandHandler : IRequestHandler<UpdateFuelTypeComman
             throw new NotFoundException($"FuelType with id '{request.Id}' not found.");
         }
 
-        await repository.ThrowIfNameExistsAsync(request.Name, nameof(FuelType), request.Id);
-
         fuelTypeToUpdate!.Name = request.Name;
         repository.Update(fuelTypeToUpdate!);
 

@@ -1,14 +1,11 @@
 using AutoMapper;
 using MediatR;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Contracts.DTOs;
 
 namespace WestcoastCars.Application.Features.Vehicles.Queries.ListAll;
 
-public class ListAllVehiclesQueryHandler : IRequestHandler<ListAllVehiclesQuery, IEnumerable<VehicleSummaryDto>>
+public class ListAllVehiclesQueryHandler : IRequestHandler<ListAllVehiclesQuery, PagedResult<VehicleSummaryDto>>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
@@ -19,10 +16,20 @@ public class ListAllVehiclesQueryHandler : IRequestHandler<ListAllVehiclesQuery,
         _mapper = mapper;
     }
 
-    public async Task<IEnumerable<VehicleSummaryDto>> Handle(ListAllVehiclesQuery request, CancellationToken cancellationToken)
+    public async Task<PagedResult<VehicleSummaryDto>> Handle(ListAllVehiclesQuery request, CancellationToken cancellationToken)
     {
-        var vehicles = await _unitOfWork.VehicleRepository.GetAllAsync();
-        var unsoldVehicles = vehicles.Where(v => !v.IsSold);
-        return _mapper.Map<IEnumerable<VehicleSummaryDto>>(unsoldVehicles);
+        var vehicles = await _unitOfWork.VehicleRepository.GetUnsoldAsync(new PagedQueryDto
+        {
+            Page = request.Page,
+            PageSize = request.PageSize
+        });
+
+        return new PagedResult<VehicleSummaryDto>
+        {
+            Items = _mapper.Map<List<VehicleSummaryDto>>(vehicles.Items),
+            TotalCount = vehicles.TotalCount,
+            Page = vehicles.Page,
+            PageSize = vehicles.PageSize
+        };
     }
 }

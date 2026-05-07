@@ -1,4 +1,3 @@
-
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -37,19 +36,25 @@ public class VehiclesControllerTests
     public async Task ListAll_ShouldReturnOkAndListOfVehicles()
     {
         // Arrange
-        var vehicles = new List<VehicleSummaryDto>
+        var vehicles = new PagedResult<VehicleSummaryDto>
         {
-            new VehicleSummaryDto { Id = 1, Name = "Volvo V60" }
+            Items = new List<VehicleSummaryDto>
+            {
+                new VehicleSummaryDto { Id = 1, Name = "Volvo V60" }
+            },
+            TotalCount = 1,
+            Page = 1,
+            PageSize = 20
         };
         _mediatorMock.Setup(m => m.Send(It.IsAny<ListAllVehiclesQuery>(), default)).ReturnsAsync(vehicles);
 
         // Act
-        var result = await _controller.ListAll();
+        var result = await _controller.ListAll(new PagedQueryDto());
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var returnValue = Assert.IsAssignableFrom<IEnumerable<VehicleSummaryDto>>(okResult.Value);
-        Assert.Single(returnValue);
+        var returnValue = Assert.IsType<PagedResult<VehicleSummaryDto>>(okResult.Value);
+        Assert.Single(returnValue.Items);
     }
 
     [Fact]

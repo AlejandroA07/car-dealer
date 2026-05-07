@@ -26,7 +26,10 @@ public class VehiclesController : Controller
     {
         try
         {
-            IList<VehicleSummaryDto> vehicles;
+            search.Page = page;
+            const int pageSize = 15;
+            search.PageSize = pageSize;
+            PagedResult<VehicleSummaryDto> result;
 
             // Check if any filter is applied (ignoring nulls)
             bool isFiltered = !string.IsNullOrEmpty(search.Make) ||
@@ -41,20 +44,12 @@ public class VehiclesController : Controller
             {
                 // Default to available cars if IsSold is not specified
                 if (!search.IsSold.HasValue) search.IsSold = false;
-                vehicles = await _vehicleService.SearchVehiclesAsync(search);
+                result = await _vehicleService.SearchVehiclesAsync(search);
             }
             else
             {
-                vehicles = await _vehicleService.ListVehiclesAsync();
+                result = await _vehicleService.ListVehiclesAsync(page, pageSize);
             }
-
-            const int pageSize = 15;
-            var totalVehicles = vehicles.Count;
-            var currentPage = Math.Clamp(page, 1, Math.Max(1, (int)Math.Ceiling(totalVehicles / (double)pageSize)));
-            var pagedVehicles = vehicles
-                .Skip((currentPage - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
 
             var manufacturers = await _manufacturerService.ListAllAsync();
             var manufacturerList = manufacturers.Select(m => new SelectListItem
@@ -66,12 +61,12 @@ public class VehiclesController : Controller
 
             var viewModel = new VehicleListViewModel
             {
-                Vehicles = pagedVehicles,
+                Vehicles = result.Items,
                 Search = search,
                 Manufacturers = manufacturerList,
-                CurrentPage = currentPage,
-                PageSize = pageSize,
-                TotalVehicles = totalVehicles
+                CurrentPage = result.Page,
+                PageSize = result.PageSize,
+                TotalVehicles = result.TotalCount
             };
 
             return View("Index", viewModel);

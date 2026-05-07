@@ -16,6 +16,7 @@ using FluentValidation;
 using WestcoastCars.Application.Common.Behaviors;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.OpenApi;
+using Npgsql;
 
 
 
@@ -137,6 +138,16 @@ using (var scope = app.Services.CreateScope())
         if (context.Database.IsRelational() && !context.Database.IsSqlite())
         {
             await context.Database.MigrateAsync();
+
+            if (context.Database.GetDbConnection() is NpgsqlConnection npgsqlConnection)
+            {
+                if (npgsqlConnection.State != System.Data.ConnectionState.Open)
+                {
+                    await npgsqlConnection.OpenAsync();
+                }
+
+                await npgsqlConnection.ReloadTypesAsync(CancellationToken.None);
+            }
         }
         else if (context.Database.IsSqlite())
         {

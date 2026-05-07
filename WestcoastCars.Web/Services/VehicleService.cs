@@ -25,28 +25,39 @@ public class VehicleService : IVehicleService
         _options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
     }
 
-    public async Task<List<VehicleSummaryDto>> ListVehiclesAsync()
+    public async Task<PagedResult<VehicleSummaryDto>> ListVehiclesAsync(int page = 1, int pageSize = 20)
     {
         return await ExecuteWithApiFallback(async () =>
         {
-            var response = await _httpClient.GetAsync($"{_baseUrl}/api/v1/vehicles/list");
+            var url = QueryHelpers.AddQueryString($"{_baseUrl}/api/v1/vehicles/list", new Dictionary<string, string?>
+            {
+                ["Page"] = page.ToString(),
+                ["PageSize"] = pageSize.ToString()
+            });
+            var response = await _httpClient.GetAsync(url);
 
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogError($"Error fetching vehicle list: {response.StatusCode}");
-                return new List<VehicleSummaryDto>();
+                return new PagedResult<VehicleSummaryDto> { Page = page, PageSize = pageSize };
             }
 
             var json = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<List<VehicleSummaryDto>>(json, _options) ?? new List<VehicleSummaryDto>();
-        }, new List<VehicleSummaryDto>(), "listing vehicles");
+            return JsonSerializer.Deserialize<PagedResult<VehicleSummaryDto>>(json, _options)
+                ?? new PagedResult<VehicleSummaryDto> { Page = page, PageSize = pageSize };
+        }, new PagedResult<VehicleSummaryDto> { Page = page, PageSize = pageSize }, "listing vehicles");
     }
 
     public async Task<List<VehicleSummaryDto>> ListAllVehiclesAsync()
     {
         return await ExecuteWithApiFallback(async () =>
         {
-            var response = await _httpClient.GetAsync($"{_baseUrl}/api/v1/vehicles/list-all");
+            var firstPageUrl = QueryHelpers.AddQueryString($"{_baseUrl}/api/v1/vehicles/list-all", new Dictionary<string, string?>
+            {
+                ["Page"] = "1",
+                ["PageSize"] = "100"
+            });
+            var response = await _httpClient.GetAsync(firstPageUrl);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -55,7 +66,43 @@ public class VehicleService : IVehicleService
             }
 
             var json = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<List<VehicleSummaryDto>>(json, _options) ?? new List<VehicleSummaryDto>();
+            var firstPage = JsonSerializer.Deserialize<PagedResult<VehicleSummaryDto>>(json, _options);
+            if (firstPage is null)
+            {
+                return new List<VehicleSummaryDto>();
+            }
+
+            var vehicles = new List<VehicleSummaryDto>(firstPage.Items);
+            var totalPages = firstPage.PageSize <= 0
+                ? 1
+                : (int)Math.Ceiling(firstPage.TotalCount / (double)firstPage.PageSize);
+
+            for (var currentPage = 2; currentPage <= totalPages; currentPage++)
+            {
+                var pageUrl = QueryHelpers.AddQueryString($"{_baseUrl}/api/v1/vehicles/list-all", new Dictionary<string, string?>
+                {
+                    ["Page"] = currentPage.ToString(),
+                    ["PageSize"] = firstPage.PageSize.ToString()
+                });
+
+                var pageResponse = await _httpClient.GetAsync(pageUrl);
+                if (!pageResponse.IsSuccessStatusCode)
+                {
+                    _logger.LogError($"Error fetching vehicle list page {currentPage}: {pageResponse.StatusCode}");
+                    break;
+                }
+
+                var pageJson = await pageResponse.Content.ReadAsStringAsync();
+                var pageResult = JsonSerializer.Deserialize<PagedResult<VehicleSummaryDto>>(pageJson, _options);
+                if (pageResult is null)
+                {
+                    break;
+                }
+
+                vehicles.AddRange(pageResult.Items);
+            }
+
+            return vehicles;
         }, new List<VehicleSummaryDto>(), "listing all vehicles");
     }
 
@@ -197,7 +244,7 @@ public class VehicleService : IVehicleService
         }, false, "creating vehicle");
     }
 
-    public async Task<List<VehicleSummaryDto>> SearchVehiclesAsync(VehicleSearchDto search)
+    public async Task<PagedResult<VehicleSummaryDto>> SearchVehiclesAsync(VehicleSearchDto search)
     {
         var queryParams = new Dictionary<string, string?>();
         if (!string.IsNullOrWhiteSpace(search.Make)) queryParams["Make"] = search.Make;
@@ -207,6 +254,8 @@ public class VehicleService : IVehicleService
         if (search.MinPrice.HasValue) queryParams["MinPrice"] = search.MinPrice.Value.ToString();
         if (search.MaxPrice.HasValue) queryParams["MaxPrice"] = search.MaxPrice.Value.ToString();
         if (search.IsSold.HasValue) queryParams["IsSold"] = search.IsSold.Value.ToString();
+        queryParams["Page"] = search.Page.ToString();
+        queryParams["PageSize"] = search.PageSize.ToString();
 
         return await ExecuteWithApiFallback(async () =>
         {
@@ -217,12 +266,13 @@ public class VehicleService : IVehicleService
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogError($"Error searching vehicles: {response.StatusCode}");
-                return new List<VehicleSummaryDto>();
+                return new PagedResult<VehicleSummaryDto> { Page = search.Page, PageSize = search.PageSize };
             }
 
             var json = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<List<VehicleSummaryDto>>(json, _options) ?? new List<VehicleSummaryDto>();
-        }, new List<VehicleSummaryDto>(), "searching vehicles");
+            return JsonSerializer.Deserialize<PagedResult<VehicleSummaryDto>>(json, _options)
+                ?? new PagedResult<VehicleSummaryDto> { Page = search.Page, PageSize = search.PageSize };
+        }, new PagedResult<VehicleSummaryDto> { Page = search.Page, PageSize = search.PageSize }, "searching vehicles");
     }
 
     public async Task<BlocketSyncViewModel> SyncBlocketAsync(BlocketSyncViewModel model)

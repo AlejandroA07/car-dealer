@@ -3,7 +3,7 @@ using WestcoastCars.Contracts.DTOs;
 
 namespace WestcoastCars.Application.Features.Vehicles.Queries.Search;
 
-public class SearchVehiclesQuery : IRequest<IEnumerable<VehicleSummaryDto>>
+public class SearchVehiclesQuery : IRequest<PagedResult<VehicleSummaryDto>>
 {
     public VehicleSearchDto Criteria { get; set; }
 

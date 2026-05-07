@@ -26,7 +26,7 @@ public class HomeController : Controller
         try
         {
             var manufacturersTask = _manufacturerService.ListAllAsync();
-            var vehiclesTask = _vehicleService.ListVehiclesAsync();
+            var vehiclesTask = _vehicleService.ListVehiclesAsync(pageSize: 4);
 
             await Task.WhenAll(manufacturersTask, vehiclesTask);
 
@@ -34,8 +34,7 @@ public class HomeController : Controller
                 .Select(m => new SelectListItem { Value = m.Name, Text = m.Name })
                 .ToList();
 
-            // Take only top 4 for the home page
-            topVehicles = vehiclesTask.Result.Take(4).ToList();
+            topVehicles = vehiclesTask.Result.Items;
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
         {

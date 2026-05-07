@@ -24,20 +24,15 @@ public class UpdateManufacturerCommandHandlerTests
     [Fact]
     public async Task Handle_ShouldUpdateManufacturer_WhenUpdateIsSuccessful()
     {
-        // Arrange
         var manufacturerId = 1;
         var command = new UpdateManufacturerCommand { Id = manufacturerId, Name = "Updated Name" };
         var existingManufacturer = new Manufacturer { Id = manufacturerId, Name = "Old Name" };
 
         _manufacturerRepositoryMock.Setup(r => r.GetByIdAsync(manufacturerId)).ReturnsAsync(existingManufacturer);
-        _manufacturerRepositoryMock.Setup(r => r.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<Manufacturer, bool>>>()))
-            .ReturnsAsync((Manufacturer?)null);
         _unitOfWorkMock.Setup(u => u.CompleteAsync()).ReturnsAsync(1);
 
-        // Act
         await _handler.Handle(command, CancellationToken.None);
 
-        // Assert
         Assert.Equal(command.Name, existingManufacturer.Name);
         _unitOfWorkMock.Verify(u => u.CompleteAsync(), Times.Once);
         _unitOfWorkMock.VerifyGet(u => u.ManufacturerRepository, Times.Once);
@@ -46,70 +41,22 @@ public class UpdateManufacturerCommandHandlerTests
     [Fact]
     public async Task Handle_ShouldThrowPersistenceException_WhenSaveAffectsNoRows()
     {
-        // Arrange
         var manufacturerId = 1;
         var command = new UpdateManufacturerCommand { Id = manufacturerId, Name = "Updated Name" };
         var existingManufacturer = new Manufacturer { Id = manufacturerId, Name = "Old Name" };
 
         _manufacturerRepositoryMock.Setup(r => r.GetByIdAsync(manufacturerId)).ReturnsAsync(existingManufacturer);
-        _manufacturerRepositoryMock.Setup(r => r.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<Manufacturer, bool>>>()))
-            .ReturnsAsync((Manufacturer?)null);
         _unitOfWorkMock.Setup(u => u.CompleteAsync()).ReturnsAsync(0);
 
-        // Act & Assert
         await Assert.ThrowsAsync<PersistenceException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
     [Fact]
     public async Task Handle_ShouldThrowNotFoundException_WhenManufacturerDoesNotExist()
     {
-        // Arrange
         var command = new UpdateManufacturerCommand { Id = 99, Name = "Test" };
         _manufacturerRepositoryMock.Setup(r => r.GetByIdAsync(command.Id)).ReturnsAsync((Manufacturer?)null);
 
-        // Act & Assert
         await Assert.ThrowsAsync<NotFoundException>(() => _handler.Handle(command, CancellationToken.None));
-        _manufacturerRepositoryMock.Verify(
-            r => r.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<Manufacturer, bool>>>()),
-            Times.Never);
-    }
-
-    [Fact]
-    public async Task Handle_ShouldThrowConflictException_WhenNameAlreadyExists()
-    {
-        // Arrange
-        var manufacturerId = 1;
-        var command = new UpdateManufacturerCommand { Id = manufacturerId, Name = "Existing Name" };
-        var existingManufacturer = new Manufacturer { Id = manufacturerId, Name = "Old Name" };
-        var otherManufacturer = new Manufacturer { Id = 2, Name = "Existing Name" };
-
-        _manufacturerRepositoryMock.Setup(r => r.GetByIdAsync(manufacturerId)).ReturnsAsync(existingManufacturer);
-        _manufacturerRepositoryMock.Setup(r => r.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<Manufacturer, bool>>>()))
-            .ReturnsAsync(otherManufacturer);
-
-        // Act & Assert
-        await Assert.ThrowsAsync<ConflictException>(() => _handler.Handle(command, CancellationToken.None));
-    }
-
-    [Fact]
-    public async Task Handle_ShouldUpdateManufacturer_WhenExistingNameBelongsToSameManufacturer()
-    {
-        // Arrange
-        var manufacturerId = 1;
-        var command = new UpdateManufacturerCommand { Id = manufacturerId, Name = "Existing Name" };
-        var existingManufacturer = new Manufacturer { Id = manufacturerId, Name = "Old Name" };
-        var sameManufacturer = new Manufacturer { Id = manufacturerId, Name = "Existing Name" };
-
-        _manufacturerRepositoryMock.Setup(r => r.GetByIdAsync(manufacturerId)).ReturnsAsync(existingManufacturer);
-        _manufacturerRepositoryMock.Setup(r => r.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<Manufacturer, bool>>>()))
-            .ReturnsAsync(sameManufacturer);
-        _unitOfWorkMock.Setup(u => u.CompleteAsync()).ReturnsAsync(1);
-
-        // Act
-        await _handler.Handle(command, CancellationToken.None);
-
-        // Assert
-        Assert.Equal(command.Name, existingManufacturer.Name);
-        _unitOfWorkMock.Verify(u => u.CompleteAsync(), Times.Once);
     }
 }

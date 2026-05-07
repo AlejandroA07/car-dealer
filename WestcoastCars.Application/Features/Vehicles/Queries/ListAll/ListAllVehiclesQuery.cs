@@ -1,9 +1,10 @@
 using MediatR;
 using WestcoastCars.Contracts.DTOs;
-using System.Collections.Generic;
 
 namespace WestcoastCars.Application.Features.Vehicles.Queries.ListAll;
 
-public class ListAllVehiclesQuery : IRequest<IEnumerable<VehicleSummaryDto>>
+public class ListAllVehiclesQuery : IRequest<PagedResult<VehicleSummaryDto>>
 {
+    public int Page { get; set; } = 1;
+    public int PageSize { get; set; } = 20;
 }

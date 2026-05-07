@@ -34,8 +34,6 @@ public class CreateManufacturerCommandHandlerTests
         var command = new CreateManufacturerCommand { Name = "Volvo" };
         var expectedDto = new NamedObjectDto { Id = 1, Name = "Volvo" };
 
-        _manufacturerRepositoryMock.Setup(r => r.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<Manufacturer, bool>>>()))
-            .ReturnsAsync((Manufacturer?)null);
         _unitOfWorkMock.Setup(u => u.CompleteAsync()).ReturnsAsync(1);
         _mapperMock.Setup(m => m.Map<NamedObjectDto>(It.IsAny<Manufacturer>())).Returns(expectedDto);
 
@@ -55,25 +53,9 @@ public class CreateManufacturerCommandHandlerTests
         // Arrange
         var command = new CreateManufacturerCommand { Name = "Volvo" };
 
-        _manufacturerRepositoryMock.Setup(r => r.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<Manufacturer, bool>>>()))
-            .ReturnsAsync((Manufacturer?)null);
         _unitOfWorkMock.Setup(u => u.CompleteAsync()).ReturnsAsync(0);
 
         // Act & Assert
         await Assert.ThrowsAsync<PersistenceException>(() => _handler.Handle(command, CancellationToken.None));
-    }
-
-    [Fact]
-    public async Task Handle_ShouldThrowConflictException_WhenManufacturerExists()
-    {
-        // Arrange
-        var command = new CreateManufacturerCommand { Name = "Volvo" };
-        var existingManufacturer = new Manufacturer { Id = 1, Name = "Volvo" };
-
-        _manufacturerRepositoryMock.Setup(r => r.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<Manufacturer, bool>>>()))
-            .ReturnsAsync(existingManufacturer);
-
-        // Act & Assert
-        await Assert.ThrowsAsync<ConflictException>(() => _handler.Handle(command, CancellationToken.None));
     }
 }

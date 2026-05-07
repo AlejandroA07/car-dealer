@@ -21,8 +21,6 @@ public class CreateManufacturerCommandHandler : IRequestHandler<CreateManufactur
     {
         var repository = _unitOfWork.ManufacturerRepository;
 
-        await repository.ThrowIfNameExistsAsync(request.Name, nameof(Manufacturer));
-
         var manufacturerToAdd = new Manufacturer { Name = request.Name };
         await repository.AddAsync(manufacturerToAdd);
 

@@ -5,7 +5,7 @@ using WestcoastCars.Contracts.DTOs;
 
 namespace WestcoastCars.Application.Features.Vehicles.Queries.Search;
 
-public class SearchVehiclesQueryHandler : IRequestHandler<SearchVehiclesQuery, IEnumerable<VehicleSummaryDto>>
+public class SearchVehiclesQueryHandler : IRequestHandler<SearchVehiclesQuery, PagedResult<VehicleSummaryDto>>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
@@ -16,9 +16,15 @@ public class SearchVehiclesQueryHandler : IRequestHandler<SearchVehiclesQuery, I
         _mapper = mapper;
     }
 
-    public async Task<IEnumerable<VehicleSummaryDto>> Handle(SearchVehiclesQuery request, CancellationToken cancellationToken)
+    public async Task<PagedResult<VehicleSummaryDto>> Handle(SearchVehiclesQuery request, CancellationToken cancellationToken)
     {
         var vehicles = await _unitOfWork.VehicleRepository.SearchAsync(request.Criteria);
-        return _mapper.Map<IEnumerable<VehicleSummaryDto>>(vehicles);
+        return new PagedResult<VehicleSummaryDto>
+        {
+            Items = _mapper.Map<List<VehicleSummaryDto>>(vehicles.Items),
+            TotalCount = vehicles.TotalCount,
+            Page = vehicles.Page,
+            PageSize = vehicles.PageSize
+        };
     }
 }
