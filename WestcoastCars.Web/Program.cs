@@ -98,7 +98,7 @@ app.Use(async (context, next) =>
     context.Response.Headers["Permissions-Policy"] = "camera=(), microphone=()";
     context.Response.Headers["Content-Security-Policy"] =
         "default-src 'self'; " +
-        "script-src 'self' 'unsafe-inline' https://kit.fontawesome.com https://code.jquery.com https://cdnjs.cloudflare.com; " +
+        "script-src 'self' https://kit.fontawesome.com https://code.jquery.com https://cdnjs.cloudflare.com; " +
         "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://ka-f.fontawesome.com; " +
         "font-src 'self' https://ka-f.fontawesome.com; " +
         "connect-src 'self' https://ka-f.fontawesome.com; " +
