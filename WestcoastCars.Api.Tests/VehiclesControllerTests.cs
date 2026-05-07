@@ -120,8 +120,7 @@ public class VehiclesControllerTests
             command.Value == dto.Value &&
             command.Description == dto.Description &&
             command.IsSold == dto.IsSold &&
-            command.ImageUrl == dto.ImageUrl), default)).ReturnsAsync(1);
-        _mediatorMock.Setup(m => m.Send(It.IsAny<GetVehicleByIdQuery>(), default)).ReturnsAsync(vehicle);
+            command.ImageUrl == dto.ImageUrl), default)).ReturnsAsync(vehicle);
 
         // Act
         var result = await _controller.Add(dto);
@@ -131,6 +130,7 @@ public class VehiclesControllerTests
         Assert.Equal("GetById", createdAtAction.ActionName);
         var returnValue = Assert.IsType<VehicleDetailsDto>(createdAtAction.Value);
         Assert.Equal(1, returnValue.Id);
+        _mediatorMock.Verify(m => m.Send(It.IsAny<GetVehicleByIdQuery>(), default), Times.Never);
     }
 
     [Fact]

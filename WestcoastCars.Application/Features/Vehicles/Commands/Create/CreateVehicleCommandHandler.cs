@@ -1,21 +1,25 @@
+using AutoMapper;
 using MediatR;
 using WestcoastCars.Application.Exceptions;
 using WestcoastCars.Application.Interfaces;
+using WestcoastCars.Contracts.DTOs;
 using WestcoastCars.Domain.Entities;
 
 namespace WestcoastCars.Application.Features.Vehicles.Commands.Create;
 
-public class CreateVehicleCommandHandler : IRequestHandler<CreateVehicleCommand, int>
+public class CreateVehicleCommandHandler : IRequestHandler<CreateVehicleCommand, VehicleDetailsDto>
 {
     private const string DefaultCarImageName = "/images/no-car.png";
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
 
-    public CreateVehicleCommandHandler(IUnitOfWork unitOfWork)
+    public CreateVehicleCommandHandler(IUnitOfWork unitOfWork, IMapper mapper)
     {
         _unitOfWork = unitOfWork;
+        _mapper = mapper;
     }
 
-    public async Task<int> Handle(CreateVehicleCommand request, CancellationToken cancellationToken)
+    public async Task<VehicleDetailsDto> Handle(CreateVehicleCommand request, CancellationToken cancellationToken)
     {
         // Validate related entities
         var manufacturer = await _unitOfWork.ManufacturerRepository.GetByIdAsync(request.ManufacturerId);
@@ -45,6 +49,6 @@ public class CreateVehicleCommandHandler : IRequestHandler<CreateVehicleCommand,
         await _unitOfWork.VehicleRepository.AddAsync(vehicle);
 
         await _unitOfWork.CompleteOrThrowAsync("Failed to create vehicle");
-        return vehicle.Id;
+        return _mapper.Map<VehicleDetailsDto>(vehicle);
     }
 }

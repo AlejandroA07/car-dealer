@@ -1,7 +1,9 @@
+using AutoMapper;
 using Moq;
 using WestcoastCars.Application.Exceptions;
 using WestcoastCars.Application.Features.Vehicles.Commands.Create;
 using WestcoastCars.Application.Interfaces;
+using WestcoastCars.Contracts.DTOs;
 using WestcoastCars.Domain.Entities;
 using Xunit;
 
@@ -14,6 +16,7 @@ public class CreateVehicleCommandHandlerTests
     private readonly Mock<IManufacturerRepository> _manufacturerRepositoryMock;
     private readonly Mock<IFuelTypeRepository> _fuelTypeRepositoryMock;
     private readonly Mock<ITransmissionTypeRepository> _transmissionTypeRepositoryMock;
+    private readonly Mock<IMapper> _mapperMock;
     private readonly CreateVehicleCommandHandler _handler;
 
     public CreateVehicleCommandHandlerTests()
@@ -23,17 +26,18 @@ public class CreateVehicleCommandHandlerTests
         _manufacturerRepositoryMock = new Mock<IManufacturerRepository>();
         _fuelTypeRepositoryMock = new Mock<IFuelTypeRepository>();
         _transmissionTypeRepositoryMock = new Mock<ITransmissionTypeRepository>();
+        _mapperMock = new Mock<IMapper>();
 
         _unitOfWorkMock.Setup(u => u.VehicleRepository).Returns(_vehicleRepositoryMock.Object);
         _unitOfWorkMock.Setup(u => u.ManufacturerRepository).Returns(_manufacturerRepositoryMock.Object);
         _unitOfWorkMock.Setup(u => u.FuelTypeRepository).Returns(_fuelTypeRepositoryMock.Object);
         _unitOfWorkMock.Setup(u => u.TransmissionTypeRepository).Returns(_transmissionTypeRepositoryMock.Object);
 
-        _handler = new CreateVehicleCommandHandler(_unitOfWorkMock.Object);
+        _handler = new CreateVehicleCommandHandler(_unitOfWorkMock.Object, _mapperMock.Object);
     }
 
     [Fact]
-    public async Task Handle_ShouldReturnVehicleId_WhenCreationIsSuccessful()
+    public async Task Handle_ShouldReturnVehicleDetails_WhenCreationIsSuccessful()
     {
         // Arrange
         var command = new CreateVehicleCommand
@@ -48,6 +52,7 @@ public class CreateVehicleCommandHandlerTests
             Description = "Test description",
             ImageUrl = "test.png"
         };
+        var expectedDto = new VehicleDetailsDto { Id = 1, RegistrationNumber = "NEW123" };
 
         _manufacturerRepositoryMock.Setup(r => r.GetByIdAsync(command.ManufacturerId))
             .ReturnsAsync(new Manufacturer { Id = 1, Name = "Volvo" });
@@ -57,14 +62,17 @@ public class CreateVehicleCommandHandlerTests
             .ReturnsAsync(new TransmissionType { Id = 1, Name = "Automatic" });
 
         _unitOfWorkMock.Setup(u => u.CompleteAsync()).ReturnsAsync(1);
+        _mapperMock.Setup(m => m.Map<VehicleDetailsDto>(It.IsAny<Vehicle>())).Returns(expectedDto);
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.True(result >= 0);
+        Assert.Equal(expectedDto.Id, result.Id);
+        Assert.Equal(expectedDto.RegistrationNumber, result.RegistrationNumber);
         _vehicleRepositoryMock.Verify(r => r.AddAsync(It.IsAny<Vehicle>()), Times.Once);
         _unitOfWorkMock.Verify(u => u.CompleteAsync(), Times.Once);
+        _mapperMock.Verify(m => m.Map<VehicleDetailsDto>(It.IsAny<Vehicle>()), Times.Once);
     }
 
     [Fact]

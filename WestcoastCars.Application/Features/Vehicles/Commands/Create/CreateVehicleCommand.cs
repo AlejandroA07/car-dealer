@@ -1,8 +1,9 @@
 using MediatR;
+using WestcoastCars.Contracts.DTOs;
 
 namespace WestcoastCars.Application.Features.Vehicles.Commands.Create;
 
-public class CreateVehicleCommand : IRequest<int>
+public class CreateVehicleCommand : IRequest<VehicleDetailsDto>
 {
     public string RegistrationNumber { get; set; } = string.Empty;
     public int ManufacturerId { get; set; }

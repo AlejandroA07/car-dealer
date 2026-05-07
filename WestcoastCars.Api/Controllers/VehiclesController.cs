@@ -152,9 +152,8 @@ public class VehiclesController : ControllerBase
         };
 
         _logger.LogInformation("Creating new vehicle with registration: {RegNo} via MediatR", command.RegistrationNumber);
-        var id = await _mediator.Send(command);
-        var result = await _mediator.Send(new GetVehicleByIdQuery { Id = id });
-        return CreatedAtAction(nameof(GetById), new { id = id }, result);
+        var result = await _mediator.Send(command);
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
     /// <summary>
