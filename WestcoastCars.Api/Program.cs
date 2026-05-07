@@ -15,8 +15,10 @@ using WestcoastCars.Infrastructure;
 using FluentValidation;
 using WestcoastCars.Application.Common.Behaviors;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.OpenApi;
 using Npgsql;
+using System.Threading.RateLimiting;
 
 
 
@@ -54,6 +56,18 @@ builder.Services.AddDataProtection()
     .SetApplicationName("WestcoastCars");
 
 builder.Services.AddHealthChecks();
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("auth", o =>
+    {
+        o.PermitLimit = 10;
+        o.Window = TimeSpan.FromMinutes(1);
+        o.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        o.QueueLimit = 0;
+    });
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
@@ -154,10 +168,11 @@ using (var scope = app.Services.CreateScope())
             await context.Database.EnsureCreatedAsync();
         }
 
-        await SeedData.LoadManufacturerData(context);
-        await SeedData.LoadFuelTypeData(context);
-        await SeedData.LoadTransmissionsData(context);
-        await SeedData.LoadVehicleData(context);
+        var seedPresence = await SeedData.GetSeedPresenceAsync(context);
+        await SeedData.LoadManufacturerData(context, seedPresence.HasManufacturers);
+        await SeedData.LoadFuelTypeData(context, seedPresence.HasFuelTypes);
+        await SeedData.LoadTransmissionsData(context, seedPresence.HasTransmissionTypes);
+        await SeedData.LoadVehicleData(context, seedPresence.HasVehicles);
         await SeedData.EnsurePostgreSqlIdentitySequencesAsync(context);
 
         var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
@@ -201,6 +216,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseStaticFiles();
+
+app.UseRateLimiter();
 
 app.UseExceptionHandler("/error");
 

@@ -33,5 +33,10 @@ public class UpdateVehicleCommandValidator : AbstractValidator<UpdateVehicleComm
 
         RuleFor(v => v.TransmissionTypeId)
             .GreaterThan(0).WithMessage("A valid transmission type is required.");
+
+        RuleFor(v => v.ImageUrl)
+            .MaximumLength(500)
+            .Must(url => string.IsNullOrEmpty(url) || Uri.TryCreate(url, UriKind.Absolute, out _))
+            .WithMessage("ImageUrl must be a valid absolute URL.");
     }
 }

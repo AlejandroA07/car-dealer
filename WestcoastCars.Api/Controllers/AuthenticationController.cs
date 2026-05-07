@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.RateLimiting;
+using WestcoastCars.Application.Exceptions;
 using WestcoastCars.Application.Services;
 using WestcoastCars.Contracts.Auth;
 
@@ -11,6 +13,7 @@ namespace WestcoastCars.Api.Controllers;
 [ApiController]
 [Route("api/auth")]
 [Tags("Authentication")]
+[EnableRateLimiting("auth")]
 public class AuthenticationController : ControllerBase
 {
     private readonly IAuthService _authService;
@@ -32,22 +35,35 @@ public class AuthenticationController : ControllerBase
     [ProducesResponseType(400)]
     public async Task<IActionResult> Register(RegisterRequest request)
     {
-        var authResult = await _authService.RegisterAsync(
-            request.FirstName,
-            request.LastName,
-            request.Email,
-            request.Password
-        );
+        try
+        {
+            var authResult = await _authService.RegisterAsync(
+                request.FirstName,
+                request.LastName,
+                request.Email,
+                request.Password
+            );
 
-        var response = new AuthenticationResponse(
-            authResult.User.Id,
-            authResult.User.FirstName,
-            authResult.User.LastName,
-            authResult.User.Email,
-            authResult.Token
-        );
+            var response = new AuthenticationResponse(
+                authResult.User.Id,
+                authResult.User.FirstName,
+                authResult.User.LastName,
+                authResult.User.Email,
+                authResult.Token
+            );
 
-        return Ok(response);
+            return Ok(response);
+        }
+        catch (ConflictException)
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "Registration failed.",
+                Detail = "Registration failed. Check the provided details and try again.",
+                Instance = HttpContext.Request.Path
+            });
+        }
     }
 
     /// <summary>

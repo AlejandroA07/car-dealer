@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Caching.Memory;
 using WestcoastCars.Web.ViewModels.Vehicles;
 using WestcoastCars.Contracts.DTOs;
 
@@ -10,19 +11,28 @@ namespace WestcoastCars.Web.Services;
 
 public class VehicleService : IVehicleService
 {
+    private const string ManufacturersCacheKey = "vehicle-form-manufacturers";
+    private const string FuelTypesCacheKey = "vehicle-form-fuel-types";
+    private const string TransmissionsCacheKey = "vehicle-form-transmissions";
+    private static readonly TimeSpan DropdownCacheDuration = TimeSpan.FromMinutes(10);
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
     private readonly HttpClient _httpClient;
     private readonly HttpClient _longRunningHttpClient;
     private readonly ILogger<VehicleService> _logger;
     private readonly string _baseUrl;
-    private readonly JsonSerializerOptions _options;
+    private readonly IMemoryCache _cache;
 
-    public VehicleService(IHttpClientFactory httpClientFactory, IConfiguration config, ILogger<VehicleService> logger)
+    public VehicleService(IHttpClientFactory httpClientFactory, IConfiguration config, ILogger<VehicleService> logger, IMemoryCache cache)
     {
         _httpClient = httpClientFactory.CreateClient("ApiClient");
         _longRunningHttpClient = httpClientFactory.CreateClient("LongRunningApiClient");
         _logger = logger;
         _baseUrl = config["Services:ApiUrl"] ?? throw new InvalidOperationException("Services:ApiUrl is not configured");
-        _options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        _cache = cache;
     }
 
     public async Task<PagedResult<VehicleSummaryDto>> ListVehiclesAsync(int page = 1, int pageSize = 20)
@@ -38,12 +48,11 @@ public class VehicleService : IVehicleService
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError($"Error fetching vehicle list: {response.StatusCode}");
+                _logger.LogError("Error fetching vehicle list: {StatusCode}", response.StatusCode);
                 return new PagedResult<VehicleSummaryDto> { Page = page, PageSize = pageSize };
             }
 
-            var json = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<PagedResult<VehicleSummaryDto>>(json, _options)
+            return await response.Content.ReadFromJsonAsync<PagedResult<VehicleSummaryDto>>(JsonOptions)
                 ?? new PagedResult<VehicleSummaryDto> { Page = page, PageSize = pageSize };
         }, new PagedResult<VehicleSummaryDto> { Page = page, PageSize = pageSize }, "listing vehicles");
     }
@@ -61,12 +70,11 @@ public class VehicleService : IVehicleService
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError($"Error fetching all vehicles list: {response.StatusCode}");
+                _logger.LogError("Error fetching all vehicles list: {StatusCode}", response.StatusCode);
                 return new List<VehicleSummaryDto>();
             }
 
-            var json = await response.Content.ReadAsStringAsync();
-            var firstPage = JsonSerializer.Deserialize<PagedResult<VehicleSummaryDto>>(json, _options);
+            var firstPage = await response.Content.ReadFromJsonAsync<PagedResult<VehicleSummaryDto>>(JsonOptions);
             if (firstPage is null)
             {
                 return new List<VehicleSummaryDto>();
@@ -88,12 +96,11 @@ public class VehicleService : IVehicleService
                 var pageResponse = await _httpClient.GetAsync(pageUrl);
                 if (!pageResponse.IsSuccessStatusCode)
                 {
-                    _logger.LogError($"Error fetching vehicle list page {currentPage}: {pageResponse.StatusCode}");
+                    _logger.LogError("Error fetching vehicle list page {Page}: {StatusCode}", currentPage, pageResponse.StatusCode);
                     break;
                 }
 
-                var pageJson = await pageResponse.Content.ReadAsStringAsync();
-                var pageResult = JsonSerializer.Deserialize<PagedResult<VehicleSummaryDto>>(pageJson, _options);
+                var pageResult = await pageResponse.Content.ReadFromJsonAsync<PagedResult<VehicleSummaryDto>>(JsonOptions);
                 if (pageResult is null)
                 {
                     break;
@@ -113,12 +120,11 @@ public class VehicleService : IVehicleService
             var response = await _httpClient.GetAsync($"{_baseUrl}/api/v1/vehicles/{id}");
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError($"Error fetching vehicle {id}: {response.StatusCode}");
+                _logger.LogError("Error fetching vehicle {VehicleId}: {StatusCode}", id, response.StatusCode);
                 return null;
             }
 
-            var json = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<VehicleDetailsDto>(json, _options);
+            return await response.Content.ReadFromJsonAsync<VehicleDetailsDto>(JsonOptions);
         }, null, $"getting vehicle {id}");
     }
 
@@ -126,14 +132,14 @@ public class VehicleService : IVehicleService
     {
         return await ExecuteWithApiFallback(async () =>
         {
-            var response = await _httpClient.PatchAsync($"{_baseUrl}/api/v1/vehicles/{id}", null);
+            var response = await _httpClient.DeleteAsync($"{_baseUrl}/api/v1/vehicles/{id}");
             if (response.IsSuccessStatusCode)
             {
-                _logger.LogInformation($"Vehicle {id} deleted successfully");
+                _logger.LogInformation("Vehicle {VehicleId} deleted successfully", id);
                 return true;
             }
 
-            _logger.LogError($"Error deleting vehicle {id}: {response.StatusCode}");
+            _logger.LogError("Error deleting vehicle {VehicleId}: {StatusCode}", id, response.StatusCode);
             return false;
         }, false, $"deleting vehicle {id}");
     }
@@ -183,18 +189,18 @@ public class VehicleService : IVehicleService
 
         return await ExecuteWithApiFallback(async () =>
         {
-            var jsonPayload = JsonSerializer.Serialize(updateDto, _options);
+            var jsonPayload = JsonSerializer.Serialize(updateDto, JsonOptions);
             var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
             var response = await _httpClient.PutAsync($"{_baseUrl}/api/v1/vehicles/{id}", content);
 
             if (response.IsSuccessStatusCode)
             {
-                _logger.LogInformation($"Vehicle {id} updated successfully");
+                _logger.LogInformation("Vehicle {VehicleId} updated successfully", id);
                 return true;
             }
 
             var responseContent = await response.Content.ReadAsStringAsync();
-            _logger.LogError($"Error updating vehicle {id}: {response.StatusCode} - {responseContent}");
+            _logger.LogError("Error updating vehicle {VehicleId}: {StatusCode} - {ResponseContent}", id, response.StatusCode, responseContent);
             return false;
         }, false, $"updating vehicle {id}");
     }
@@ -228,7 +234,7 @@ public class VehicleService : IVehicleService
 
         return await ExecuteWithApiFallback(async () =>
         {
-            var jsonPayload = JsonSerializer.Serialize(postDto, _options);
+            var jsonPayload = JsonSerializer.Serialize(postDto, JsonOptions);
             var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
             var response = await _httpClient.PostAsync($"{_baseUrl}/api/v1/vehicles", content);
 
@@ -239,7 +245,7 @@ public class VehicleService : IVehicleService
             }
 
             var errorContent = await response.Content.ReadAsStringAsync();
-            _logger.LogError($"Error creating vehicle: {response.StatusCode} - {errorContent}");
+            _logger.LogError("Error creating vehicle: {StatusCode} - {ErrorContent}", response.StatusCode, errorContent);
             return false;
         }, false, "creating vehicle");
     }
@@ -265,12 +271,11 @@ public class VehicleService : IVehicleService
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError($"Error searching vehicles: {response.StatusCode}");
+                _logger.LogError("Error searching vehicles: {StatusCode}", response.StatusCode);
                 return new PagedResult<VehicleSummaryDto> { Page = search.Page, PageSize = search.PageSize };
             }
 
-            var json = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<PagedResult<VehicleSummaryDto>>(json, _options)
+            return await response.Content.ReadFromJsonAsync<PagedResult<VehicleSummaryDto>>(JsonOptions)
                 ?? new PagedResult<VehicleSummaryDto> { Page = search.Page, PageSize = search.PageSize };
         }, new PagedResult<VehicleSummaryDto> { Page = search.Page, PageSize = search.PageSize }, "searching vehicles");
     }
@@ -320,7 +325,7 @@ public class VehicleService : IVehicleService
                 };
             }
 
-            var result = await response.Content.ReadFromJsonAsync<BlocketSyncViewModel>(_options);
+            var result = await response.Content.ReadFromJsonAsync<BlocketSyncViewModel>(JsonOptions);
             if (result is null)
             {
                 return new BlocketSyncViewModel
@@ -370,15 +375,15 @@ public class VehicleService : IVehicleService
     {
         try
         {
-            var manufacturersTask = _httpClient.GetStringAsync($"{_baseUrl}/api/v1/manufacturers");
-            var fuelTypesTask = _httpClient.GetStringAsync($"{_baseUrl}/api/v1/fueltypes");
-            var transmissionsTask = _httpClient.GetStringAsync($"{_baseUrl}/api/v1/transmissions");
+            var manufacturersTask = GetManufacturersAsync();
+            var fuelTypesTask = GetFuelTypesAsync();
+            var transmissionsTask = GetTransmissionsAsync();
 
             await Task.WhenAll(manufacturersTask, fuelTypesTask, transmissionsTask);
 
-            var manufacturers = JsonSerializer.Deserialize<List<NamedObjectDto>>(await manufacturersTask, _options) ?? new List<NamedObjectDto>();
-            var fuelTypes = JsonSerializer.Deserialize<List<NamedObjectDto>>(await fuelTypesTask, _options) ?? new List<NamedObjectDto>();
-            var transmissionTypes = JsonSerializer.Deserialize<List<NamedObjectDto>>(await transmissionsTask, _options) ?? new List<NamedObjectDto>();
+            var manufacturers = await manufacturersTask ?? new List<NamedObjectDto>();
+            var fuelTypes = await fuelTypesTask ?? new List<NamedObjectDto>();
+            var transmissionTypes = await transmissionsTask ?? new List<NamedObjectDto>();
 
             viewModel.Vehicle.ManufacturerId = manufacturers.FirstOrDefault(m => m.Name.Equals(vehicleToEdit.Manufacturer, StringComparison.OrdinalIgnoreCase))?.Id ?? 0;
             viewModel.Vehicle.FuelTypeId = fuelTypes.FirstOrDefault(f => f.Name.Equals(vehicleToEdit.FuelType, StringComparison.OrdinalIgnoreCase))?.Id ?? 0;
@@ -401,15 +406,15 @@ public class VehicleService : IVehicleService
     {
         try
         {
-            var manufacturersTask = _httpClient.GetStringAsync($"{_baseUrl}/api/v1/manufacturers");
-            var fuelTypesTask = _httpClient.GetStringAsync($"{_baseUrl}/api/v1/fueltypes");
-            var transmissionsTask = _httpClient.GetStringAsync($"{_baseUrl}/api/v1/transmissions");
+            var manufacturersTask = GetManufacturersAsync();
+            var fuelTypesTask = GetFuelTypesAsync();
+            var transmissionsTask = GetTransmissionsAsync();
 
             await Task.WhenAll(manufacturersTask, fuelTypesTask, transmissionsTask);
 
-            var manufacturers = JsonSerializer.Deserialize<List<NamedObjectDto>>(await manufacturersTask, _options) ?? new List<NamedObjectDto>();
-            var fuelTypes = JsonSerializer.Deserialize<List<NamedObjectDto>>(await fuelTypesTask, _options) ?? new List<NamedObjectDto>();
-            var transmissionTypes = JsonSerializer.Deserialize<List<NamedObjectDto>>(await transmissionsTask, _options) ?? new List<NamedObjectDto>();
+            var manufacturers = await manufacturersTask ?? new List<NamedObjectDto>();
+            var fuelTypes = await fuelTypesTask ?? new List<NamedObjectDto>();
+            var transmissionTypes = await transmissionsTask ?? new List<NamedObjectDto>();
 
             viewModel.Manufacturers = manufacturers.Select(m => new SelectListItem { Value = m.Id.ToString(), Text = m.Name }).ToList();
             viewModel.FuelTypes = fuelTypes.Select(f => new SelectListItem { Value = f.Id.ToString(), Text = f.Name }).ToList();
@@ -422,6 +427,26 @@ public class VehicleService : IVehicleService
             viewModel.FuelTypes = new List<SelectListItem>();
             viewModel.TransmissionTypes = new List<SelectListItem>();
         }
+    }
+
+    private Task<List<NamedObjectDto>> GetManufacturersAsync() =>
+        GetCachedDropdownDataAsync(ManufacturersCacheKey, $"{_baseUrl}/api/v1/manufacturers");
+
+    private Task<List<NamedObjectDto>> GetFuelTypesAsync() =>
+        GetCachedDropdownDataAsync(FuelTypesCacheKey, $"{_baseUrl}/api/v1/fueltypes");
+
+    private Task<List<NamedObjectDto>> GetTransmissionsAsync() =>
+        GetCachedDropdownDataAsync(TransmissionsCacheKey, $"{_baseUrl}/api/v1/transmissions");
+
+    private async Task<List<NamedObjectDto>> GetCachedDropdownDataAsync(string cacheKey, string requestUri)
+    {
+        var result = await _cache.GetOrCreateAsync(cacheKey, async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = DropdownCacheDuration;
+            return await _httpClient.GetFromJsonAsync<List<NamedObjectDto>>(requestUri, JsonOptions) ?? new List<NamedObjectDto>();
+        });
+
+        return result ?? new List<NamedObjectDto>();
     }
 
     private async Task<T> ExecuteWithApiFallback<T>(Func<Task<T>> action, T fallbackValue, string operation)

@@ -36,7 +36,7 @@ public class AuthService : IAuthService
             return null;
         }
 
-        var result = await _signInManager.CheckPasswordSignInAsync(user, password, false);
+        var result = await _signInManager.CheckPasswordSignInAsync(user, password, lockoutOnFailure: true);
         if (!result.Succeeded)
         {
             _logger.LogWarning("Login failed: Password check failed for user {Email}. IsLockedOut: {IsLockedOut}, IsNotAllowed: {IsNotAllowed}, RequiresTwoFactor: {RequiresTwoFactor}",
@@ -80,7 +80,10 @@ public class AuthService : IAuthService
 
         if (!result.Succeeded)
         {
-            throw new ValidationException("Identity", result.Errors.Select(e => e.Description));
+            _logger.LogWarning("User creation failed for {Email}: {Errors}",
+                email, string.Join(", ", result.Errors.Select(e => e.Code)));
+            throw new ValidationException("Registration",
+                new[] { "Registration failed. Ensure the email is valid and the password meets requirements." });
         }
 
         await _userManager.AddClaimAsync(user, new Claim("firstName", firstName));

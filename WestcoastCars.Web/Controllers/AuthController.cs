@@ -2,13 +2,17 @@ using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using WestcoastCars.Web.Services;
 using WestcoastCars.Web.ViewModels.Auth;
+using WestcoastCars.Web.Configurations;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using System.Collections.Generic;
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Text;
 
 namespace WestcoastCars.Web.Controllers;
 
@@ -16,10 +20,12 @@ namespace WestcoastCars.Web.Controllers;
 public class AuthController : Controller
 {
     private readonly IAuthService _authService;
+    private readonly JwtSettings _jwtSettings;
 
-    public AuthController(IAuthService authService)
+    public AuthController(IAuthService authService, IOptions<JwtSettings> jwtOptions)
     {
         _authService = authService;
+        _jwtSettings = jwtOptions.Value;
     }
 
     [HttpGet("login")]
@@ -60,9 +66,30 @@ public class AuthController : Controller
             };
 
             var handler = new JwtSecurityTokenHandler();
-            var jwtToken = handler.ReadJwtToken(result.Token);
+            var validationParams = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Secret)),
+                ValidateIssuer = true,
+                ValidIssuer = _jwtSettings.Issuer,
+                ValidateAudience = true,
+                ValidAudience = _jwtSettings.Audience,
+                ValidateLifetime = true
+            };
 
-            var roleClaims = jwtToken.Claims.Where(c => c.Type == "role" || c.Type == ClaimTypes.Role);
+            ClaimsPrincipal? principal = null;
+            try
+            {
+                principal = handler.ValidateToken(result.Token, validationParams, out _);
+            }
+            catch (SecurityTokenException)
+            {
+                ModelState.AddModelError(string.Empty, "Inloggningen misslyckades.");
+                TempData["error"] = "Inloggningen misslyckades";
+                return View(model);
+            }
+
+            var roleClaims = principal.Claims.Where(c => c.Type == "role" || c.Type == ClaimTypes.Role);
             foreach (var roleClaim in roleClaims)
             {
                 claims.Add(new Claim(ClaimTypes.Role, roleClaim.Value));

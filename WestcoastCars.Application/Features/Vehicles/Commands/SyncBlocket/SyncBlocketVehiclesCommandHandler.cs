@@ -58,6 +58,8 @@ public class SyncBlocketVehiclesCommandHandler : IRequestHandler<SyncBlocketVehi
                     break;
                 }
 
+                // Intentionally sequential: BlocketApiClient applies a shared process-wide throttle,
+                // so parallel detail requests would only add contention and risk upstream pressure.
                 var adDetails = await _blocketApiClient.GetCarAdAsync(searchItem.Id, cancellationToken);
                 var mappedVehicle = _mapper.Map(searchItem, adDetails, importedAtUtc);
 

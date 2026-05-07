@@ -86,7 +86,13 @@
         {
             <div class="vehicle-card-actions">
                 <a class="btn btn-ghost" asp-action="Edit" asp-controller="Vehicles" asp-route-id="@Model.Id">Ändra</a>
-                <a class="btn btn-danger" asp-action="Delete" asp-controller="Vehicles" asp-route-id="@Model.Id">Såld</a>
+                @if (User.IsInRole("Admin"))
+                {
+                    <form asp-action="Delete" asp-controller="Vehicles" asp-route-id="@Model.Id" method="post" style="display:contents">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger">Såld</button>
+                    </form>
+                }
             </div>
         }
     </div>

@@ -20,6 +20,9 @@ public class JwtTokenGenerator : IJwtTokenGenerator
     {
         _jwtSettings = jwtOptions.Value;
         _dateTimeProvider = dateTimeProvider;
+
+        if (_jwtSettings.Secret is null || _jwtSettings.Secret.Length < 32)
+            throw new InvalidOperationException("JwtSettings:Secret must be at least 32 characters.");
     }
 
     public Task<string> GenerateTokenAsync(AuthenticatedUser user, IEnumerable<string> roles)

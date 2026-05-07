@@ -142,7 +142,9 @@ public class VehiclesController : Controller
         }
     }
 
-    [HttpGet("delete/{id}")]
+    [HttpPost("delete/{id}")]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(int id)
     {
         try
@@ -164,6 +166,7 @@ public class VehiclesController : Controller
         }
     }
 
+    [Authorize(Roles = "Admin,Salesperson")]
     [HttpGet("edit/{id}")]
     public async Task<IActionResult> Edit(int id)
     {
@@ -183,6 +186,7 @@ public class VehiclesController : Controller
         }
     }
 
+    [Authorize(Roles = "Admin,Salesperson")]
     [HttpPost("edit/{id}")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, [Bind(Prefix = "Vehicle")] VehicleDto vehicle)
@@ -231,6 +235,7 @@ public class VehiclesController : Controller
         }
     }
 
+    [Authorize(Roles = "Admin,Salesperson")]
     [HttpGet("create")]
     public async Task<IActionResult> Create()
     {
@@ -246,6 +251,7 @@ public class VehiclesController : Controller
         }
     }
 
+    [Authorize(Roles = "Admin,Salesperson")]
     [HttpPost("create")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(VehicleBaseViewModel vehicleViewModel)

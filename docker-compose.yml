@@ -22,6 +22,7 @@ services:
     environment:
       - ASPNETCORE_URLS=http://+:8080
       - Services__ApiUrl=http://api:8080
+      - JwtSettings__Secret=${JWT_SECRET}
     depends_on:
       - api
     volumes:

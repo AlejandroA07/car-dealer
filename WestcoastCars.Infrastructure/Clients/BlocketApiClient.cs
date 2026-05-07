@@ -14,6 +14,9 @@ public class BlocketApiClient : IBlocketApiClient
     {
         PropertyNameCaseInsensitive = true
     };
+
+    // Process-wide by design: concurrent syncs share one Blocket request queue
+    // so multiple admins cannot accidentally multiply outbound API traffic.
     private static readonly SemaphoreSlim RequestThrottle = new(1, 1);
     private static DateTimeOffset _nextAllowedRequestAt = DateTimeOffset.MinValue;
 

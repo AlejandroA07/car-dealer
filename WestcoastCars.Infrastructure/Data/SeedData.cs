@@ -6,14 +6,71 @@ namespace WestcoastCars.Infrastructure.Data;
 
 public static class SeedData
 {
-    public static async Task LoadManufacturerData(WestcoastCarsContext context)
+    public record SeedPresence(
+        bool HasManufacturers,
+        bool HasFuelTypes,
+        bool HasTransmissionTypes,
+        bool HasVehicles);
+
+    public static async Task<SeedPresence> GetSeedPresenceAsync(WestcoastCarsContext context)
+    {
+        if (!context.Database.IsRelational())
+        {
+            return new SeedPresence(
+                await context.Manufacturers.AnyAsync(),
+                await context.FuelTypes.AnyAsync(),
+                await context.TransmissionTypes.AnyAsync(),
+                await context.Vehicles.AnyAsync());
+        }
+
+        var connection = context.Database.GetDbConnection();
+        var shouldCloseConnection = connection.State != System.Data.ConnectionState.Open;
+
+        if (shouldCloseConnection)
+        {
+            await connection.OpenAsync();
+        }
+
+        try
+        {
+            await using var command = connection.CreateCommand();
+            command.CommandText = """
+                SELECT
+                    EXISTS (SELECT 1 FROM "Manufacturers"),
+                    EXISTS (SELECT 1 FROM "FuelTypes"),
+                    EXISTS (SELECT 1 FROM "TransmissionTypes"),
+                    EXISTS (SELECT 1 FROM "Vehicles");
+                """;
+
+            await using var reader = await command.ExecuteReaderAsync();
+            if (!await reader.ReadAsync())
+            {
+                return new SeedPresence(false, false, false, false);
+            }
+
+            return new SeedPresence(
+                Convert.ToBoolean(reader.GetValue(0)),
+                Convert.ToBoolean(reader.GetValue(1)),
+                Convert.ToBoolean(reader.GetValue(2)),
+                Convert.ToBoolean(reader.GetValue(3)));
+        }
+        finally
+        {
+            if (shouldCloseConnection)
+            {
+                await connection.CloseAsync();
+            }
+        }
+    }
+
+    public static async Task LoadManufacturerData(WestcoastCarsContext context, bool hasManufacturers)
     {
         var options = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
         };
 
-        if (context.Manufacturers.Any()) return;
+        if (hasManufacturers) return;
 
         var baseDir = AppContext.BaseDirectory;
         var path = Path.Combine(baseDir, "Data", "json", "manufacturer.json");
@@ -32,14 +89,14 @@ public static class SeedData
         }
     }
 
-    public static async Task LoadVehicleData(WestcoastCarsContext context)
+    public static async Task LoadVehicleData(WestcoastCarsContext context, bool hasVehicles)
     {
         var options = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
         };
 
-        if (context.Vehicles.Any()) return;
+        if (hasVehicles) return;
 
         var baseDir = AppContext.BaseDirectory;
         var path = Path.Combine(baseDir, "Data", "json", "vehicles.json");
@@ -80,14 +137,14 @@ public static class SeedData
         await context.SaveChangesAsync();
     }
 
-    public static async Task LoadFuelTypeData(WestcoastCarsContext context)
+    public static async Task LoadFuelTypeData(WestcoastCarsContext context, bool hasFuelTypes)
     {
         var options = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
         };
 
-        if (context.FuelTypes.Any()) return;
+        if (hasFuelTypes) return;
 
         var baseDir = AppContext.BaseDirectory;
         var path = Path.Combine(baseDir, "Data", "json", "fuelTypes.json");
@@ -106,14 +163,14 @@ public static class SeedData
         }
     }
 
-    public static async Task LoadTransmissionsData(WestcoastCarsContext context)
+    public static async Task LoadTransmissionsData(WestcoastCarsContext context, bool hasTransmissionTypes)
     {
         var options = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
         };
 
-        if (context.TransmissionTypes.Any()) return;
+        if (hasTransmissionTypes) return;
 
         var baseDir = AppContext.BaseDirectory;
         var path = Path.Combine(baseDir, "Data", "json", "transmissionTypes.json");

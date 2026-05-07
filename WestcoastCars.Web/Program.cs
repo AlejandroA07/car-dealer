@@ -11,6 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Configure Options
 builder.Services.Configure<ServiceOptions>(builder.Configuration.GetSection(ServiceOptions.SectionName));
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(JwtSettings.SectionName));
 var serviceOptions = builder.Configuration.GetSection(ServiceOptions.SectionName).Get<ServiceOptions>() ?? throw new InvalidOperationException("ServiceOptions section is missing or invalid");
 
 // Configure the HttpClient to connect to the API.
@@ -41,6 +42,7 @@ builder.Services.AddScoped<IFuelTypeService, FuelTypeService>();
 builder.Services.AddScoped<ITransmissionTypeService, TransmissionTypeService>();
 builder.Services.AddScoped<IServiceBookingService, ServiceBookingService>();
 
+builder.Services.AddMemoryCache();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<AuthHandler>();
 
@@ -54,6 +56,9 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.AccessDeniedPath = "/auth/accessdenied";
         options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
         options.SlidingExpiration = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.SameSite = SameSiteMode.Strict;
+        options.Cookie.HttpOnly = true;
     });
 
 // Configure data protection to persist keys from configuration.
@@ -84,6 +89,22 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    context.Response.Headers["X-Frame-Options"] = "DENY";
+    context.Response.Headers["Referrer-Policy"] = "no-referrer";
+    context.Response.Headers["Permissions-Policy"] = "camera=(), microphone=()";
+    context.Response.Headers["Content-Security-Policy"] =
+        "default-src 'self'; " +
+        "script-src 'self' 'unsafe-inline' https://kit.fontawesome.com https://code.jquery.com https://cdnjs.cloudflare.com; " +
+        "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://ka-f.fontawesome.com; " +
+        "font-src 'self' https://ka-f.fontawesome.com; " +
+        "connect-src 'self' https://ka-f.fontawesome.com; " +
+        "img-src 'self' data: https:;";
+    await next();
+});
 
 app.UseStaticFiles();
 
