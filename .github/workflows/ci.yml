@@ -51,14 +51,15 @@ jobs:
         run: dotnet build --no-restore --configuration Release
 
       - name: Test (Release + trx)
-        run: dotnet test --no-build --configuration Release --logger "trx;LogFileName=test-results.trx"
+        run: dotnet test --no-build --configuration Release --filter "Category!=ExternalE2E" --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults --collect:"XPlat Code Coverage"
 
-      - name: Upload test results (only on failure)
-        if: failure()
+      - name: Upload test results and coverage
         uses: actions/upload-artifact@v4
         with:
-          name: test-results
-          path: "**/*.trx"
+          name: test-results-and-coverage
+          path: |
+            TestResults/**/*.trx
+            TestResults/**/coverage.cobertura.xml
 
   docker-build:
     runs-on: ubuntu-latest

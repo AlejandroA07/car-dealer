@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 using WestcoastCars.Api.Controllers;
+using WestcoastCars.Api.Observability;
 using WestcoastCars.Application.Features.ServiceBookings.Commands.Create;
 using WestcoastCars.Application.Features.ServiceBookings.Queries.ListAll;
 using WestcoastCars.Contracts.DTOs;
@@ -14,13 +15,15 @@ public class ServiceBookingsControllerTests
 {
     private readonly Mock<IMediator> _mediatorMock;
     private readonly Mock<ILogger<ServiceBookingsController>> _loggerMock;
+    private readonly AppTelemetry _telemetry;
     private readonly ServiceBookingsController _controller;
 
     public ServiceBookingsControllerTests()
     {
         _mediatorMock = new Mock<IMediator>();
         _loggerMock = new Mock<ILogger<ServiceBookingsController>>();
-        _controller = new ServiceBookingsController(_mediatorMock.Object, _loggerMock.Object);
+        _telemetry = new AppTelemetry();
+        _controller = new ServiceBookingsController(_mediatorMock.Object, _loggerMock.Object, _telemetry);
     }
 
     [Fact]
@@ -40,6 +43,7 @@ public class ServiceBookingsControllerTests
         var okResult = Assert.IsType<OkObjectResult>(result);
         var returnValue = Assert.IsAssignableFrom<IEnumerable<ServiceBookingSummaryDto>>(okResult.Value);
         Assert.Single(returnValue);
+        _mediatorMock.Verify(m => m.Send(It.IsAny<ListServiceBookingsQuery>(), default), Times.Once);
     }
 
     [Fact]
@@ -71,7 +75,28 @@ public class ServiceBookingsControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var idProperty = okResult.Value?.GetType().GetProperty("id");
-        Assert.Equal(10, idProperty?.GetValue(okResult.Value));
+        var response = Assert.IsType<CreateServiceBookingResponseDto>(okResult.Value);
+        Assert.Equal(10, response.Id);
+        _loggerMock.VerifyLog(LogLevel.Information, "Creating new service booking for vehicle", Times.Once());
+    }
+
+    [Fact]
+    public async Task Create_ShouldPropagateException_WhenMediatorFails()
+    {
+        var dto = new ServiceBookingPostDto
+        {
+            VehicleRegistrationNumber = "ABC123",
+            ServiceType = "Oil",
+            BookingDate = new DateTime(2026, 5, 6),
+            CustomerName = "Test Customer",
+            CustomerEmail = "test@example.com",
+            CustomerPhone = "123456",
+            Description = "Test booking"
+        };
+
+        _mediatorMock.Setup(m => m.Send(It.IsAny<CreateServiceBookingCommand>(), default))
+            .ThrowsAsync(new InvalidOperationException("Boom"));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _controller.Create(dto));
     }
 }

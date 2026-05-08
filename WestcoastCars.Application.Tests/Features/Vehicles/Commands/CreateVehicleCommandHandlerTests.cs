@@ -70,9 +70,50 @@ public class CreateVehicleCommandHandlerTests
         // Assert
         Assert.Equal(expectedDto.Id, result.Id);
         Assert.Equal(expectedDto.RegistrationNumber, result.RegistrationNumber);
-        _vehicleRepositoryMock.Verify(r => r.AddAsync(It.IsAny<Vehicle>()), Times.Once);
+        _vehicleRepositoryMock.Verify(r => r.AddAsync(It.Is<Vehicle>(vehicle =>
+            vehicle.RegistrationNumber == command.RegistrationNumber &&
+            vehicle.Model == command.Model &&
+            vehicle.ModelYear == command.ModelYear &&
+            vehicle.Value == command.Value &&
+            vehicle.Description == command.Description &&
+            vehicle.ImageUrl == command.ImageUrl &&
+            vehicle.Manufacturer.Name == "Volvo" &&
+            vehicle.FuelType.Name == "Diesel" &&
+            vehicle.TransmissionType.Name == "Automatic")), Times.Once);
         _unitOfWorkMock.Verify(u => u.CompleteAsync(), Times.Once);
         _mapperMock.Verify(m => m.Map<VehicleDetailsDto>(It.IsAny<Vehicle>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_ShouldUseDefaultImage_WhenImageUrlIsMissing()
+    {
+        var command = new CreateVehicleCommand
+        {
+            RegistrationNumber = "NEW124",
+            ManufacturerId = 1,
+            FuelTypeId = 1,
+            TransmissionTypeId = 1,
+            Model = "V60",
+            ModelYear = "2024",
+            Value = 450000,
+            Description = "Test description",
+            ImageUrl = string.Empty
+        };
+
+        _manufacturerRepositoryMock.Setup(r => r.GetByIdAsync(command.ManufacturerId))
+            .ReturnsAsync(new Manufacturer { Id = 1, Name = "Volvo" });
+        _fuelTypeRepositoryMock.Setup(r => r.GetByIdAsync(command.FuelTypeId))
+            .ReturnsAsync(new FuelType { Id = 1, Name = "Diesel" });
+        _transmissionTypeRepositoryMock.Setup(r => r.GetByIdAsync(command.TransmissionTypeId))
+            .ReturnsAsync(new TransmissionType { Id = 1, Name = "Automatic" });
+
+        _unitOfWorkMock.Setup(u => u.CompleteAsync()).ReturnsAsync(1);
+        _mapperMock.Setup(m => m.Map<VehicleDetailsDto>(It.IsAny<Vehicle>()))
+            .Returns(new VehicleDetailsDto { Id = 2, RegistrationNumber = command.RegistrationNumber });
+
+        await _handler.Handle(command, CancellationToken.None);
+
+        _vehicleRepositoryMock.Verify(r => r.AddAsync(It.Is<Vehicle>(vehicle => vehicle.ImageUrl == "/images/no-car.png")), Times.Once);
     }
 
     [Fact]
@@ -116,5 +157,52 @@ public class CreateVehicleCommandHandlerTests
         // Act & Assert
         var exception = await Assert.ThrowsAsync<NotFoundException>(() => _handler.Handle(command, CancellationToken.None));
         Assert.Contains("Manufacturer", exception.Message);
+    }
+
+    [Fact]
+    public async Task Handle_ShouldThrowNotFoundException_WhenFuelTypeDoesNotExist()
+    {
+        var command = new CreateVehicleCommand
+        {
+            RegistrationNumber = "NEW123",
+            ManufacturerId = 1,
+            FuelTypeId = 99,
+            TransmissionTypeId = 1
+        };
+
+        _manufacturerRepositoryMock.Setup(r => r.GetByIdAsync(command.ManufacturerId))
+            .ReturnsAsync(new Manufacturer { Id = 1, Name = "Volvo" });
+        _fuelTypeRepositoryMock.Setup(r => r.GetByIdAsync(command.FuelTypeId))
+            .ReturnsAsync((FuelType?)null);
+
+        var exception = await Assert.ThrowsAsync<NotFoundException>(() => _handler.Handle(command, CancellationToken.None));
+
+        Assert.Contains("Fuel type", exception.Message);
+        _transmissionTypeRepositoryMock.Verify(r => r.GetByIdAsync(It.IsAny<int>()), Times.Never);
+        _vehicleRepositoryMock.Verify(r => r.AddAsync(It.IsAny<Vehicle>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Handle_ShouldThrowNotFoundException_WhenTransmissionTypeDoesNotExist()
+    {
+        var command = new CreateVehicleCommand
+        {
+            RegistrationNumber = "NEW123",
+            ManufacturerId = 1,
+            FuelTypeId = 1,
+            TransmissionTypeId = 99
+        };
+
+        _manufacturerRepositoryMock.Setup(r => r.GetByIdAsync(command.ManufacturerId))
+            .ReturnsAsync(new Manufacturer { Id = 1, Name = "Volvo" });
+        _fuelTypeRepositoryMock.Setup(r => r.GetByIdAsync(command.FuelTypeId))
+            .ReturnsAsync(new FuelType { Id = 1, Name = "Diesel" });
+        _transmissionTypeRepositoryMock.Setup(r => r.GetByIdAsync(command.TransmissionTypeId))
+            .ReturnsAsync((TransmissionType?)null);
+
+        var exception = await Assert.ThrowsAsync<NotFoundException>(() => _handler.Handle(command, CancellationToken.None));
+
+        Assert.Contains("Transmission type", exception.Message);
+        _vehicleRepositoryMock.Verify(r => r.AddAsync(It.IsAny<Vehicle>()), Times.Never);
     }
 }

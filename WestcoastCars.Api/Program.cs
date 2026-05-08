@@ -24,16 +24,37 @@ using System.Threading.RateLimiting;
 
 using WestcoastCars.Api.Swagger.Examples;
 using Swashbuckle.AspNetCore.Filters;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
+using WestcoastCars.Api.Observability;
 
 // ... other usings ...
 
 using WestcoastCars.Application;
+using System.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
+builder.Services.AddSingleton<AppTelemetry>();
+builder.Services.AddOpenTelemetry()
+    .WithTracing(tracing =>
+    {
+        tracing
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddSource(AppTelemetry.ActivitySourceName);
+    })
+    .WithMetrics(metrics =>
+    {
+        metrics
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddRuntimeInstrumentation()
+            .AddMeter(AppTelemetry.MeterName);
+    });
 
 // Configure Options
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
@@ -55,7 +76,10 @@ builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(keysPath))
     .SetApplicationName("WestcoastCars");
 
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecks()
+    .AddNpgSql(
+        builder.Configuration.GetConnectionString("DefaultConnection")!,
+        name: "postgresql");
 
 builder.Services.AddRateLimiter(options =>
 {
@@ -216,6 +240,27 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseStaticFiles();
+
+app.Use(async (context, next) =>
+{
+    var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+    var startedAt = Stopwatch.StartNew();
+
+    try
+    {
+        await next();
+    }
+    finally
+    {
+        startedAt.Stop();
+        logger.LogInformation(
+            "HTTP {Method} {Path} responded {StatusCode} in {ElapsedMilliseconds} ms",
+            context.Request.Method,
+            context.Request.Path,
+            context.Response.StatusCode,
+            startedAt.ElapsedMilliseconds);
+    }
+});
 
 app.UseRateLimiter();
 

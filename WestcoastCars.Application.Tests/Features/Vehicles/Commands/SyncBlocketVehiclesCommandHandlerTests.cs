@@ -249,6 +249,64 @@ public class SyncBlocketVehiclesCommandHandlerTests
     }
 
     [Fact]
+    public async Task Handle_ShouldSkipVehiclesWithoutRegistrationNumber()
+    {
+        _blocketApiClientMock
+            .SetupSequence(client => client.SearchCarsAsync(It.IsAny<BlocketCarSearchRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new BlocketCarSearchResponse
+            {
+                Docs =
+                [
+                    new BlocketCarSearchItem { Id = "1" },
+                    new BlocketCarSearchItem { Id = "2" }
+                ]
+            })
+            .ReturnsAsync(new BlocketCarSearchResponse());
+
+        _blocketApiClientMock
+            .Setup(client => client.GetCarAdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new BlocketCarAdDetails());
+
+        _mapperMock
+            .SetupSequence(mapper => mapper.Map(It.IsAny<BlocketCarSearchItem>(), It.IsAny<BlocketCarAdDetails>(), It.IsAny<DateTime>()))
+            .Returns(new BlocketVehicleImportData
+            {
+                ExternalListingId = "1",
+                RegistrationNumber = "REG1",
+                Manufacturer = "VOLVO",
+                FuelType = "Petrol",
+                TransmissionType = "Automatic",
+                Model = "A",
+                ModelYear = "2024",
+                ImageUrl = "x",
+                Description = "x"
+            })
+            .Returns(new BlocketVehicleImportData
+            {
+                ExternalListingId = "2",
+                RegistrationNumber = "   ",
+                Manufacturer = "VOLVO",
+                FuelType = "Petrol",
+                TransmissionType = "Automatic",
+                Model = "B",
+                ModelYear = "2024",
+                ImageUrl = "x",
+                Description = "x"
+            });
+
+        var result = await _handler.Handle(new SyncBlocketVehiclesCommand { Limit = 2 }, CancellationToken.None);
+
+        Assert.Equal(1, result.TotalPrepared);
+        Assert.Equal(1, result.TotalImported);
+        Assert.Equal(1, result.TotalSkipped);
+        Assert.Single(result.Vehicles);
+        Assert.Equal("REG1", result.Vehicles[0].RegistrationNumber);
+        _vehicleRepositoryMock.Verify(repository => repository.AddRangeAsync(It.Is<IEnumerable<Vehicle>>(vehicles =>
+            vehicles.Count() == 1 &&
+            vehicles.Single().RegistrationNumber == "REG1")), Times.Once);
+    }
+
+    [Fact]
     public async Task Handle_ShouldLoadLookupTablesOnceAndResolveExistingLookupsInMemory()
     {
         _blocketApiClientMock

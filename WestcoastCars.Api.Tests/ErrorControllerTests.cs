@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Moq;
 using WestcoastCars.Api.Controllers;
 using WestcoastCars.Application.Exceptions;
 using Xunit;
@@ -17,7 +19,9 @@ public class ErrorControllerTests
     [Fact]
     public void HandleError_ShouldExposeKnownExceptionDetail()
     {
-        var controller = CreateController(new ConflictException("Email already exists"));
+        var loggerMock = new Mock<ILogger<ErrorController>>();
+        var exception = new ConflictException("Email already exists");
+        var controller = CreateController(exception, loggerMock);
 
         var result = controller.HandleError(new TestHostEnvironment(Environments.Production));
 
@@ -26,6 +30,28 @@ public class ErrorControllerTests
         Assert.Equal(StatusCodes.Status409Conflict, objectResult.StatusCode);
         Assert.Equal("Conflict", problemDetails.Title);
         Assert.Equal("Email already exists", problemDetails.Detail);
+        loggerMock.Verify(
+            logger => logger.Log(
+                LogLevel.Error,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((state, _) => state.ToString()!.Contains("An error occurred with traceId", StringComparison.Ordinal)),
+                exception,
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public void HandleError_ShouldMapNotFoundExceptionTo404()
+    {
+        var controller = CreateController(new NotFoundException("Manufacturer no longer exists."));
+
+        var result = controller.HandleError(new TestHostEnvironment(Environments.Production));
+
+        var objectResult = Assert.IsType<ObjectResult>(result);
+        var problemDetails = Assert.IsType<ProblemDetails>(objectResult.Value);
+        Assert.Equal(StatusCodes.Status404NotFound, objectResult.StatusCode);
+        Assert.Equal("Not Found", problemDetails.Title);
+        Assert.Equal("Manufacturer no longer exists.", problemDetails.Detail);
     }
 
     [Fact]
@@ -55,6 +81,7 @@ public class ErrorControllerTests
         Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
         Assert.Equal("An unexpected error occurred.", problemDetails.Detail);
         Assert.DoesNotContain("secret", problemDetails.Detail);
+        Assert.DoesNotContain("stackTrace", problemDetails.Extensions.Keys);
     }
 
     [Fact]
@@ -69,17 +96,54 @@ public class ErrorControllerTests
         Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
         Assert.Equal("A persistence error occurred.", problemDetails.Detail);
         Assert.DoesNotContain("Failed to create vehicle", problemDetails.Detail);
+        Assert.DoesNotContain("stackTrace", problemDetails.Extensions.Keys);
     }
 
-    private static ErrorController CreateController(Exception exception)
+    [Fact]
+    public void HandleError_ShouldIncludeStackTraceForPersistenceExceptionInDevelopment()
     {
-        var services = new ServiceCollection()
-            .AddLogging()
-            .BuildServiceProvider();
+        var controller = CreateController(new PersistenceException("Failed to create vehicle"));
+
+        var result = controller.HandleError(new TestHostEnvironment(Environments.Development));
+
+        var objectResult = Assert.IsType<ObjectResult>(result);
+        var problemDetails = Assert.IsType<ProblemDetails>(objectResult.Value);
+        Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
+        Assert.Equal("A persistence error occurred.", problemDetails.Detail);
+        Assert.Contains("stackTrace", problemDetails.Extensions.Keys);
+    }
+
+    [Fact]
+    public void HandleError_ShouldIncludeStackTraceForUnknownExceptionInDevelopment()
+    {
+        var controller = CreateController(new InvalidOperationException("secret database details"));
+
+        var result = controller.HandleError(new TestHostEnvironment(Environments.Development));
+
+        var objectResult = Assert.IsType<ObjectResult>(result);
+        var problemDetails = Assert.IsType<ProblemDetails>(objectResult.Value);
+        Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
+        Assert.Equal("An unexpected error occurred.", problemDetails.Detail);
+        Assert.Contains("stackTrace", problemDetails.Extensions.Keys);
+    }
+
+    private static ErrorController CreateController(Exception exception, Mock<ILogger<ErrorController>>? loggerMock = null)
+    {
+        var services = new ServiceCollection();
+        if (loggerMock is null)
+        {
+            services.AddLogging();
+        }
+        else
+        {
+            services.AddSingleton(loggerMock.Object);
+        }
+
+        var serviceProvider = services.BuildServiceProvider();
 
         var httpContext = new DefaultHttpContext
         {
-            RequestServices = services
+            RequestServices = serviceProvider
         };
         httpContext.Request.Path = "/error-source";
         httpContext.Features.Set<IExceptionHandlerFeature>(new TestExceptionHandlerFeature(exception));

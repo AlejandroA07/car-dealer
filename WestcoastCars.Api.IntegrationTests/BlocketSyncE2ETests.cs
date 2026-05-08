@@ -11,20 +11,16 @@ using Xunit;
 
 namespace WestcoastCars.Api.IntegrationTests;
 
+[Trait("Category", "ExternalE2E")]
 public class BlocketSyncE2ETests : IntegrationTestBase
 {
     public BlocketSyncE2ETests(CustomWebApplicationFactory<Program> factory) : base(factory)
     {
     }
 
-    [Fact]
+    [OptionalBlocketE2EFact]
     public async Task SyncBlocket_ShouldReplaceVehicles_AndCapTo50()
     {
-        if (!string.Equals(Environment.GetEnvironmentVariable("RUN_BLOCKET_E2E"), "1", StringComparison.OrdinalIgnoreCase))
-        {
-            return;
-        }
-
         var client = await CreateAuthenticatedClientAsync();
 
         var response = await client.PostAsJsonAsync("/api/v1/vehicles/import/blocket", new SyncBlocketVehiclesCommand

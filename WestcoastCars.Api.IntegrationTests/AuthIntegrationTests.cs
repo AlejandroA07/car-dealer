@@ -103,5 +103,13 @@ public class AuthIntegrationTests : IntegrationTestBase
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
-}
+    [Fact]
+    public async Task Login_ShouldReturnUnauthorized_WhenCredentialsAreInvalid()
+    {
+        var response = await _client.PostAsJsonAsync(
+            "/api/auth/login",
+            new LoginRequest("admin@westcoast-cars.com", "WrongPassword123!"));
 
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+}

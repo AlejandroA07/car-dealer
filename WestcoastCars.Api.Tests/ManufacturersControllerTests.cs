@@ -70,7 +70,7 @@ public class ManufacturersControllerTests
         // Arrange
         var newManufacturerDto = new NamedObjectDto { Name = "Tesla" };
         var returnedManufacturerDto = new NamedObjectDto { Id = 1, Name = "Tesla" };
-        _mediatorMock.Setup(m => m.Send(It.IsAny<CreateManufacturerCommand>(), default)).ReturnsAsync(returnedManufacturerDto);
+        _mediatorMock.Setup(m => m.Send(It.Is<CreateManufacturerCommand>(command => command.Name == "Tesla"), default)).ReturnsAsync(returnedManufacturerDto);
 
         // Act
         var result = await _controller.Add(newManufacturerDto);
@@ -80,6 +80,7 @@ public class ManufacturersControllerTests
         Assert.Equal("GetById", createdAtActionResult.ActionName);
         var returnValue = Assert.IsType<NamedObjectDto>(createdAtActionResult.Value);
         Assert.Equal(newManufacturerDto.Name, returnValue.Name);
+        _mediatorMock.Verify(m => m.Send(It.Is<CreateManufacturerCommand>(command => command.Name == "Tesla"), default), Times.Once);
     }
 
     [Fact]
@@ -95,6 +96,18 @@ public class ManufacturersControllerTests
 
         // Assert
         Assert.IsType<NoContentResult>(result);
+        _mediatorMock.Verify(m => m.Send(It.Is<UpdateManufacturerCommand>(command =>
+            command.Id == manufacturerId &&
+            command.Name == "UpdatedName"), default), Times.Once);
+    }
+
+    [Fact]
+    public async Task Update_ShouldReturnBadRequest_WhenRouteIdDoesNotMatchDtoId()
+    {
+        var result = await _controller.Update(1, new NamedObjectDto { Id = 2, Name = "Mismatch" });
+
+        Assert.IsType<BadRequestObjectResult>(result);
+        _mediatorMock.Verify(m => m.Send(It.IsAny<UpdateManufacturerCommand>(), default), Times.Never);
     }
 
     [Fact]
@@ -108,5 +121,6 @@ public class ManufacturersControllerTests
 
         // Assert
         Assert.IsType<NoContentResult>(result);
+        _mediatorMock.Verify(m => m.Send(It.Is<DeleteManufacturerCommand>(command => command.Id == 1), default), Times.Once);
     }
 }

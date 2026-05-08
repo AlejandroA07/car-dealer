@@ -209,6 +209,23 @@ dotnet run --project WestcoastCars.Web/WestcoastCars.Web.csproj
 dotnet test westcoast-cars.sln
 ```
 
+### Optional Blocket E2E test
+
+The real Blocket sync E2E test is skipped by default.
+
+Run it when you:
+- are preparing a release
+- changed Blocket sync logic
+- want to verify the live external integration
+
+PowerShell:
+```powershell
+$env:RUN_BLOCKET_E2E="1"
+dotnet test westcoast-cars.sln --filter "Category=ExternalE2E"
+```
+
+Regular CI excludes this test on purpose so normal PR feedback stays fast and stable.
+
 ## Manual Blocket sync
 
 The API supports a manual Blocket inventory sync through:

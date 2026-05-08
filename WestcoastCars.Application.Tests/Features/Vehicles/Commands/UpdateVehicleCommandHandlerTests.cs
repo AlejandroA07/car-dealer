@@ -82,8 +82,45 @@ public class UpdateVehicleCommandHandlerTests
         Assert.Equal(Unit.Value, result);
         Assert.Equal(command.RegistrationNumber, existingVehicle.RegistrationNumber);
         Assert.Equal(command.Model, existingVehicle.Model);
+        Assert.Equal(command.ModelYear, existingVehicle.ModelYear);
+        Assert.Equal(command.Value, existingVehicle.Value);
+        Assert.Equal(command.Description, existingVehicle.Description);
+        Assert.Equal(command.ManufacturerId, existingVehicle.Manufacturer.Id);
+        Assert.Equal(command.FuelTypeId, existingVehicle.FuelType.Id);
+        Assert.Equal(command.TransmissionTypeId, existingVehicle.TransmissionType.Id);
         _vehicleRepositoryMock.Verify(r => r.Update(existingVehicle), Times.Once);
         _unitOfWorkMock.Verify(u => u.CompleteAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_ShouldKeepExistingImage_WhenImageUrlIsNotProvided()
+    {
+        var vehicleId = 1;
+        var command = new UpdateVehicleCommand
+        {
+            Id = vehicleId,
+            RegistrationNumber = "UPDATED",
+            ManufacturerId = 1,
+            FuelTypeId = 1,
+            TransmissionTypeId = 1,
+            Model = "New Model",
+            ModelYear = "2024",
+            Value = 500000,
+            Description = "New Description",
+            ImageUrl = string.Empty
+        };
+
+        var existingVehicle = CreateTestVehicle(vehicleId, "OLD123");
+
+        _vehicleRepositoryMock.Setup(r => r.GetByIdAsync(vehicleId)).ReturnsAsync(existingVehicle);
+        _manufacturerRepositoryMock.Setup(r => r.GetByIdAsync(command.ManufacturerId)).ReturnsAsync(new Manufacturer { Id = 1, Name = "Make" });
+        _fuelTypeRepositoryMock.Setup(r => r.GetByIdAsync(command.FuelTypeId)).ReturnsAsync(new FuelType { Id = 1, Name = "Fuel" });
+        _transmissionTypeRepositoryMock.Setup(r => r.GetByIdAsync(command.TransmissionTypeId)).ReturnsAsync(new TransmissionType { Id = 1, Name = "Trans" });
+        _unitOfWorkMock.Setup(u => u.CompleteAsync()).ReturnsAsync(1);
+
+        await _handler.Handle(command, CancellationToken.None);
+
+        Assert.Equal("test.png", existingVehicle.ImageUrl);
     }
 
     [Fact]

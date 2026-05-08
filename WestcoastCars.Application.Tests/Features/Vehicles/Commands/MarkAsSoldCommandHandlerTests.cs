@@ -55,6 +55,33 @@ public class MarkAsSoldCommandHandlerTests
     }
 
     [Fact]
+    public async Task Handle_ShouldThrowConflictException_WhenVehicleIsAlreadySold()
+    {
+        var vehicleId = 1;
+        var vehicle = new Vehicle
+        {
+            Id = vehicleId,
+            RegistrationNumber = "TEST123",
+            Model = "Test",
+            ModelYear = "2020",
+            ImageUrl = "test.png",
+            Description = "Test",
+            Manufacturer = new Manufacturer { Name = "Make" },
+            FuelType = new FuelType { Name = "Fuel" },
+            TransmissionType = new TransmissionType { Name = "Trans" },
+            IsSold = true
+        };
+
+        _vehicleRepositoryMock.Setup(r => r.GetByIdAsync(vehicleId)).ReturnsAsync(vehicle);
+
+        var exception = await Assert.ThrowsAsync<ConflictException>(() => _handler.Handle(new MarkAsSoldCommand { Id = vehicleId }, CancellationToken.None));
+
+        Assert.Equal($"Vehicle with ID {vehicleId} is already marked as sold", exception.Message);
+        _vehicleRepositoryMock.Verify(r => r.Update(It.IsAny<Vehicle>()), Times.Never);
+        _unitOfWorkMock.Verify(u => u.CompleteAsync(), Times.Never);
+    }
+
+    [Fact]
     public async Task Handle_ShouldThrowPersistenceException_WhenSaveAffectsNoRows()
     {
         // Arrange

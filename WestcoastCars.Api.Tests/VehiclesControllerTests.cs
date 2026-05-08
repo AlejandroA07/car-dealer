@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 using WestcoastCars.Api.Controllers;
+using WestcoastCars.Api.Observability;
 using WestcoastCars.Application.Features.Vehicles.Commands.Create;
 using WestcoastCars.Application.Features.Vehicles.Commands.Delete;
 using WestcoastCars.Application.Features.Vehicles.Commands.MarkAsSold;
@@ -11,6 +12,7 @@ using WestcoastCars.Application.Features.Vehicles.Commands.Update;
 using WestcoastCars.Application.Features.Vehicles.Queries.GetById;
 using WestcoastCars.Application.Features.Vehicles.Queries.GetByRegNo;
 using WestcoastCars.Application.Features.Vehicles.Queries.ListAll;
+using WestcoastCars.Application.Features.Vehicles.Queries.Search;
 using WestcoastCars.Contracts.DTOs;
 using System.Collections.Generic;
 using System.Threading;
@@ -23,13 +25,15 @@ public class VehiclesControllerTests
 {
     private readonly Mock<IMediator> _mediatorMock;
     private readonly Mock<ILogger<VehiclesController>> _loggerMock;
+    private readonly AppTelemetry _telemetry;
     private readonly VehiclesController _controller;
 
     public VehiclesControllerTests()
     {
         _mediatorMock = new Mock<IMediator>();
         _loggerMock = new Mock<ILogger<VehiclesController>>();
-        _controller = new VehiclesController(_mediatorMock.Object, _loggerMock.Object);
+        _telemetry = new AppTelemetry();
+        _controller = new VehiclesController(_mediatorMock.Object, _loggerMock.Object, _telemetry);
     }
 
     [Fact]
@@ -55,6 +59,8 @@ public class VehiclesControllerTests
         var okResult = Assert.IsType<OkObjectResult>(result);
         var returnValue = Assert.IsType<PagedResult<VehicleSummaryDto>>(okResult.Value);
         Assert.Single(returnValue.Items);
+        _mediatorMock.Verify(m => m.Send(It.Is<ListAllVehiclesQuery>(query => query.Page == 1 && query.PageSize == 20), default), Times.Once);
+        _loggerMock.VerifyLog(LogLevel.Information, "Retrieving list of unsold vehicles via MediatR", Times.Once());
     }
 
     [Fact]
@@ -71,6 +77,7 @@ public class VehiclesControllerTests
         var okResult = Assert.IsType<OkObjectResult>(result);
         var returnValue = Assert.IsType<VehicleDetailsDto>(okResult.Value);
         Assert.Equal(1, returnValue.Id);
+        _mediatorMock.Verify(m => m.Send(It.Is<GetVehicleByIdQuery>(query => query.Id == 1), default), Times.Once);
     }
 
     [Fact]
@@ -87,6 +94,28 @@ public class VehiclesControllerTests
         var okResult = Assert.IsType<OkObjectResult>(result);
         var returnValue = Assert.IsType<VehicleDetailsDto>(okResult.Value);
         Assert.Equal("TEST123", returnValue.RegistrationNumber);
+        _mediatorMock.Verify(m => m.Send(It.Is<GetVehicleByRegNoQuery>(query => query.RegistrationNumber == "TEST123"), default), Times.Once);
+    }
+
+    [Fact]
+    public async Task Search_ShouldReturnOkAndForwardSearchCriteria()
+    {
+        var search = new VehicleSearchDto { Make = "Volvo", Model = "XC60", Page = 2, PageSize = 15 };
+        var expectedResult = new PagedResult<VehicleSummaryDto> { Items = [], TotalCount = 0, Page = 2, PageSize = 15 };
+
+        _mediatorMock
+            .Setup(m => m.Send(It.Is<SearchVehiclesQuery>(query =>
+                query.Criteria.Make == "Volvo" &&
+                query.Criteria.Model == "XC60" &&
+                query.Criteria.Page == 2 &&
+                query.Criteria.PageSize == 15), default))
+            .ReturnsAsync(expectedResult);
+
+        var result = await _controller.Search(search);
+
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        Assert.Same(expectedResult, okResult.Value);
+        _loggerMock.VerifyLog(LogLevel.Information, "Searching vehicles with criteria", Times.Once());
     }
 
     [Fact]
@@ -131,6 +160,7 @@ public class VehiclesControllerTests
         var returnValue = Assert.IsType<VehicleDetailsDto>(createdAtAction.Value);
         Assert.Equal(1, returnValue.Id);
         _mediatorMock.Verify(m => m.Send(It.IsAny<GetVehicleByIdQuery>(), default), Times.Never);
+        _loggerMock.VerifyLog(LogLevel.Information, "Creating new vehicle with registration", Times.Once());
     }
 
     [Fact]
@@ -171,6 +201,10 @@ public class VehiclesControllerTests
 
         // Assert
         Assert.IsType<NoContentResult>(result);
+        _mediatorMock.Verify(m => m.Send(It.Is<UpdateVehicleCommand>(command =>
+            command.Id == dto.Id &&
+            command.RegistrationNumber == dto.RegistrationNumber &&
+            command.ImageUrl == dto.ImageUrl), default), Times.Once);
     }
 
     [Fact]
@@ -228,25 +262,27 @@ public class VehiclesControllerTests
     public async Task MarkAsSold_ShouldReturnNoContent_WhenSuccessful()
     {
         // Arrange
-        _mediatorMock.Setup(m => m.Send(It.IsAny<MarkAsSoldCommand>(), default)).ReturnsAsync(Unit.Value);
+        _mediatorMock.Setup(m => m.Send(It.Is<MarkAsSoldCommand>(command => command.Id == 1), default)).ReturnsAsync(Unit.Value);
 
         // Act
         var result = await _controller.MarkAsSold(1);
 
         // Assert
         Assert.IsType<NoContentResult>(result);
+        _mediatorMock.Verify(m => m.Send(It.Is<MarkAsSoldCommand>(command => command.Id == 1), default), Times.Once);
     }
 
     [Fact]
     public async Task Delete_ShouldReturnNoContent_WhenSuccessful()
     {
         // Arrange
-        _mediatorMock.Setup(m => m.Send(It.IsAny<DeleteVehicleCommand>(), default)).ReturnsAsync(Unit.Value);
+        _mediatorMock.Setup(m => m.Send(It.Is<DeleteVehicleCommand>(command => command.Id == 1), default)).ReturnsAsync(Unit.Value);
 
         // Act
         var result = await _controller.Delete(1);
 
         // Assert
         Assert.IsType<NoContentResult>(result);
+        _mediatorMock.Verify(m => m.Send(It.Is<DeleteVehicleCommand>(command => command.Id == 1), default), Times.Once);
     }
 }

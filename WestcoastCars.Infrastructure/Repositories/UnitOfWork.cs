@@ -37,6 +37,10 @@ public class UnitOfWork : IUnitOfWork
         {
             throw new ConflictException(conflictMessage);
         }
+        catch (DbUpdateException ex) when (TryMapForeignKeyConstraint(ex, out var relationException))
+        {
+            throw relationException;
+        }
     }
 
     public void Dispose()
@@ -69,6 +73,34 @@ public class UnitOfWork : IUnitOfWork
         }
 
         conflictMessage = string.Empty;
+        return false;
+    }
+
+    private static bool TryMapForeignKeyConstraint(DbUpdateException exception, out Exception mappedException)
+    {
+        if (exception.InnerException is PostgresException postgresException &&
+            postgresException.SqlState == PostgresErrorCodes.ForeignKeyViolation)
+        {
+            mappedException = postgresException.ConstraintName switch
+            {
+                "FK_Vehicles_Manufacturers_ManufacturerId" => new NotFoundException("Manufacturer no longer exists."),
+                "FK_Vehicles_FuelTypes_FuelTypeId" => new NotFoundException("Fuel type no longer exists."),
+                "FK_Vehicles_TransmissionTypes_TransmissionTypeId" => new NotFoundException("Transmission type no longer exists."),
+                _ => new ConflictException("The operation conflicts with existing related data.")
+            };
+
+            return true;
+        }
+
+        if (exception.InnerException is SqliteException sqliteException &&
+            sqliteException.SqliteErrorCode == 19 &&
+            sqliteException.Message.Contains("FOREIGN KEY constraint failed", StringComparison.OrdinalIgnoreCase))
+        {
+            mappedException = new ConflictException("The operation conflicts with existing related data.");
+            return true;
+        }
+
+        mappedException = new ConflictException("The operation conflicts with existing related data.");
         return false;
     }
 }

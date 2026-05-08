@@ -63,4 +63,18 @@ public class DeleteManufacturerCommandHandlerTests
         // Act & Assert
         await Assert.ThrowsAsync<NotFoundException>(() => _handler.Handle(new DeleteManufacturerCommand { Id = manufacturerId }, CancellationToken.None));
     }
+
+    [Fact]
+    public async Task Handle_ShouldPropagateConflictException_WhenRepositorySaveFailsWithConflict()
+    {
+        var manufacturerId = 1;
+        var manufacturer = new Manufacturer { Id = manufacturerId, Name = "Volvo" };
+
+        _manufacturerRepositoryMock.Setup(r => r.GetByIdAsync(manufacturerId)).ReturnsAsync(manufacturer);
+        _unitOfWorkMock.Setup(u => u.CompleteAsync()).ThrowsAsync(new ConflictException("Manufacturer cannot be deleted because vehicles still reference it."));
+
+        var exception = await Assert.ThrowsAsync<ConflictException>(() => _handler.Handle(new DeleteManufacturerCommand { Id = manufacturerId }, CancellationToken.None));
+
+        Assert.Equal("Manufacturer cannot be deleted because vehicles still reference it.", exception.Message);
+    }
 }

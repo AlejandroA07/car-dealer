@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using WestcoastCars.Contracts.DTOs;
 using WestcoastCars.Application.Features.ServiceBookings.Commands.Create;
 using WestcoastCars.Application.Features.ServiceBookings.Queries.ListAll;
+using WestcoastCars.Api.Observability;
+using System.Diagnostics;
 
 namespace WestcoastCars.Api.Controllers;
 
@@ -17,11 +19,13 @@ public class ServiceBookingsController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ILogger<ServiceBookingsController> _logger;
+    private readonly AppTelemetry _telemetry;
 
-    public ServiceBookingsController(IMediator mediator, ILogger<ServiceBookingsController> logger)
+    public ServiceBookingsController(IMediator mediator, ILogger<ServiceBookingsController> logger, AppTelemetry telemetry)
     {
         _mediator = mediator;
         _logger = logger;
+        _telemetry = telemetry;
     }
 
     /// <summary>
@@ -47,7 +51,7 @@ public class ServiceBookingsController : ControllerBase
     /// <returns>The ID of the created booking.</returns>
     [HttpPost]
     [AllowAnonymous]
-    [ProducesResponseType(200)]
+    [ProducesResponseType(typeof(CreateServiceBookingResponseDto), 200)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> Create(ServiceBookingPostDto dto)
     {
@@ -63,7 +67,23 @@ public class ServiceBookingsController : ControllerBase
         };
 
         _logger.LogInformation("Creating new service booking for vehicle: {RegNo}", command.VehicleRegistrationNumber);
-        var id = await _mediator.Send(command);
-        return Ok(new { id = id });
+
+        using var activity = _telemetry.StartServiceBookingActivity(command.VehicleRegistrationNumber);
+        var startedAt = Stopwatch.StartNew();
+
+        try
+        {
+            var id = await _mediator.Send(command);
+            startedAt.Stop();
+            _telemetry.RecordServiceBookingOperation("success", startedAt.Elapsed);
+            activity?.SetTag("service_booking.id", id);
+            return Ok(new CreateServiceBookingResponseDto { Id = id });
+        }
+        catch
+        {
+            startedAt.Stop();
+            _telemetry.RecordServiceBookingOperation("failure", startedAt.Elapsed);
+            throw;
+        }
     }
 }

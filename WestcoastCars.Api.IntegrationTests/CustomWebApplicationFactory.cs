@@ -1,40 +1,30 @@
 using DotNet.Testcontainers.Builders;
-using Microsoft.Data.Sqlite;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Testcontainers.PostgreSql;
+using WestcoastCars.Infrastructure.Data;
 
 namespace WestcoastCars.Api.IntegrationTests;
 
 public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProgram>, IAsyncLifetime
     where TProgram : class
 {
-    private readonly string _sqliteFallbackConnectionString = $"Data Source=WestcoastCarsIntegrationTests-{Guid.NewGuid():N};Mode=Memory;Cache=Shared";
+    private const string AdminPassword = "Password123!";
     private PostgreSqlContainer? _dbContainer;
-    private SqliteConnection? _sqliteFallbackConnection;
     private string _connectionString = string.Empty;
-
-    public bool UsesSqliteFallback { get; private set; }
 
     async Task IAsyncLifetime.InitializeAsync()
     {
-        try
-        {
-            _dbContainer = new PostgreSqlBuilder("postgres:16-alpine")
-                .WithWaitStrategy(Wait.ForUnixContainer().UntilInternalTcpPortIsAvailable(5432))
-                .Build();
+        _dbContainer = new PostgreSqlBuilder("postgres:16-alpine")
+            .WithWaitStrategy(Wait.ForUnixContainer().UntilInternalTcpPortIsAvailable(5432))
+            .Build();
 
-            await _dbContainer.StartAsync();
-            _connectionString = _dbContainer.GetConnectionString();
-        }
-        catch (DockerUnavailableException)
-        {
-            await EnableSqliteFallbackAsync();
-        }
-        catch (AggregateException ex) when (ex.InnerExceptions.OfType<DockerUnavailableException>().Any())
-        {
-            await EnableSqliteFallbackAsync();
-        }
+        await _dbContainer.StartAsync();
+        _connectionString = _dbContainer.GetConnectionString();
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -44,7 +34,44 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
         builder.UseSetting("JwtSettings:Issuer", "WestcoastCars.Auth");
         builder.UseSetting("JwtSettings:Audience", "WestcoastCars.Auth");
         builder.UseSetting("JwtSettings:ExpiryMinutes", "60");
-        builder.UseSetting("AdminSettings:Password", "Password123!");
+        builder.UseSetting("AdminSettings:Password", AdminPassword);
+    }
+
+    public async Task ResetDatabaseAsync()
+    {
+        using var scope = Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<WestcoastCarsContext>();
+
+        await context.Database.ExecuteSqlRawAsync("""
+            TRUNCATE TABLE
+                "ServiceBookings",
+                "Vehicles",
+                "Manufacturers",
+                "FuelTypes",
+                "TransmissionTypes",
+                "AspNetUserClaims",
+                "AspNetUserLogins",
+                "AspNetUserRoles",
+                "AspNetUserTokens",
+                "AspNetRoleClaims",
+                "AspNetRoles",
+                "AspNetUsers"
+            RESTART IDENTITY CASCADE;
+            """);
+
+        var seedPresence = await SeedData.GetSeedPresenceAsync(context);
+        await SeedData.LoadManufacturerData(context, seedPresence.HasManufacturers);
+        await SeedData.LoadFuelTypeData(context, seedPresence.HasFuelTypes);
+        await SeedData.LoadTransmissionsData(context, seedPresence.HasTransmissionTypes);
+        await SeedData.LoadVehicleData(context, seedPresence.HasVehicles);
+        await SeedData.EnsurePostgreSqlIdentitySequencesAsync(context);
+
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        var loggerFactory = scope.ServiceProvider.GetRequiredService<ILoggerFactory>();
+        var logger = loggerFactory.CreateLogger<CustomWebApplicationFactory<TProgram>>();
+
+        await IdentitySeedData.SeedRolesAndUsers(userManager, roleManager, AdminPassword, logger);
     }
 
     async Task IAsyncLifetime.DisposeAsync()
@@ -53,18 +80,5 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
         {
             await _dbContainer.DisposeAsync();
         }
-
-        if (_sqliteFallbackConnection is not null)
-        {
-            await _sqliteFallbackConnection.DisposeAsync();
-        }
-    }
-
-    private async Task EnableSqliteFallbackAsync()
-    {
-        UsesSqliteFallback = true;
-        _connectionString = _sqliteFallbackConnectionString;
-        _sqliteFallbackConnection = new SqliteConnection(_sqliteFallbackConnectionString);
-        await _sqliteFallbackConnection.OpenAsync();
     }
 }

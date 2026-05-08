@@ -13,6 +13,8 @@ using WestcoastCars.Application.Features.Vehicles.Commands.MarkAsSold;
 using WestcoastCars.Application.Features.Vehicles.Commands.SyncBlocket;
 using WestcoastCars.Application.Features.Vehicles.Queries.Search;
 using Microsoft.Extensions.Logging;
+using WestcoastCars.Api.Observability;
+using System.Diagnostics;
 
 namespace WestcoastCars.Api.Controllers;
 
@@ -26,11 +28,13 @@ public class VehiclesController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ILogger<VehiclesController> _logger;
+    private readonly AppTelemetry _telemetry;
 
-    public VehiclesController(IMediator mediator, ILogger<VehiclesController> logger)
+    public VehiclesController(IMediator mediator, ILogger<VehiclesController> logger, AppTelemetry telemetry)
     {
         _mediator = mediator;
         _logger = logger;
+        _telemetry = telemetry;
     }
 
     /// <summary>
@@ -152,8 +156,24 @@ public class VehiclesController : ControllerBase
         };
 
         _logger.LogInformation("Creating new vehicle with registration: {RegNo} via MediatR", command.RegistrationNumber);
-        var result = await _mediator.Send(command);
-        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+
+        using var activity = _telemetry.StartVehicleActivity("create", command.RegistrationNumber);
+        var startedAt = Stopwatch.StartNew();
+
+        try
+        {
+            var result = await _mediator.Send(command);
+            startedAt.Stop();
+            _telemetry.RecordVehicleOperation("create", "success", startedAt.Elapsed);
+            activity?.SetTag("vehicle.id", result.Id);
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+        }
+        catch
+        {
+            startedAt.Stop();
+            _telemetry.RecordVehicleOperation("create", "failure", startedAt.Elapsed);
+            throw;
+        }
     }
 
     /// <summary>
@@ -170,8 +190,24 @@ public class VehiclesController : ControllerBase
     {
         var request = command ?? new SyncBlocketVehiclesCommand();
         _logger.LogInformation("Starting manual Blocket sync with limit {Limit}", request.Limit);
-        var result = await _mediator.Send(request);
-        return Ok(result);
+        using var activity = _telemetry.StartBlocketSyncActivity(request.Limit);
+        var startedAt = Stopwatch.StartNew();
+
+        try
+        {
+            var result = await _mediator.Send(request);
+            startedAt.Stop();
+            _telemetry.RecordBlocketSync("success", startedAt.Elapsed, request.Limit);
+            activity?.SetTag("blocket_sync.total_imported", result.TotalImported);
+            activity?.SetTag("blocket_sync.total_replaced", result.TotalReplaced);
+            return Ok(result);
+        }
+        catch
+        {
+            startedAt.Stop();
+            _telemetry.RecordBlocketSync("failure", startedAt.Elapsed, request.Limit);
+            throw;
+        }
     }
 
     /// <summary>
@@ -212,8 +248,22 @@ public class VehiclesController : ControllerBase
         };
 
         _logger.LogInformation("Updating vehicle {Id} via MediatR", id);
-        await _mediator.Send(command);
-        return NoContent();
+        using var activity = _telemetry.StartVehicleActivity("update", command.RegistrationNumber, id);
+        var startedAt = Stopwatch.StartNew();
+
+        try
+        {
+            await _mediator.Send(command);
+            startedAt.Stop();
+            _telemetry.RecordVehicleOperation("update", "success", startedAt.Elapsed);
+            return NoContent();
+        }
+        catch
+        {
+            startedAt.Stop();
+            _telemetry.RecordVehicleOperation("update", "failure", startedAt.Elapsed);
+            throw;
+        }
     }
 
     /// <summary>
@@ -230,8 +280,22 @@ public class VehiclesController : ControllerBase
     public async Task<IActionResult> MarkAsSold(int id)
     {
         _logger.LogInformation("Marking vehicle {Id} as sold via MediatR", id);
-        await _mediator.Send(new MarkAsSoldCommand { Id = id });
-        return NoContent();
+        using var activity = _telemetry.StartVehicleActivity("mark-as-sold", vehicleId: id);
+        var startedAt = Stopwatch.StartNew();
+
+        try
+        {
+            await _mediator.Send(new MarkAsSoldCommand { Id = id });
+            startedAt.Stop();
+            _telemetry.RecordVehicleOperation("mark-as-sold", "success", startedAt.Elapsed);
+            return NoContent();
+        }
+        catch
+        {
+            startedAt.Stop();
+            _telemetry.RecordVehicleOperation("mark-as-sold", "failure", startedAt.Elapsed);
+            throw;
+        }
     }
 
     /// <summary>
@@ -248,7 +312,21 @@ public class VehiclesController : ControllerBase
     public async Task<IActionResult> Delete(int id)
     {
         _logger.LogInformation("Deleting vehicle {Id} via MediatR", id);
-        await _mediator.Send(new DeleteVehicleCommand { Id = id });
-        return NoContent();
+        using var activity = _telemetry.StartVehicleActivity("delete", vehicleId: id);
+        var startedAt = Stopwatch.StartNew();
+
+        try
+        {
+            await _mediator.Send(new DeleteVehicleCommand { Id = id });
+            startedAt.Stop();
+            _telemetry.RecordVehicleOperation("delete", "success", startedAt.Elapsed);
+            return NoContent();
+        }
+        catch
+        {
+            startedAt.Stop();
+            _telemetry.RecordVehicleOperation("delete", "failure", startedAt.Elapsed);
+            throw;
+        }
     }
 }

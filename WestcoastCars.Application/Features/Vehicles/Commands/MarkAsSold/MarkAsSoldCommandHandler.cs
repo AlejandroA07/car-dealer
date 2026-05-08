@@ -21,6 +21,11 @@ public class MarkAsSoldCommandHandler : IRequestHandler<MarkAsSoldCommand, Unit>
             throw new NotFoundException($"Vehicle with ID {request.Id} not found");
         }
 
+        if (vehicle.IsSold)
+        {
+            throw new ConflictException($"Vehicle with ID {request.Id} is already marked as sold");
+        }
+
         vehicle.IsSold = true;
 
         _unitOfWork.VehicleRepository.Update(vehicle);
