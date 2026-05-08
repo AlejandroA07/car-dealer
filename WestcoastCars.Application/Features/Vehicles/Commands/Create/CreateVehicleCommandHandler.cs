@@ -40,7 +40,7 @@ public class CreateVehicleCommandHandler : IRequestHandler<CreateVehicleCommand,
             Mileage = request.Mileage,
             TransmissionType = transmissionType,
             FuelType = fuelType,
-            Value = request.Value,
+            Price = request.Price,
             IsSold = request.IsSold,
             Description = request.Description,
             ImageUrl = string.IsNullOrEmpty(request.ImageUrl) ? DefaultCarImageName : request.ImageUrl

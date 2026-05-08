@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.RegularExpressions;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Application.Models.Blocket;
 
@@ -45,7 +46,7 @@ public class BlocketVehicleImportMapper : IBlocketVehicleImportMapper
             ModelYear = NormalizeModelYear(searchItem.Year, adDetails),
             Mileage = NormalizeMileage(searchItem, adDetails),
             ImageUrl = NormalizeImageUrl(searchItem, adDetails),
-            Value = NormalizeValue(searchItem, adDetails),
+            Price = NormalizePrice(searchItem, adDetails),
             Description = NormalizeDescription(searchItem, adDetails),
             FuelType = NormalizeFuelType(searchItem.Fuel, adDetails),
             TransmissionType = NormalizeTransmission(searchItem.Transmission, adDetails),
@@ -80,17 +81,17 @@ public class BlocketVehicleImportMapper : IBlocketVehicleImportMapper
         return normalizedModel.Trim();
     }
 
-    private static string NormalizeModelYear(int? year, BlocketCarAdDetails? adDetails)
+    private static int? NormalizeModelYear(int? year, BlocketCarAdDetails? adDetails)
     {
-        if (year.HasValue)
+        if (year.HasValue && IsValidModelYear(year.Value))
         {
-            return year.Value.ToString(CultureInfo.InvariantCulture);
+            return year.Value;
         }
 
-        var detailsYear = NormalizeOptional(adDetails?.ModelYear)
+        var detailsYear = NormalizeOptional(adDetails?.ModelYearText)
             ?? GetSpecification(adDetails, "Modellår");
 
-        return detailsYear ?? string.Empty;
+        return ParseModelYear(detailsYear);
     }
 
     private static int NormalizeMileage(BlocketCarSearchItem searchItem, BlocketCarAdDetails? adDetails)
@@ -115,7 +116,7 @@ public class BlocketVehicleImportMapper : IBlocketVehicleImportMapper
         return NormalizeOptional(imageUrl) ?? DefaultImageUrl;
     }
 
-    private static int NormalizeValue(BlocketCarSearchItem searchItem, BlocketCarAdDetails? adDetails)
+    private static int NormalizePrice(BlocketCarSearchItem searchItem, BlocketCarAdDetails? adDetails)
     {
         if (searchItem.Price?.Amount is int amount)
         {
@@ -219,6 +220,26 @@ public class BlocketVehicleImportMapper : IBlocketVehicleImportMapper
             ? parsedValue
             : null;
     }
+
+    private static int? ParseModelYear(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var match = Regex.Match(value, @"(?<!\d)\d{4}(?!\d)");
+        var parsedYear = match.Success
+            ? int.Parse(match.Value, CultureInfo.InvariantCulture)
+            : (int?)null;
+
+        return parsedYear.HasValue && IsValidModelYear(parsedYear.Value)
+            ? parsedYear.Value
+            : null;
+    }
+
+    private static bool IsValidModelYear(int year) =>
+        year >= 1900 && year <= DateTime.UtcNow.Year + 1;
 
     private static string? NormalizeOptional(string? value)
     {

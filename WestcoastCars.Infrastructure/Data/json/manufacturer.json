@@ -1,183 +1,137 @@
 [
     {
-      "id": 2,
-      "name": "VOLVO"
+        "name":  "VOLVO"
     },
     {
-      "id": 3,
-      "name": "BMW"
+        "name":  "BMW"
     },
     {
-      "id": 4,
-      "name": "RENAULT"
+        "name":  "RENAULT"
     },
     {
-      "id": 6,
-      "name": "AUDI"
+        "name":  "AUDI"
     },
     {
-      "id": 7,
-      "name": "FIAT"
+        "name":  "FIAT"
     },
     {
-      "id": 8,
-      "name": "MERCEDES-BENZ"
+        "name":  "MERCEDES-BENZ"
     },
     {
-      "id": 9,
-      "name": "TOYOTA"
+        "name":  "TOYOTA"
     },
     {
-      "id": 11,
-      "name": "VOLKSWAGEN"
+        "name":  "VOLKSWAGEN"
     },
     {
-      "id": 13,
-      "name": "FORD"
+        "name":  "FORD"
     },
     {
-      "id": 14,
-      "name": "NISSAN"
+        "name":  "NISSAN"
     },
     {
-      "id": 15,
-      "name": "MAZDA"
+        "name":  "MAZDA"
     },
     {
-      "id": 17,
-      "name": "SKODA"
+        "name":  "SKODA"
     },
     {
-      "id": 18,
-      "name": "PEUGEOT"
+        "name":  "PEUGEOT"
     },
     {
-      "id": 19,
-      "name": "SEAT"
+        "name":  "SEAT"
     },
     {
-      "id": 22,
-      "name": "KIA"
+        "name":  "KIA"
     },
     {
-      "id": 24,
-      "name": "ALFA ROMEO"
+        "name":  "ALFA ROMEO"
     },
     {
-      "id": 26,
-      "name": "HYUNDAI"
+        "name":  "HYUNDAI"
     },
     {
-      "id": 27,
-      "name": "OPEL"
+        "name":  "OPEL"
     },
     {
-      "id": 28,
-      "name": "CITROEN"
+        "name":  "CITROEN"
     },
     {
-      "id": 29,
-      "name": "DACIA"
+        "name":  "DACIA"
     },
     {
-      "id": 30,
-      "name": "JAGUAR"
+        "name":  "JAGUAR"
     },
     {
-      "id": 37,
-      "name": "HONDA"
+        "name":  "HONDA"
     },
     {
-      "id": 38,
-      "name": "JAGUAR"
+        "name":  "JAGUAR"
     },
     {
-      "id": 39,
-      "name": "SUZUKI"
+        "name":  "SUZUKI"
     },
     {
-      "id": 40,
-      "name": "JEEP"
+        "name":  "JEEP"
     },
     {
-      "id": 44,
-      "name": "TESLA"
+        "name":  "TESLA"
     },
     {
-      "id": 45,
-      "name": "MITSUBISHI"
+        "name":  "MITSUBISHI"
     },
     {
-      "id": 46,
-      "name": "PORSCHE"
+        "name":  "PORSCHE"
     },
     {
-      "id": 48,
-      "name": "SUBARU"
+        "name":  "SUBARU"
     },
     {
-      "id": 52,
-      "name": "LEXUS"
+        "name":  "LEXUS"
     },
     {
-      "id": 53,
-      "name": "CHEVROLET"
+        "name":  "CHEVROLET"
     },
     {
-      "id": 55,
-      "name": "MASERATI"
+        "name":  "MASERATI"
     },
     {
-      "id": 56,
-      "name": "SAAB"
+        "name":  "SAAB"
     },
     {
-      "id": 58,
-      "name": "DODGE"
+        "name":  "DODGE"
     },
     {
-      "id": 59,
-      "name": "OKÄND"
+        "name":  "OKÃƒâ€žND"
     },
     {
-      "id": 61,
-      "name": "MG"
+        "name":  "MG"
     },
     {
-      "id": 62,
-      "name": "ISUZU"
+        "name":  "ISUZU"
     },
     {
-      "id": 63,
-      "name": "BENTLEY"
+        "name":  "BENTLEY"
     },
     {
-      "id": 64,
-      "name": "POLESTAR"
+        "name":  "POLESTAR"
     },
     {
-      "id": 65,
-      "name": "FERRARI"
+        "name":  "FERRARI"
     },
     {
-      "id": 66,
-      "name": "CHRYSLER"
+        "name":  "CHRYSLER"
     },
     {
-      "id": 69,
-      "name": "SMART"
+        "name":  "SMART"
     },
     {
-      "id": 70,
-      "name": "ASTON MARTIN"
+        "name":  "ASTON MARTIN"
     },
     {
-      "id": 76,
-      "name": "CADILLAC"
+        "name":  "CADILLAC"
     },
     {
-      "id": 77,
-      "name": "LAMBOURGHINI"
+        "name":  "LAMBOURGHINI"
     }
-  ]
-  
+]

@@ -17,8 +17,10 @@ public class CreateServiceBookingCommandHandler : IRequestHandler<CreateServiceB
 
     public async Task<int> Handle(CreateServiceBookingCommand request, CancellationToken cancellationToken)
     {
+        var vehicle = await _unitOfWork.VehicleRepository.FindByRegistrationNumberAsync(request.VehicleRegistrationNumber);
         var booking = new ServiceBooking
         {
+            VehicleId = vehicle?.Id,
             VehicleRegistrationNumber = request.VehicleRegistrationNumber,
             ServiceType = request.ServiceType,
             BookingDate = request.BookingDate,
@@ -26,8 +28,7 @@ public class CreateServiceBookingCommandHandler : IRequestHandler<CreateServiceB
             CustomerEmail = request.CustomerEmail,
             CustomerPhone = request.CustomerPhone,
             Description = request.Description,
-            Status = BookingStatus.Pending,
-            CreatedAt = DateTime.UtcNow
+            Status = BookingStatus.Pending
         };
 
         await _unitOfWork.ServiceBookingRepository.AddAsync(booking);

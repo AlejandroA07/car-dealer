@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using WestcoastCars.Contracts.DTOs;
 using WestcoastCars.Domain.Entities;
 using WestcoastCars.Infrastructure.Data;
 using WestcoastCars.Infrastructure.Repositories;
@@ -51,7 +52,49 @@ public class VehicleRepositoryTests
         Assert.Equal("Automatic", vehicles[0].TransmissionType.Name);
     }
 
-    private static async Task<int> SeedVehicleAsync(string databaseName)
+    [Fact]
+    public async Task GetAllForReplacementAsync_ShouldReturnOnlyBlocketVehicles()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+        await SeedVehicleAsync(databaseName, "BLK123", "Blocket");
+        await SeedVehicleAsync(databaseName, "MAN123", null);
+
+        await using var queryContext = CreateContext(databaseName);
+        var repository = new VehicleRepository(queryContext);
+
+        var vehicles = (await repository.GetAllForReplacementAsync()).ToList();
+
+        Assert.Single(vehicles);
+        Assert.Equal("BLK123", vehicles[0].RegistrationNumber);
+        Assert.Equal("Blocket", vehicles[0].Source);
+    }
+
+    [Fact]
+    public async Task SearchAsync_ShouldFilterByModelYearRange()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+        await SeedVehicleAsync(databaseName, "OLD123", modelYear: 2019);
+        await SeedVehicleAsync(databaseName, "MID123", modelYear: 2022);
+        await SeedVehicleAsync(databaseName, "NEW123", modelYear: 2025);
+
+        await using var queryContext = CreateContext(databaseName);
+        var repository = new VehicleRepository(queryContext);
+
+        var result = await repository.SearchAsync(new VehicleSearchDto
+        {
+            MinYear = 2020,
+            MaxYear = 2024
+        });
+
+        Assert.Single(result.Items);
+        Assert.Equal("MID123", result.Items[0].RegistrationNumber);
+    }
+
+    private static async Task<int> SeedVehicleAsync(
+        string databaseName,
+        string registrationNumber = "ABC123",
+        string? source = null,
+        int modelYear = 2024)
     {
         await using var seedContext = CreateContext(databaseName);
 
@@ -60,16 +103,17 @@ public class VehicleRepositoryTests
         var transmissionType = new TransmissionType { Name = "Automatic" };
         var vehicle = new Vehicle
         {
-            RegistrationNumber = "ABC123",
+            RegistrationNumber = registrationNumber,
             Model = "XC60",
-            ModelYear = "2024",
+            ModelYear = modelYear,
             Mileage = 1000,
             ImageUrl = "/images/xc60.png",
-            Value = 500000,
+            Price = 500000,
             Description = "Repository test vehicle",
             Manufacturer = manufacturer,
             FuelType = fuelType,
-            TransmissionType = transmissionType
+            TransmissionType = transmissionType,
+            Source = source
         };
 
         seedContext.Manufacturers.Add(manufacturer);

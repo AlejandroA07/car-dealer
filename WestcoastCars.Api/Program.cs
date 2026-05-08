@@ -197,7 +197,6 @@ using (var scope = app.Services.CreateScope())
         await SeedData.LoadFuelTypeData(context, seedPresence.HasFuelTypes);
         await SeedData.LoadTransmissionsData(context, seedPresence.HasTransmissionTypes);
         await SeedData.LoadVehicleData(context, seedPresence.HasVehicles);
-        await SeedData.EnsurePostgreSqlIdentitySequencesAsync(context);
 
         var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();

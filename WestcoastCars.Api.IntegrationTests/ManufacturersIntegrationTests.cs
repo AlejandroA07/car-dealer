@@ -66,11 +66,11 @@ public class ManufacturersIntegrationTests : IntegrationTestBase
             RegistrationNumber = $"MFG{Guid.NewGuid():N}"[..8].ToUpperInvariant(),
             ManufacturerId = manufacturer!.Id,
             Model = "Constraint Model",
-            ModelYear = "2024",
+            ModelYear = 2024,
             Mileage = 100,
             FuelTypeId = fuelTypeId,
             TransmissionTypeId = transmissionTypeId,
-            Value = 500000,
+            Price = 500000,
             Description = "Constraint integration test vehicle"
         });
         vehicleResponse.StatusCode.Should().Be(HttpStatusCode.Created);

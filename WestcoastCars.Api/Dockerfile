@@ -8,6 +8,9 @@ WORKDIR /src
 
 # Copy the solution file and all project files
 COPY ["westcoast-cars.sln", "."]
+COPY ["global.json", "."]
+COPY ["Directory.Build.props", "."]
+COPY ["Directory.Packages.props", "."]
 
 # API project
 COPY ["WestcoastCars.Api/WestcoastCars.Api.csproj", "WestcoastCars.Api/"]

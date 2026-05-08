@@ -15,12 +15,14 @@ public class CreateVehicleCommandValidator : AbstractValidator<CreateVehicleComm
             .NotEmpty().WithMessage("Model is required.")
             .MaximumLength(100).WithMessage("Model name must not exceed 100 characters.");
 
-        RuleFor(v => v.ModelYear)
-            .NotEmpty().WithMessage("Model year is required.")
-            .Matches(@"^\d{4}$").WithMessage("Model year must be a 4-digit number.");
+        var maxModelYear = DateTime.UtcNow.Year + 1;
 
-        RuleFor(v => v.Value)
-            .GreaterThan(0).WithMessage("Vehicle value must be greater than zero.");
+        RuleFor(v => v.ModelYear)
+            .InclusiveBetween(1900, maxModelYear)
+            .WithMessage($"Model year must be between 1900 and {maxModelYear}.");
+
+        RuleFor(v => v.Price)
+            .GreaterThan(0).WithMessage("Vehicle price must be greater than zero.");
 
         RuleFor(v => v.ManufacturerId)
             .GreaterThan(0).WithMessage("A valid manufacturer is required.");

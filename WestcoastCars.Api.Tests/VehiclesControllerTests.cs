@@ -127,11 +127,11 @@ public class VehiclesControllerTests
             RegistrationNumber = "NEWCAR1",
             ManufacturerId = 1,
             Model = "V60",
-            ModelYear = "2024",
+            ModelYear = 2024,
             Mileage = 1000,
             FuelTypeId = 2,
             TransmissionTypeId = 3,
-            Value = 450000,
+            Price = 450000,
             Description = "Test",
             IsSold = false,
             ImageUrl = "test.png"
@@ -146,7 +146,7 @@ public class VehiclesControllerTests
             command.Mileage == dto.Mileage &&
             command.FuelTypeId == dto.FuelTypeId &&
             command.TransmissionTypeId == dto.TransmissionTypeId &&
-            command.Value == dto.Value &&
+            command.Price == dto.Price &&
             command.Description == dto.Description &&
             command.IsSold == dto.IsSold &&
             command.ImageUrl == dto.ImageUrl), default)).ReturnsAsync(vehicle);
@@ -173,11 +173,11 @@ public class VehiclesControllerTests
             RegistrationNumber = "UPDATED",
             ManufacturerId = 1,
             Model = "V60",
-            ModelYear = "2024",
+            ModelYear = 2024,
             Mileage = 1000,
             FuelTypeId = 2,
             TransmissionTypeId = 3,
-            Value = 450000,
+            Price = 450000,
             Description = "Updated",
             IsSold = true,
             ImageUrl = "updated.png"
@@ -191,7 +191,7 @@ public class VehiclesControllerTests
             command.Mileage == dto.Mileage &&
             command.FuelTypeId == dto.FuelTypeId &&
             command.TransmissionTypeId == dto.TransmissionTypeId &&
-            command.Value == dto.Value &&
+            command.Price == dto.Price &&
             command.Description == dto.Description &&
             command.IsSold == dto.IsSold &&
             command.ImageUrl == dto.ImageUrl), default)).ReturnsAsync(Unit.Value);

@@ -49,7 +49,7 @@ public class MappingProfileTests
         var publishedAt = new DateTime(2026, 5, 8, 10, 30, 0, DateTimeKind.Utc);
         var vehicle = CreateVehicle("xc60.png");
         vehicle.IsSold = true;
-        vehicle.Value = 525000;
+        vehicle.Price = 525000;
         vehicle.Color = "Blue";
         vehicle.City = "Gothenburg";
         vehicle.Source = "Blocket";
@@ -64,7 +64,7 @@ public class MappingProfileTests
         Assert.Equal(vehicle.ModelYear, summary.ModelYear);
         Assert.Equal("/images/xc60.png", summary.ImageUrl);
         Assert.Equal(vehicle.IsSold, summary.IsSold);
-        Assert.Equal(525000m, summary.Value);
+        Assert.Equal(525000m, summary.Price);
         Assert.Equal(vehicle.Color, summary.Color);
         Assert.Equal(vehicle.City, summary.City);
         Assert.Equal(vehicle.Source, summary.Source);
@@ -92,7 +92,7 @@ public class MappingProfileTests
         Assert.Equal(vehicle.FuelType.Name, details.FuelType);
         Assert.Equal(vehicle.TransmissionType.Name, details.TransmissionType);
         Assert.Equal(vehicle.Mileage, details.Mileage);
-        Assert.Equal(vehicle.Value, details.Value);
+        Assert.Equal(vehicle.Price, details.Price);
         Assert.Equal(vehicle.Description, details.Description);
         Assert.Equal("Volvo XC60", details.Name);
         Assert.Equal(vehicle.Manufacturer.Name, details.Manufacturer);
@@ -147,10 +147,10 @@ public class MappingProfileTests
             Id = 1,
             RegistrationNumber = "ABC123",
             Model = "XC60",
-            ModelYear = "2024",
+            ModelYear = 2024,
             Mileage = 1000,
             ImageUrl = imageUrl!,
-            Value = 450000,
+            Price = 450000,
             Description = "Test vehicle",
             Manufacturer = new Manufacturer { Id = 1, Name = "Volvo" },
             FuelType = new FuelType { Id = 1, Name = "Diesel" },

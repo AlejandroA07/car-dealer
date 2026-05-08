@@ -158,7 +158,7 @@ public class VehicleService : IVehicleService
                 Model = vehicleToEdit.Model,
                 ModelYear = vehicleToEdit.ModelYear,
                 Mileage = vehicleToEdit.Mileage,
-                Value = vehicleToEdit.Value,
+                Price = vehicleToEdit.Price,
                 Description = vehicleToEdit.Description,
                 IsSold = vehicleToEdit.IsSold,
                 ImageUrl = vehicleToEdit.ImageUrl
@@ -178,7 +178,7 @@ public class VehicleService : IVehicleService
             ModelYear = vehicle.ModelYear,
             Mileage = vehicle.Mileage,
             Description = vehicle.Description,
-            Value = vehicle.Value,
+            Price = vehicle.Price,
             IsSold = vehicle.IsSold,
             ImageUrl = vehicle.ImageUrl,
             ManufacturerId = vehicle.ManufacturerId,
@@ -226,7 +226,7 @@ public class VehicleService : IVehicleService
             Mileage = vehicleViewModel.Vehicle.Mileage,
             FuelTypeId = vehicleViewModel.Vehicle.FuelTypeId,
             TransmissionTypeId = vehicleViewModel.Vehicle.TransmissionTypeId,
-            Value = vehicleViewModel.Vehicle.Value,
+            Price = vehicleViewModel.Vehicle.Price,
             Description = vehicleViewModel.Vehicle.Description,
             IsSold = vehicleViewModel.Vehicle.IsSold,
             ImageUrl = vehicleViewModel.Vehicle.ImageUrl

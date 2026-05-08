@@ -29,14 +29,6 @@ public partial class FixDomainEntityConsistency : Migration
             oldType: "text",
             oldNullable: true);
 
-        migrationBuilder.AlterColumn<DateTime>(
-            name: "CreatedAt",
-            table: "ServiceBookings",
-            type: "timestamp with time zone",
-            nullable: false,
-            defaultValueSql: "NOW()",
-            oldClrType: typeof(DateTime),
-            oldType: "timestamp with time zone");
     }
 
     protected override void Down(MigrationBuilder migrationBuilder)
@@ -49,13 +41,5 @@ public partial class FixDomainEntityConsistency : Migration
             oldClrType: typeof(string),
             oldType: "text");
 
-        migrationBuilder.AlterColumn<DateTime>(
-            name: "CreatedAt",
-            table: "ServiceBookings",
-            type: "timestamp with time zone",
-            nullable: false,
-            oldClrType: typeof(DateTime),
-            oldType: "timestamp with time zone",
-            oldDefaultValueSql: "NOW()");
     }
 }

@@ -49,7 +49,9 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
 
     public async Task<IEnumerable<Vehicle>> GetAllForReplacementAsync()
     {
-        return await _context.Vehicles.ToListAsync();
+        return await _context.Vehicles
+            .Where(vehicle => vehicle.Source == "Blocket")
+            .ToListAsync();
     }
 
     public async Task<PagedResult<Vehicle>> SearchAsync(VehicleSearchDto search)
@@ -75,22 +77,22 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
 
         if (search.MinYear.HasValue)
         {
-            query = query.Where(v => Convert.ToInt32(v.ModelYear) >= search.MinYear.Value);
+            query = query.Where(v => v.ModelYear >= search.MinYear.Value);
         }
 
         if (search.MaxYear.HasValue)
         {
-            query = query.Where(v => Convert.ToInt32(v.ModelYear) <= search.MaxYear.Value);
+            query = query.Where(v => v.ModelYear <= search.MaxYear.Value);
         }
 
         if (search.MinPrice.HasValue)
         {
-            query = query.Where(v => v.Value >= search.MinPrice.Value);
+            query = query.Where(v => v.Price >= search.MinPrice.Value);
         }
 
         if (search.MaxPrice.HasValue)
         {
-            query = query.Where(v => v.Value <= search.MaxPrice.Value);
+            query = query.Where(v => v.Price <= search.MaxPrice.Value);
         }
 
         if (search.IsSold.HasValue)

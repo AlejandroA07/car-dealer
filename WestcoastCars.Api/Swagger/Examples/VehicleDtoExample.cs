@@ -13,11 +13,11 @@ public class VehicleDtoExample : IExamplesProvider<VehicleDto>
             RegistrationNumber = "ABC123",
             ManufacturerId = 1,
             Model = "Model S",
-            ModelYear = "2023",
+            ModelYear = 2023,
             Mileage = 15000,
             FuelTypeId = 1,
             TransmissionTypeId = 1,
-            Value = 450000,
+            Price = 450000,
             Description = "Electric sedan in excellent condition",
             IsSold = false,
             ImageUrl = "/images/tesla-model-s.jpg"

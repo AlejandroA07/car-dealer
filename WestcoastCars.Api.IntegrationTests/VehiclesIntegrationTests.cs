@@ -44,11 +44,11 @@ public class VehiclesIntegrationTests : IntegrationTestBase
             RegistrationNumber = "INTEG123",
             ManufacturerId = manufacturerId,
             Model = "V60",
-            ModelYear = "2024",
+            ModelYear = 2024,
             Mileage = 100,
             FuelTypeId = fuelTypeId,
             TransmissionTypeId = transmissionTypeId,
-            Value = 500000,
+            Price = 500000,
             Description = "Integration Test Vehicle"
         };
 
@@ -114,11 +114,11 @@ public class VehiclesIntegrationTests : IntegrationTestBase
             RegistrationNumber = "SOLD123",
             ManufacturerId = manufacturerId,
             Model = "Sold Model",
-            ModelYear = "2024",
+            ModelYear = 2024,
             Mileage = 100,
             FuelTypeId = fuelTypeId,
             TransmissionTypeId = transmissionTypeId,
-            Value = 500000,
+            Price = 500000,
             Description = "Sold integration test vehicle",
             IsSold = true
         };
@@ -146,11 +146,11 @@ public class VehiclesIntegrationTests : IntegrationTestBase
             RegistrationNumber = registrationNumber,
             ManufacturerId = manufacturerId,
             Model = "V60",
-            ModelYear = "2024",
+            ModelYear = 2024,
             Mileage = 100,
             FuelTypeId = fuelTypeId,
             TransmissionTypeId = transmissionTypeId,
-            Value = 500000,
+            Price = 500000,
             Description = "Integration Test Vehicle"
         };
 
@@ -166,7 +166,7 @@ public class VehiclesIntegrationTests : IntegrationTestBase
             Mileage = command.Mileage,
             FuelTypeId = command.FuelTypeId,
             TransmissionTypeId = command.TransmissionTypeId,
-            Value = command.Value,
+            Price = command.Price,
             Description = command.Description
         };
 
@@ -184,11 +184,11 @@ public class VehiclesIntegrationTests : IntegrationTestBase
             RegistrationNumber = "A",
             ManufacturerId = 0,
             Model = "A",
-            ModelYear = "24",
+            ModelYear = 24,
             Mileage = 100,
             FuelTypeId = 0,
             TransmissionTypeId = 0,
-            Value = 0,
+            Price = 0,
             Description = "Invalid vehicle payload",
             ImageUrl = "relative-image.png"
         });
@@ -203,7 +203,7 @@ public class VehiclesIntegrationTests : IntegrationTestBase
         errors.ValueKind.Should().Be(JsonValueKind.Object);
         errors.EnumerateObject().Select(property => property.Name).Should().Contain([
             "ModelYear",
-            "Value",
+            "Price",
             "ManufacturerId",
             "FuelTypeId",
             "TransmissionTypeId",
@@ -267,11 +267,11 @@ public class VehiclesIntegrationTests : IntegrationTestBase
             RegistrationNumber = registrationNumber,
             ManufacturerId = manufacturerId,
             Model = "XC90",
-            ModelYear = "2025",
+            ModelYear = 2025,
             Mileage = 500,
             FuelTypeId = fuelTypeId,
             TransmissionTypeId = transmissionTypeId,
-            Value = 650000,
+            Price = 650000,
             Description = "Updated integration flow vehicle",
             IsSold = false,
             ImageUrl = string.Empty
@@ -325,11 +325,11 @@ public class VehiclesIntegrationTests : IntegrationTestBase
             RegistrationNumber = $"MISS{Guid.NewGuid():N}"[..8].ToUpperInvariant(),
             ManufacturerId = int.MaxValue,
             Model = "V90",
-            ModelYear = "2024",
+            ModelYear = 2024,
             Mileage = 100,
             FuelTypeId = int.MaxValue,
             TransmissionTypeId = int.MaxValue,
-            Value = 500000,
+            Price = 500000,
             Description = "Missing related entities"
         });
 

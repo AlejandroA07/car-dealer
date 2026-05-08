@@ -23,7 +23,7 @@ public class AdminController : Controller
             TotalVehicles = vehicles.Count,
             SoldVehicles = vehicles.Count(v => v.IsSold),
             AvailableVehicles = vehicles.Count(v => !v.IsSold),
-            TotalInventoryValue = vehicles.Sum(v => v.Value),
+            TotalInventoryValue = vehicles.Sum(v => v.Price),
             RecentVehicles = vehicles.OrderByDescending(v => v.Id).Take(5).ToList(),
             StockByManufacturer = vehicles
                 .GroupBy(v => v.Manufacturer)

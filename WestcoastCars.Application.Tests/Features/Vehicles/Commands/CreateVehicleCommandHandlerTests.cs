@@ -47,8 +47,8 @@ public class CreateVehicleCommandHandlerTests
             FuelTypeId = 1,
             TransmissionTypeId = 1,
             Model = "V60",
-            ModelYear = "2024",
-            Value = 450000,
+            ModelYear = 2024,
+            Price = 450000,
             Description = "Test description",
             ImageUrl = "test.png"
         };
@@ -74,7 +74,7 @@ public class CreateVehicleCommandHandlerTests
             vehicle.RegistrationNumber == command.RegistrationNumber &&
             vehicle.Model == command.Model &&
             vehicle.ModelYear == command.ModelYear &&
-            vehicle.Value == command.Value &&
+            vehicle.Price == command.Price &&
             vehicle.Description == command.Description &&
             vehicle.ImageUrl == command.ImageUrl &&
             vehicle.Manufacturer.Name == "Volvo" &&
@@ -94,8 +94,8 @@ public class CreateVehicleCommandHandlerTests
             FuelTypeId = 1,
             TransmissionTypeId = 1,
             Model = "V60",
-            ModelYear = "2024",
-            Value = 450000,
+            ModelYear = 2024,
+            Price = 450000,
             Description = "Test description",
             ImageUrl = string.Empty
         };
@@ -127,8 +127,8 @@ public class CreateVehicleCommandHandlerTests
             FuelTypeId = 1,
             TransmissionTypeId = 1,
             Model = "V60",
-            ModelYear = "2024",
-            Value = 450000,
+            ModelYear = 2024,
+            Price = 450000,
             Description = "Test description",
             ImageUrl = "test.png"
         };

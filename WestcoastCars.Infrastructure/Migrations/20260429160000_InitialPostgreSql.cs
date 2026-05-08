@@ -20,6 +20,8 @@ public partial class InitialPostgreSql : Migration
             {
                 Id = table.Column<int>(type: "integer", nullable: false)
                     .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()"),
+                UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()"),
                 Name = table.Column<string>(type: "text", nullable: false)
             },
             constraints: table => table.PrimaryKey("PK_FuelTypes", x => x.Id));
@@ -30,6 +32,8 @@ public partial class InitialPostgreSql : Migration
             {
                 Id = table.Column<int>(type: "integer", nullable: false)
                     .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()"),
+                UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()"),
                 Name = table.Column<string>(type: "text", nullable: false)
             },
             constraints: table => table.PrimaryKey("PK_Manufacturers", x => x.Id));
@@ -53,6 +57,9 @@ public partial class InitialPostgreSql : Migration
             {
                 Id = table.Column<int>(type: "integer", nullable: false)
                     .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()"),
+                UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()"),
+                VehicleId = table.Column<int>(type: "integer", nullable: true),
                 VehicleRegistrationNumber = table.Column<string>(type: "text", nullable: false),
                 ServiceType = table.Column<string>(type: "text", nullable: false),
                 BookingDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
@@ -60,8 +67,7 @@ public partial class InitialPostgreSql : Migration
                 CustomerEmail = table.Column<string>(type: "text", nullable: false),
                 CustomerPhone = table.Column<string>(type: "text", nullable: false),
                 Description = table.Column<string>(type: "text", nullable: false),
-                Status = table.Column<int>(type: "integer", nullable: false),
-                CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                Status = table.Column<int>(type: "integer", nullable: false)
             },
             constraints: table => table.PrimaryKey("PK_ServiceBookings", x => x.Id));
 
@@ -71,6 +77,8 @@ public partial class InitialPostgreSql : Migration
             {
                 Id = table.Column<int>(type: "integer", nullable: false)
                     .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()"),
+                UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()"),
                 Name = table.Column<string>(type: "text", nullable: false)
             },
             constraints: table => table.PrimaryKey("PK_TransmissionTypes", x => x.Id));
@@ -81,12 +89,14 @@ public partial class InitialPostgreSql : Migration
             {
                 Id = table.Column<int>(type: "integer", nullable: false)
                     .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()"),
+                UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()"),
                 RegistrationNumber = table.Column<string>(type: "text", nullable: true),
                 Model = table.Column<string>(type: "text", nullable: false),
-                ModelYear = table.Column<string>(type: "text", nullable: false),
+                ModelYear = table.Column<int>(type: "integer", nullable: false),
                 Mileage = table.Column<int>(type: "integer", nullable: false),
                 ImageUrl = table.Column<string>(type: "text", nullable: false),
-                Value = table.Column<int>(type: "integer", nullable: false),
+                Price = table.Column<int>(type: "integer", nullable: false),
                 Description = table.Column<string>(type: "text", nullable: false),
                 IsSold = table.Column<bool>(type: "boolean", nullable: false),
                 ExternalListingId = table.Column<string>(type: "text", nullable: true),
@@ -113,6 +123,15 @@ public partial class InitialPostgreSql : Migration
         migrationBuilder.CreateIndex("IX_Vehicles_ManufacturerId", "Vehicles", "ManufacturerId");
         migrationBuilder.CreateIndex("IX_Vehicles_Source", "Vehicles", "Source");
         migrationBuilder.CreateIndex("IX_Vehicles_TransmissionTypeId", "Vehicles", "TransmissionTypeId");
+        migrationBuilder.CreateIndex("IX_ServiceBookings_VehicleId", "ServiceBookings", "VehicleId");
+
+        migrationBuilder.AddForeignKey(
+            name: "FK_ServiceBookings_Vehicles_VehicleId",
+            table: "ServiceBookings",
+            column: "VehicleId",
+            principalTable: "Vehicles",
+            principalColumn: "Id",
+            onDelete: ReferentialAction.SetNull);
     }
 
     protected override void Down(MigrationBuilder migrationBuilder)

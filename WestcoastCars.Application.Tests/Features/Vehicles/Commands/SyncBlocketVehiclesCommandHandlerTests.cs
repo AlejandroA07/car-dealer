@@ -63,7 +63,7 @@ public class SyncBlocketVehiclesCommandHandlerTests
                 ImportedAt = importedAt,
                 Manufacturer = "VOLVO",
                 Model = $"Model {item.Id}",
-                ModelYear = "2024"
+                ModelYear = 2024
             });
 
         var result = await _handler.Handle(new SyncBlocketVehiclesCommand { Limit = 999 }, CancellationToken.None);
@@ -110,7 +110,7 @@ public class SyncBlocketVehiclesCommandHandlerTests
                 ImportedAt = importedAt,
                 Manufacturer = "AUDI",
                 Model = $"Model {item.Id}",
-                ModelYear = "2024"
+                ModelYear = 2024
             });
 
         var result = await _handler.Handle(new SyncBlocketVehiclesCommand { Limit = 3 }, CancellationToken.None);
@@ -144,12 +144,11 @@ public class SyncBlocketVehiclesCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ShouldReplaceExistingVehicles()
+    public async Task Handle_ShouldReplaceExistingBlocketVehiclesOnly()
     {
         var existingVehicles = new List<Vehicle>
         {
-            new() { Id = 1, Source = "Blocket", RegistrationNumber = "OLD001", Model = "Old", ModelYear = "2020", ImageUrl = "x", Description = "x", Manufacturer = new Manufacturer { Name = "VOLVO" }, FuelType = new FuelType { Name = "Petrol" }, TransmissionType = new TransmissionType { Name = "Automatic" } },
-            new() { Id = 2, Source = null, RegistrationNumber = "MAN001", Model = "Manual", ModelYear = "2021", ImageUrl = "x", Description = "x", Manufacturer = new Manufacturer { Name = "VOLVO" }, FuelType = new FuelType { Name = "Petrol" }, TransmissionType = new TransmissionType { Name = "Automatic" } }
+            new() { Id = 1, Source = "Blocket", RegistrationNumber = "OLD001", Model = "Old", ModelYear = 2020, ImageUrl = "x", Description = "x", Manufacturer = new Manufacturer { Name = "VOLVO" }, FuelType = new FuelType { Name = "Petrol" }, TransmissionType = new TransmissionType { Name = "Automatic" } }
         };
 
         _vehicleRepositoryMock
@@ -186,18 +185,20 @@ public class SyncBlocketVehiclesCommandHandlerTests
                 FuelType = "Petrol",
                 TransmissionType = "Automatic",
                 Model = "XC60",
-                ModelYear = "2024",
+                ModelYear = 2024,
                 ImageUrl = "/images/no-car.png",
                 Description = "Imported"
             });
 
         var result = await _handler.Handle(new SyncBlocketVehiclesCommand { Limit = 1 }, CancellationToken.None);
 
-        Assert.Equal(2, result.TotalReplaced);
+        Assert.Equal(1, result.TotalReplaced);
         Assert.Equal(1, result.TotalImported);
         _vehicleRepositoryMock.Verify(repository => repository.GetAllAsync(), Times.Never);
         _vehicleRepositoryMock.Verify(repository => repository.GetAllForReplacementAsync(), Times.Once);
-        _vehicleRepositoryMock.Verify(repository => repository.RemoveRange(It.Is<IEnumerable<Vehicle>>(vehicles => vehicles.Count() == 2)), Times.Once);
+        _vehicleRepositoryMock.Verify(repository => repository.RemoveRange(It.Is<IEnumerable<Vehicle>>(vehicles =>
+            vehicles.Count() == 1 &&
+            vehicles.Single().Source == "Blocket")), Times.Once);
         _vehicleRepositoryMock.Verify(repository => repository.AddRangeAsync(It.Is<IEnumerable<Vehicle>>(vehicles => vehicles.Count() == 1)), Times.Once);
         _unitOfWorkMock.Verify(unitOfWork => unitOfWork.CompleteAsync(), Times.Once);
     }
@@ -238,9 +239,9 @@ public class SyncBlocketVehiclesCommandHandlerTests
 
         _mapperMock
             .SetupSequence(mapper => mapper.Map(It.IsAny<BlocketCarSearchItem>(), It.IsAny<BlocketCarAdDetails>(), It.IsAny<DateTime>()))
-            .Returns(new BlocketVehicleImportData { ExternalListingId = "1", RegistrationNumber = "REG1", Manufacturer = "VOLVO", FuelType = "Petrol", TransmissionType = "Automatic", Model = "A", ModelYear = "2024", ImageUrl = "x", Description = "x" })
-            .Returns(new BlocketVehicleImportData { ExternalListingId = "1", RegistrationNumber = "REG1", Manufacturer = "VOLVO", FuelType = "Petrol", TransmissionType = "Automatic", Model = "B", ModelYear = "2024", ImageUrl = "x", Description = "x" })
-            .Returns(new BlocketVehicleImportData { ExternalListingId = "2", RegistrationNumber = "REG2", Manufacturer = "VOLVO", FuelType = "Petrol", TransmissionType = "Automatic", Model = "C", ModelYear = "2024", ImageUrl = "x", Description = "x" });
+            .Returns(new BlocketVehicleImportData { ExternalListingId = "1", RegistrationNumber = "REG1", Manufacturer = "VOLVO", FuelType = "Petrol", TransmissionType = "Automatic", Model = "A", ModelYear = 2024, ImageUrl = "x", Description = "x" })
+            .Returns(new BlocketVehicleImportData { ExternalListingId = "1", RegistrationNumber = "REG1", Manufacturer = "VOLVO", FuelType = "Petrol", TransmissionType = "Automatic", Model = "B", ModelYear = 2024, ImageUrl = "x", Description = "x" })
+            .Returns(new BlocketVehicleImportData { ExternalListingId = "2", RegistrationNumber = "REG2", Manufacturer = "VOLVO", FuelType = "Petrol", TransmissionType = "Automatic", Model = "C", ModelYear = 2024, ImageUrl = "x", Description = "x" });
 
         var result = await _handler.Handle(new SyncBlocketVehiclesCommand { Limit = 3 }, CancellationToken.None);
 
@@ -277,7 +278,7 @@ public class SyncBlocketVehiclesCommandHandlerTests
                 FuelType = "Petrol",
                 TransmissionType = "Automatic",
                 Model = "A",
-                ModelYear = "2024",
+                ModelYear = 2024,
                 ImageUrl = "x",
                 Description = "x"
             })
@@ -289,7 +290,7 @@ public class SyncBlocketVehiclesCommandHandlerTests
                 FuelType = "Petrol",
                 TransmissionType = "Automatic",
                 Model = "B",
-                ModelYear = "2024",
+                ModelYear = 2024,
                 ImageUrl = "x",
                 Description = "x"
             });
@@ -304,6 +305,77 @@ public class SyncBlocketVehiclesCommandHandlerTests
         _vehicleRepositoryMock.Verify(repository => repository.AddRangeAsync(It.Is<IEnumerable<Vehicle>>(vehicles =>
             vehicles.Count() == 1 &&
             vehicles.Single().RegistrationNumber == "REG1")), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_ShouldSkipVehiclesWithoutValidModelYear()
+    {
+        _blocketApiClientMock
+            .SetupSequence(client => client.SearchCarsAsync(It.IsAny<BlocketCarSearchRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new BlocketCarSearchResponse
+            {
+                Docs =
+                [
+                    new BlocketCarSearchItem { Id = "1" },
+                    new BlocketCarSearchItem { Id = "2" },
+                    new BlocketCarSearchItem { Id = "3" }
+                ]
+            })
+            .ReturnsAsync(new BlocketCarSearchResponse());
+
+        _blocketApiClientMock
+            .Setup(client => client.GetCarAdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new BlocketCarAdDetails());
+
+        _mapperMock
+            .SetupSequence(mapper => mapper.Map(It.IsAny<BlocketCarSearchItem>(), It.IsAny<BlocketCarAdDetails>(), It.IsAny<DateTime>()))
+            .Returns(new BlocketVehicleImportData
+            {
+                ExternalListingId = "1",
+                RegistrationNumber = "REG1",
+                Manufacturer = "VOLVO",
+                FuelType = "Petrol",
+                TransmissionType = "Automatic",
+                Model = "A",
+                ModelYear = 2024,
+                ImageUrl = "x",
+                Description = "x"
+            })
+            .Returns(new BlocketVehicleImportData
+            {
+                ExternalListingId = "2",
+                RegistrationNumber = "REG2",
+                Manufacturer = "VOLVO",
+                FuelType = "Petrol",
+                TransmissionType = "Automatic",
+                Model = "B",
+                ModelYear = null,
+                ImageUrl = "x",
+                Description = "x"
+            })
+            .Returns(new BlocketVehicleImportData
+            {
+                ExternalListingId = "3",
+                RegistrationNumber = "REG3",
+                Manufacturer = "VOLVO",
+                FuelType = "Petrol",
+                TransmissionType = "Automatic",
+                Model = "C",
+                ModelYear = 1899,
+                ImageUrl = "x",
+                Description = "x"
+            });
+
+        var result = await _handler.Handle(new SyncBlocketVehiclesCommand { Limit = 3 }, CancellationToken.None);
+
+        Assert.Equal(1, result.TotalPrepared);
+        Assert.Equal(1, result.TotalImported);
+        Assert.Equal(2, result.TotalSkipped);
+        Assert.Single(result.Vehicles);
+        Assert.Equal(2024, result.Vehicles[0].ModelYear);
+        _vehicleRepositoryMock.Verify(repository => repository.AddRangeAsync(It.Is<IEnumerable<Vehicle>>(vehicles =>
+            vehicles.Count() == 1 &&
+            vehicles.Single().ModelYear == 2024)), Times.Once);
     }
 
     [Fact]
@@ -335,7 +407,7 @@ public class SyncBlocketVehiclesCommandHandlerTests
                 FuelType = "Petrol",
                 TransmissionType = "Automatic",
                 Model = $"Model {item.Id}",
-                ModelYear = "2024",
+                ModelYear = 2024,
                 ImageUrl = "x",
                 Description = "x",
                 ImportedAt = importedAt
@@ -384,7 +456,7 @@ public class SyncBlocketVehiclesCommandHandlerTests
                 FuelType = "Diesel",
                 TransmissionType = "Manual",
                 Model = "A",
-                ModelYear = "2024",
+                ModelYear = 2024,
                 ImageUrl = "x",
                 Description = "x"
             })
@@ -396,7 +468,7 @@ public class SyncBlocketVehiclesCommandHandlerTests
                 FuelType = " diesel ",
                 TransmissionType = "manual",
                 Model = "B",
-                ModelYear = "2024",
+                ModelYear = 2024,
                 ImageUrl = "x",
                 Description = "x"
             });

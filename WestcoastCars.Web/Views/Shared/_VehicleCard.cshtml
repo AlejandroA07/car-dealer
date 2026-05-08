@@ -18,7 +18,7 @@
         <div class="vehicle-card-catalog-head">
             <span class="vehicle-status-chip vehicle-status-chip-inline @(Model.IsSold ? "vehicle-status-chip-muted" : null)">@(Model.IsSold ? "Såld" : "Tillgänglig")</span>
             <div class="vehicle-card-catalog-price">
-                <strong>@Model.Value.ToString("N0") kr</strong>
+                <strong>@Model.Price.ToString("N0") kr</strong>
                 <small>Pris</small>
             </div>
         </div>
@@ -72,7 +72,7 @@
 
         <div class="vehicle-card-footer">
             <div>
-                <span class="vehicle-card-price">@Model.Value.ToString("N0") kr</span>
+                <span class="vehicle-card-price">@Model.Price.ToString("N0") kr</span>
                 <small>Klar för visning</small>
             </div>
             <a class="vehicle-card-link" asp-action="Details" asp-controller="Vehicles" asp-route-id="@Model.Id" aria-label="Se mer om @title">

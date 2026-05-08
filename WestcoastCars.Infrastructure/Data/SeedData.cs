@@ -74,7 +74,7 @@ public static class SeedData
 
         var baseDir = AppContext.BaseDirectory;
         var path = Path.Combine(baseDir, "Data", "json", "manufacturer.json");
-        var json = System.IO.File.ReadAllText(path);
+        var json = await System.IO.File.ReadAllTextAsync(path);
         var manufacturers = JsonSerializer.Deserialize<List<Manufacturer>>(json, options);
 
         if (manufacturers is not null && manufacturers.Count > 0)
@@ -100,35 +100,41 @@ public static class SeedData
 
         var baseDir = AppContext.BaseDirectory;
         var path = Path.Combine(baseDir, "Data", "json", "vehicles.json");
-        var json = System.IO.File.ReadAllText(path);
+        var json = await System.IO.File.ReadAllTextAsync(path);
         var vehicleDtos = JsonSerializer.Deserialize<List<VehicleSeedDto>>(json, options);
 
         if (vehicleDtos is null || !vehicleDtos.Any()) return;
 
-        var manufacturers = await context.Manufacturers.ToDictionaryAsync(m => m.Id);
-        var fuelTypes = await context.FuelTypes.ToDictionaryAsync(f => f.Id);
-        var transmissionTypes = await context.TransmissionTypes.ToDictionaryAsync(t => t.Id);
+        var manufacturers = (await context.Manufacturers.ToListAsync())
+            .ToDictionary(manufacturer => manufacturer.Name, StringComparer.OrdinalIgnoreCase);
+        var fuelTypes = (await context.FuelTypes.ToListAsync())
+            .ToDictionary(fuelType => fuelType.Name, StringComparer.OrdinalIgnoreCase);
+        var transmissionTypes = (await context.TransmissionTypes.ToListAsync())
+            .ToDictionary(transmissionType => transmissionType.Name, StringComparer.OrdinalIgnoreCase);
 
         var vehicles = new List<Vehicle>();
         foreach (var dto in vehicleDtos)
         {
+            var manufacturer = ResolveSeedLookup(manufacturers, dto.Manufacturer, dto.RegistrationNumber, "manufacturer");
+            var fuelType = ResolveSeedLookup(fuelTypes, dto.FuelType, dto.RegistrationNumber, "fuel type");
+            var transmissionType = ResolveSeedLookup(transmissionTypes, dto.TransmissionType, dto.RegistrationNumber, "transmission type");
+
             var vehicle = new Vehicle
             {
-                Id = dto.Id,
                 RegistrationNumber = dto.RegistrationNumber,
                 Model = dto.Model,
                 ModelYear = dto.ModelYear,
                 Mileage = dto.Mileage,
                 ImageUrl = dto.ImageUrl,
-                Value = dto.Value,
+                Price = dto.Price,
                 Description = dto.Description,
                 IsSold = dto.IsSold,
-                ManufacturerId = dto.ManufacturerId,
-                FuelTypeId = dto.FuelTypeId,
-                TransmissionTypeId = dto.TransmissionTypeId,
-                Manufacturer = manufacturers[dto.ManufacturerId],
-                FuelType = fuelTypes[dto.FuelTypeId],
-                TransmissionType = transmissionTypes[dto.TransmissionTypeId]
+                ManufacturerId = manufacturer.Id,
+                FuelTypeId = fuelType.Id,
+                TransmissionTypeId = transmissionType.Id,
+                Manufacturer = manufacturer,
+                FuelType = fuelType,
+                TransmissionType = transmissionType
             };
             vehicles.Add(vehicle);
         }
@@ -148,7 +154,7 @@ public static class SeedData
 
         var baseDir = AppContext.BaseDirectory;
         var path = Path.Combine(baseDir, "Data", "json", "fuelTypes.json");
-        var json = System.IO.File.ReadAllText(path);
+        var json = await System.IO.File.ReadAllTextAsync(path);
         var fueltypes = JsonSerializer.Deserialize<List<FuelType>>(json, options);
 
         if (fueltypes is not null && fueltypes.Count > 0)
@@ -174,7 +180,7 @@ public static class SeedData
 
         var baseDir = AppContext.BaseDirectory;
         var path = Path.Combine(baseDir, "Data", "json", "transmissionTypes.json");
-        var json = System.IO.File.ReadAllText(path);
+        var json = await System.IO.File.ReadAllTextAsync(path);
         var transmissions = JsonSerializer.Deserialize<List<TransmissionType>>(json, options);
 
         if (transmissions is not null && transmissions.Count > 0)
@@ -189,48 +195,34 @@ public static class SeedData
         }
     }
 
-    public static async Task EnsurePostgreSqlIdentitySequencesAsync(WestcoastCarsContext context)
+    private static TLookup ResolveSeedLookup<TLookup>(
+        IDictionary<string, TLookup> lookupsByName,
+        string lookupName,
+        string vehicleRegistrationNumber,
+        string lookupType)
+        where TLookup : NamedEntity
     {
-        if (!string.Equals(context.Database.ProviderName, "Npgsql.EntityFrameworkCore.PostgreSQL", StringComparison.Ordinal))
+        if (lookupsByName.TryGetValue(lookupName, out var lookup))
         {
-            return;
+            return lookup;
         }
 
-        var seededTables = new[]
-        {
-            "Manufacturers",
-            "FuelTypes",
-            "TransmissionTypes",
-            "Vehicles"
-        };
-
-        foreach (var tableName in seededTables)
-        {
-            var sql = $"""
-                SELECT setval(
-                    pg_get_serial_sequence('"{tableName}"', 'Id'),
-                    GREATEST(COALESCE((SELECT MAX("Id") FROM "{tableName}"), 0), 1),
-                    EXISTS (SELECT 1 FROM "{tableName}")
-                );
-                """;
-
-            await context.Database.ExecuteSqlRawAsync(sql);
-        }
+        throw new InvalidOperationException(
+            $"Vehicle seed '{vehicleRegistrationNumber}' references unknown {lookupType} '{lookupName}'.");
     }
 
     private class VehicleSeedDto
     {
-        public int Id { get; set; }
         public string RegistrationNumber { get; set; } = string.Empty;
-        public int ManufacturerId { get; set; }
+        public string Manufacturer { get; set; } = string.Empty;
         public string Model { get; set; } = string.Empty;
-        public string ModelYear { get; set; } = string.Empty;
-        public int FuelTypeId { get; set; }
-        public int TransmissionTypeId { get; set; }
+        public int ModelYear { get; set; }
+        public string FuelType { get; set; } = string.Empty;
+        public string TransmissionType { get; set; } = string.Empty;
         public string ImageUrl { get; set; } = string.Empty;
         public int Mileage { get; set; }
         public bool IsSold { get; set; }
-        public int Value { get; set; }
+        public int Price { get; set; }
         public string Description { get; set; } = string.Empty;
     }
 }

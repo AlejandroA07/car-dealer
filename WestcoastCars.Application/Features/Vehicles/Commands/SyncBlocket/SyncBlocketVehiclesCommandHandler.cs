@@ -65,7 +65,8 @@ public class SyncBlocketVehiclesCommandHandler : IRequestHandler<SyncBlocketVehi
 
                 if (string.IsNullOrWhiteSpace(mappedVehicle.ExternalListingId) ||
                     !seenExternalListingIds.Add(mappedVehicle.ExternalListingId) ||
-                    string.IsNullOrWhiteSpace(mappedVehicle.RegistrationNumber))
+                    string.IsNullOrWhiteSpace(mappedVehicle.RegistrationNumber) ||
+                    !IsValidModelYear(mappedVehicle.ModelYear))
                 {
                     totalSkipped++;
                     continue;
@@ -125,18 +126,30 @@ public class SyncBlocketVehiclesCommandHandler : IRequestHandler<SyncBlocketVehi
 
         foreach (var preparedVehicle in preparedVehicleList)
         {
-            var manufacturer = await GetOrCreateManufacturerAsync(preparedVehicle.Manufacturer, manufacturersByName);
-            var fuelType = await GetOrCreateFuelTypeAsync(preparedVehicle.FuelType, fuelTypesByName);
-            var transmissionType = await GetOrCreateTransmissionTypeAsync(preparedVehicle.TransmissionType, transmissionTypesByName);
+            var manufacturer = await GetOrCreateLookupAsync(
+                preparedVehicle.Manufacturer,
+                manufacturersByName,
+                name => new Manufacturer { Name = name },
+                _unitOfWork.ManufacturerRepository);
+            var fuelType = await GetOrCreateLookupAsync(
+                preparedVehicle.FuelType,
+                fuelTypesByName,
+                name => new FuelType { Name = name },
+                _unitOfWork.FuelTypeRepository);
+            var transmissionType = await GetOrCreateLookupAsync(
+                preparedVehicle.TransmissionType,
+                transmissionTypesByName,
+                name => new TransmissionType { Name = name },
+                _unitOfWork.TransmissionTypeRepository);
 
             vehicles.Add(new Vehicle
             {
                 RegistrationNumber = preparedVehicle.RegistrationNumber!,
                 Model = preparedVehicle.Model,
-                ModelYear = preparedVehicle.ModelYear,
+                ModelYear = preparedVehicle.ModelYear.Value,
                 Mileage = preparedVehicle.Mileage,
                 ImageUrl = preparedVehicle.ImageUrl,
-                Value = preparedVehicle.Value,
+                Price = preparedVehicle.Price,
                 Description = preparedVehicle.Description,
                 IsSold = false,
                 ExternalListingId = preparedVehicle.ExternalListingId,
@@ -155,46 +168,23 @@ public class SyncBlocketVehiclesCommandHandler : IRequestHandler<SyncBlocketVehi
         return vehicles;
     }
 
-    private async Task<Manufacturer> GetOrCreateManufacturerAsync(string manufacturerName, IDictionary<string, Manufacturer> manufacturersByName)
+    private static async Task<TLookup> GetOrCreateLookupAsync<TLookup>(
+        string lookupName,
+        IDictionary<string, TLookup> lookupsByName,
+        Func<string, TLookup> factory,
+        IRepository<TLookup> repository)
+        where TLookup : class
     {
-        var normalizedName = NormalizeLookupName(manufacturerName, "Unknown");
-        if (manufacturersByName.TryGetValue(normalizedName, out var existingManufacturer))
+        var normalizedName = NormalizeLookupName(lookupName, "Unknown");
+        if (lookupsByName.TryGetValue(normalizedName, out var existingLookup))
         {
-            return existingManufacturer;
+            return existingLookup;
         }
 
-        var manufacturer = new Manufacturer { Name = normalizedName };
-        await _unitOfWork.ManufacturerRepository.AddAsync(manufacturer);
-        manufacturersByName[normalizedName] = manufacturer;
-        return manufacturer;
-    }
-
-    private async Task<FuelType> GetOrCreateFuelTypeAsync(string fuelTypeName, IDictionary<string, FuelType> fuelTypesByName)
-    {
-        var normalizedName = NormalizeLookupName(fuelTypeName, "Unknown");
-        if (fuelTypesByName.TryGetValue(normalizedName, out var existingFuelType))
-        {
-            return existingFuelType;
-        }
-
-        var fuelType = new FuelType { Name = normalizedName };
-        await _unitOfWork.FuelTypeRepository.AddAsync(fuelType);
-        fuelTypesByName[normalizedName] = fuelType;
-        return fuelType;
-    }
-
-    private async Task<TransmissionType> GetOrCreateTransmissionTypeAsync(string transmissionTypeName, IDictionary<string, TransmissionType> transmissionTypesByName)
-    {
-        var normalizedName = NormalizeLookupName(transmissionTypeName, "Unknown");
-        if (transmissionTypesByName.TryGetValue(normalizedName, out var existingTransmissionType))
-        {
-            return existingTransmissionType;
-        }
-
-        var transmissionType = new TransmissionType { Name = normalizedName };
-        await _unitOfWork.TransmissionTypeRepository.AddAsync(transmissionType);
-        transmissionTypesByName[normalizedName] = transmissionType;
-        return transmissionType;
+        var lookup = factory(normalizedName);
+        await repository.AddAsync(lookup);
+        lookupsByName[normalizedName] = lookup;
+        return lookup;
     }
 
     private static int NormalizeLimit(int requestedLimit)
@@ -211,6 +201,11 @@ public class SyncBlocketVehiclesCommandHandler : IRequestHandler<SyncBlocketVehi
     {
         return string.IsNullOrWhiteSpace(value) ? fallbackValue : value.Trim();
     }
+
+    private static bool IsValidModelYear(int? modelYear) =>
+        modelYear.HasValue &&
+        modelYear.Value >= 1900 &&
+        modelYear.Value <= DateTime.UtcNow.Year + 1;
 
     private static Dictionary<string, TLookup> BuildLookupDictionary<TLookup>(
         IEnumerable<TLookup> lookups,

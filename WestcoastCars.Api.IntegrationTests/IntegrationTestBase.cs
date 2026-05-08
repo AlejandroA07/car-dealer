@@ -80,11 +80,11 @@ public class IntegrationTestBase : IClassFixture<CustomWebApplicationFactory<Pro
             RegistrationNumber = registrationNumber,
             ManufacturerId = manufacturerId,
             Model = model,
-            ModelYear = "2024",
+            ModelYear = 2024,
             Mileage = 100,
             FuelTypeId = fuelTypeId,
             TransmissionTypeId = transmissionTypeId,
-            Value = 500000,
+            Price = 500000,
             Description = $"{model} integration test vehicle",
             IsSold = isSold
         };

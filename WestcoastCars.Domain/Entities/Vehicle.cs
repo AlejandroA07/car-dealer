@@ -6,10 +6,10 @@ public class Vehicle : BaseEntity
 {
     public required string RegistrationNumber { get; set; }
     public required string Model { get; set; }
-    public required string ModelYear { get; set; }
+    public int ModelYear { get; set; }
     public int Mileage { get; set; }
     public required string ImageUrl { get; set; }
-    public int Value { get; set; }
+    public int Price { get; set; }
     public required string Description { get; set; }
     public bool IsSold { get; set; }
     public string? ExternalListingId { get; set; }
@@ -30,4 +30,6 @@ public class Vehicle : BaseEntity
     public int TransmissionTypeId { get; set; }
     [ForeignKey("TransmissionTypeId")]
     public required TransmissionType TransmissionType { get; set; }
+
+    public ICollection<ServiceBooking> ServiceBookings { get; set; } = new List<ServiceBooking>();
 }

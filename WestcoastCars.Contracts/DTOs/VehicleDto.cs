@@ -34,7 +34,7 @@ public class VehicleDto
     /// Production year or model year.
     /// </summary>
     [Required(ErrorMessage = "Årsmodell måste anges")]
-    public string ModelYear { get; set; } = string.Empty;
+    public int ModelYear { get; set; }
 
     /// <summary>
     /// Current mileage in kilometers.
@@ -55,10 +55,10 @@ public class VehicleDto
     public int TransmissionTypeId { get; set; }
 
     /// <summary>
-    /// Selling price or value of the vehicle.
+    /// Selling price of the vehicle.
     /// </summary>
-    [Required(ErrorMessage = "Värde på bilen måste anges")]
-    public int Value { get; set; }
+    [Required(ErrorMessage = "Pris på bilen måste anges")]
+    public int Price { get; set; }
 
     /// <summary>
     /// Detailed description of the vehicle's condition and features.

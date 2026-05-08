@@ -49,14 +49,14 @@
 
                         <label class="vehicle-editor-field">
                             <span>Årsmodell</span>
-                            <input asp-for="Vehicle.ModelYear" placeholder="2024" inputmode="numeric" />
+                            <input asp-for="Vehicle.ModelYear" type="number" min="1900" max="@(DateTime.UtcNow.Year + 1)" placeholder="2024" inputmode="numeric" />
                             <span class="vehicle-editor-error" asp-validation-for="Vehicle.ModelYear"></span>
                         </label>
 
                         <label class="vehicle-editor-field">
                             <span>Pris</span>
-                            <input asp-for="Vehicle.Value" placeholder="0" inputmode="numeric" />
-                            <span class="vehicle-editor-error" asp-validation-for="Vehicle.Value"></span>
+                            <input asp-for="Vehicle.Price" placeholder="0" inputmode="numeric" />
+                            <span class="vehicle-editor-error" asp-validation-for="Vehicle.Price"></span>
                         </label>
 
                         <label class="vehicle-editor-toggle">

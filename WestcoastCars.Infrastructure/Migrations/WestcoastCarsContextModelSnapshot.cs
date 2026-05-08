@@ -115,7 +115,9 @@ partial class WestcoastCarsContextModelSnapshot : ModelSnapshot
         {
             b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("integer");
             NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+            b.Property<DateTime>("CreatedAt").HasDefaultValueSql("NOW()").HasColumnType("timestamp with time zone");
             b.Property<string>("Name").IsRequired().HasColumnType("citext");
+            b.Property<DateTime>("UpdatedAt").HasDefaultValueSql("NOW()").HasColumnType("timestamp with time zone");
             b.HasKey("Id");
             b.HasIndex("Name").IsUnique().HasDatabaseName("IX_FuelTypes_Name");
             b.ToTable("FuelTypes");
@@ -125,7 +127,9 @@ partial class WestcoastCarsContextModelSnapshot : ModelSnapshot
         {
             b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("integer");
             NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+            b.Property<DateTime>("CreatedAt").HasDefaultValueSql("NOW()").HasColumnType("timestamp with time zone");
             b.Property<string>("Name").IsRequired().HasColumnType("text");
+            b.Property<DateTime>("UpdatedAt").HasDefaultValueSql("NOW()").HasColumnType("timestamp with time zone");
             b.HasKey("Id");
             b.HasIndex("Name").HasDatabaseName("IX_Manufacturers_Name_Trgm").HasMethod("GIN").HasOperators("gin_trgm_ops");
             b.ToTable("Manufacturers");
@@ -143,8 +147,11 @@ partial class WestcoastCarsContextModelSnapshot : ModelSnapshot
             b.Property<string>("Description").IsRequired().HasColumnType("text");
             b.Property<string>("ServiceType").IsRequired().HasColumnType("text");
             b.Property<int>("Status").HasColumnType("integer");
+            b.Property<DateTime>("UpdatedAt").HasDefaultValueSql("NOW()").HasColumnType("timestamp with time zone");
+            b.Property<int?>("VehicleId").HasColumnType("integer");
             b.Property<string>("VehicleRegistrationNumber").IsRequired().HasColumnType("text");
             b.HasKey("Id");
+            b.HasIndex("VehicleId");
             b.ToTable("ServiceBookings");
         });
 
@@ -152,7 +159,9 @@ partial class WestcoastCarsContextModelSnapshot : ModelSnapshot
         {
             b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("integer");
             NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+            b.Property<DateTime>("CreatedAt").HasDefaultValueSql("NOW()").HasColumnType("timestamp with time zone");
             b.Property<string>("Name").IsRequired().HasColumnType("citext");
+            b.Property<DateTime>("UpdatedAt").HasDefaultValueSql("NOW()").HasColumnType("timestamp with time zone");
             b.HasKey("Id");
             b.HasIndex("Name").IsUnique().HasDatabaseName("IX_TransmissionTypes_Name");
             b.ToTable("TransmissionTypes");
@@ -164,6 +173,7 @@ partial class WestcoastCarsContextModelSnapshot : ModelSnapshot
             NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
             b.Property<string>("City").HasColumnType("text");
             b.Property<string>("Color").HasColumnType("text");
+            b.Property<DateTime>("CreatedAt").HasDefaultValueSql("NOW()").HasColumnType("timestamp with time zone");
             b.Property<string>("Description").IsRequired().HasColumnType("text");
             b.Property<string>("ExternalListingId").HasColumnType("text");
             b.Property<int>("FuelTypeId").HasColumnType("integer");
@@ -173,13 +183,14 @@ partial class WestcoastCarsContextModelSnapshot : ModelSnapshot
             b.Property<int>("ManufacturerId").HasColumnType("integer");
             b.Property<int>("Mileage").HasColumnType("integer");
             b.Property<string>("Model").IsRequired().HasColumnType("text");
-            b.Property<string>("ModelYear").IsRequired().HasColumnType("text");
+            b.Property<int>("ModelYear").HasColumnType("integer");
             b.Property<DateTime?>("PublishedAt").HasColumnType("timestamp with time zone");
             b.Property<string>("RegistrationNumber").IsRequired().HasColumnType("citext");
             b.Property<string>("Source").HasColumnType("text");
             b.Property<string>("SourceUrl").HasColumnType("text");
             b.Property<int>("TransmissionTypeId").HasColumnType("integer");
-            b.Property<int>("Value").HasColumnType("integer");
+            b.Property<DateTime>("UpdatedAt").HasDefaultValueSql("NOW()").HasColumnType("timestamp with time zone");
+            b.Property<int>("Price").HasColumnType("integer");
             b.HasKey("Id");
             b.HasIndex("ExternalListingId");
             b.HasIndex("FuelTypeId");
@@ -210,6 +221,12 @@ partial class WestcoastCarsContextModelSnapshot : ModelSnapshot
         modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
             b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null).WithMany().HasForeignKey("UserId").OnDelete(DeleteBehavior.Cascade).IsRequired());
 
+        modelBuilder.Entity("WestcoastCars.Domain.Entities.ServiceBooking", b =>
+        {
+            b.HasOne("WestcoastCars.Domain.Entities.Vehicle", "Vehicle").WithMany("ServiceBookings").HasForeignKey("VehicleId").OnDelete(DeleteBehavior.SetNull);
+            b.Navigation("Vehicle");
+        });
+
         modelBuilder.Entity("WestcoastCars.Domain.Entities.Vehicle", b =>
         {
             b.HasOne("WestcoastCars.Domain.Entities.FuelType", "FuelType").WithMany("Vehicles").HasForeignKey("FuelTypeId").OnDelete(DeleteBehavior.Cascade).IsRequired();
@@ -223,6 +240,7 @@ partial class WestcoastCarsContextModelSnapshot : ModelSnapshot
         modelBuilder.Entity("WestcoastCars.Domain.Entities.FuelType", b => b.Navigation("Vehicles"));
         modelBuilder.Entity("WestcoastCars.Domain.Entities.Manufacturer", b => b.Navigation("Vehicles"));
         modelBuilder.Entity("WestcoastCars.Domain.Entities.TransmissionType", b => b.Navigation("Vehicles"));
+        modelBuilder.Entity("WestcoastCars.Domain.Entities.Vehicle", b => b.Navigation("ServiceBookings"));
 #pragma warning restore 612, 618
     }
 }

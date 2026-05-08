@@ -1,18 +1,14 @@
 using FluentValidation;
 using WestcoastCars.Application.Features.ServiceBookings.Commands.Create;
-using WestcoastCars.Application.Interfaces;
 
 namespace WestcoastCars.Application.Features.ServiceBookings.Validators;
 
 public class CreateServiceBookingCommandValidator : AbstractValidator<CreateServiceBookingCommand>
 {
-    public CreateServiceBookingCommandValidator(IUnitOfWork unitOfWork)
+    public CreateServiceBookingCommandValidator()
     {
         RuleFor(command => command.VehicleRegistrationNumber)
-            .NotEmpty()
-            .MustAsync(async (registrationNumber, cancellationToken) =>
-                await unitOfWork.VehicleRepository.FindByRegistrationNumberAsync(registrationNumber) is not null)
-            .WithMessage("Vehicle with the specified registration number was not found.");
+            .NotEmpty();
 
         RuleFor(command => command.ServiceType)
             .NotEmpty();

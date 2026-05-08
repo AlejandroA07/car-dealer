@@ -14,7 +14,7 @@ public class BlocketCarAdDetails
     public string? Subtitle { get; set; }
 
     [JsonPropertyName("model_year")]
-    public string? ModelYear { get; set; }
+    public string? ModelYearText { get; set; }
 
     [JsonPropertyName("mileage")]
     public string? Mileage { get; set; }

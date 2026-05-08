@@ -46,8 +46,10 @@ public class ServiceBookingsIntegrationTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task Create_ShouldReturnBadRequest_WhenVehicleRegistrationDoesNotExist()
+    public async Task Create_ShouldPersistServiceBooking_WhenVehicleRegistrationDoesNotExist()
     {
+        var adminClient = await CreateAuthenticatedClientAsync();
+
         var response = await _client.PostAsJsonAsync("/api/v1/service-bookings", new ServiceBookingPostDto
         {
             VehicleRegistrationNumber = "UNKNOWN1",
@@ -59,10 +61,19 @@ public class ServiceBookingsIntegrationTests : IntegrationTestBase
             Description = "Invalid registration"
         });
 
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>();
-        problemDetails.Should().NotBeNull();
-        problemDetails!.Extensions.Should().ContainKey("errors");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var createdBooking = await response.Content.ReadFromJsonAsync<CreateServiceBookingResponseDto>();
+        createdBooking.Should().NotBeNull();
+        createdBooking!.Id.Should().BePositive();
+
+        var listResponse = await adminClient.GetAsync("/api/v1/service-bookings");
+        listResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        var bookings = await listResponse.Content.ReadFromJsonAsync<IEnumerable<ServiceBookingSummaryDto>>();
+        bookings.Should().NotBeNull();
+        bookings!.Should().Contain(booking =>
+            booking.Id == createdBooking.Id &&
+            booking.VehicleRegistrationNumber == "UNKNOWN1" &&
+            booking.CustomerName == "Missing Vehicle");
     }
 
     [Fact]

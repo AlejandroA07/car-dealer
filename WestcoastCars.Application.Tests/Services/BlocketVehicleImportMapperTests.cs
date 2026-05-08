@@ -22,6 +22,7 @@ public class BlocketVehicleImportMapperTests
             Location = "Göteborg",
             Timestamp = 1775736691638,
             CanonicalUrl = "https://www.blocket.se/mobility/item/22221687",
+            Year = 2024,
             Mileage = 8107,
             MileageUnit = "SCANDINAVIAN_MILE",
             Transmission = "Automatisk",
@@ -47,12 +48,13 @@ public class BlocketVehicleImportMapperTests
         Assert.Equal("ONO054", result.RegistrationNumber);
         Assert.Equal("Volvo", result.Manufacturer);
         Assert.Equal("XC60", result.Model);
+        Assert.Equal(2024, result.ModelYear);
         Assert.Equal(81070, result.Mileage);
         Assert.Equal("Petrol", result.FuelType);
         Assert.Equal("Automatic", result.TransmissionType);
         Assert.Equal("Vit", result.Color);
         Assert.Equal("Göteborg", result.City);
-        Assert.Equal(319900, result.Value);
+        Assert.Equal(319900, result.Price);
         Assert.Equal("/images/no-car.png", result.ImageUrl);
         Assert.Equal(importedAt, result.ImportedAt);
         Assert.Equal("Blocket", result.Source);
@@ -73,7 +75,7 @@ public class BlocketVehicleImportMapperTests
         {
             Title = "Audi A4",
             Subtitle = "2.0 TDI",
-            ModelYear = "2020",
+            ModelYearText = "2020",
             Mileage = "8 107 mil",
             Fuel = "Diesel",
             Transmission = "Manuell",
@@ -91,13 +93,62 @@ public class BlocketVehicleImportMapperTests
 
         Assert.Equal("Audi", result.Manufacturer);
         Assert.Equal("A4", result.Model);
-        Assert.Equal("2020", result.ModelYear);
+        Assert.Equal(2020, result.ModelYear);
         Assert.Equal(81070, result.Mileage);
         Assert.Equal("Diesel", result.FuelType);
         Assert.Equal("Manual", result.TransmissionType);
         Assert.Equal("ABC123", result.RegistrationNumber);
-        Assert.Equal(319900, result.Value);
+        Assert.Equal(319900, result.Price);
         Assert.Equal("2.0 TDI", result.Description);
+    }
+
+    [Fact]
+    public void Map_ShouldUseModelYearFromSpecifications_WhenDetailsFieldIsMissing()
+    {
+        var searchItem = new BlocketCarSearchItem
+        {
+            Id = "789",
+            Heading = "BMW 320",
+            Timestamp = 1775736691638
+        };
+
+        var adDetails = new BlocketCarAdDetails
+        {
+            Specifications = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["Modellår"] = "2021"
+            }
+        };
+
+        var result = _mapper.Map(searchItem, adDetails, DateTime.UtcNow);
+
+        Assert.Equal(2021, result.ModelYear);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("24")]
+    [InlineData("1899")]
+    [InlineData("20240")]
+    [InlineData("not a year")]
+    public void Map_ShouldReturnNullModelYear_WhenNoValidFourDigitYearIsAvailable(string? modelYear)
+    {
+        var searchItem = new BlocketCarSearchItem
+        {
+            Id = "999",
+            Heading = "Invalid Year",
+            Timestamp = 1775736691638
+        };
+
+        var adDetails = new BlocketCarAdDetails
+        {
+            ModelYearText = modelYear
+        };
+
+        var result = _mapper.Map(searchItem, adDetails, DateTime.UtcNow);
+
+        Assert.Null(result.ModelYear);
     }
 
     [Fact]
@@ -129,7 +180,7 @@ public class BlocketVehicleImportMapperTests
         Assert.Equal("Unknown", result.FuelType);
         Assert.Equal("Unknown", result.TransmissionType);
         Assert.Equal("/images/no-car.png", result.ImageUrl);
-        Assert.Equal(0, result.Value);
+        Assert.Equal(0, result.Price);
         Assert.Equal("Tesla Model 3", result.Description);
         Assert.Null(result.PublishedAt);
     }

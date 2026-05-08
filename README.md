@@ -163,47 +163,25 @@ docker compose logs -f web
 Open:
 - `http://<YOUR_VM_PUBLIC_IP>/`
 
-## Deployment (Railway)
+### Scaling note: Web Data Protection keys
 
-Railway can host the stack as one project:
+The default deployment is designed for one `web` container. The `dpkeys` directory stores the ASP.NET Core Data Protection key ring used to protect login cookies:
 
-- `web` (public)
-- `api` (private; includes auth endpoints)
-- `postgres` (PostgreSQL database for both business and auth data)
+```yaml
+web:
+  volumes:
+    - ./dpkeys:/app/keys
+```
 
-Railway provides private networking between services. Every service gets an internal DNS name like `api.railway.internal` for service-to-service HTTP calls.
+This is safe for a single-container VPS deployment because the same container keeps reading the same key files.
 
-### 1) Create a Railway project + database
+Before running multiple `web` replicas, move the key ring to storage shared by every Web instance. If one instance creates a login cookie and another instance cannot read the same key ring, users can be randomly logged out because the second instance cannot decrypt the cookie.
 
-1. Create a new Railway project from this GitHub repo.
-2. Add one PostgreSQL service in the project.
+Good scaling options:
 
-### 2) Create the Docker services
-
-Create two services from the same repo and set each to build from a different Dockerfile:
-
-- `web` (Dockerfile: `WestcoastCars.Web/Dockerfile`)
-- `api` (Dockerfile: `WestcoastCars.Api/Dockerfile`)
-
-Recommended: make only `web` publicly reachable and keep `api` private. The web app reaches `api` via Railway private DNS.
-
-### 3) Configure environment variables
-
-Set these variables on each service:
-
-**`web`**
-- `PORT=8080`
-- `ASPNETCORE_URLS=http://0.0.0.0:8080`
-- `Services__ApiUrl=http://api.railway.internal:8080`
-
-**`api`**
-- `PORT=8080`
-- `ASPNETCORE_URLS=http://0.0.0.0:8080`
-- `JwtSettings__Secret=<generate a strong random value>`
-- `AdminSettings__Password=<choose a strong password>`
-- `ConnectionStrings__DefaultConnection=Host=<postgres host>;Port=<postgres port>;Database=<postgres database>;Username=<postgres user>;Password=<postgres password>;`
-
-Tip: Railway PostgreSQL services expose variables such as `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD`, and `DATABASE_URL`.
+- shared VM/NFS volume mounted at `/app/keys`
+- Redis-backed Data Protection key storage
+- cloud blob storage such as Azure Blob Storage or S3-compatible storage
 
 ## Local development (without Docker)
 

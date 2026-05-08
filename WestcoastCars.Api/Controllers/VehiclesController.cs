@@ -149,7 +149,7 @@ public class VehiclesController : ControllerBase
             Mileage = dto.Mileage,
             FuelTypeId = dto.FuelTypeId,
             TransmissionTypeId = dto.TransmissionTypeId,
-            Value = dto.Value,
+            Price = dto.Price,
             Description = dto.Description,
             IsSold = dto.IsSold,
             ImageUrl = dto.ImageUrl
@@ -241,7 +241,7 @@ public class VehiclesController : ControllerBase
             Mileage = dto.Mileage,
             FuelTypeId = dto.FuelTypeId,
             TransmissionTypeId = dto.TransmissionTypeId,
-            Value = dto.Value,
+            Price = dto.Price,
             Description = dto.Description,
             IsSold = dto.IsSold,
             ImageUrl = dto.ImageUrl

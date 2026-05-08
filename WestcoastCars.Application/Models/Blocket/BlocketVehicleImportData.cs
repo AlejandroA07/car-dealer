@@ -5,10 +5,10 @@ public class BlocketVehicleImportData
     public string? RegistrationNumber { get; set; }
     public string Manufacturer { get; set; } = string.Empty;
     public string Model { get; set; } = string.Empty;
-    public string ModelYear { get; set; } = string.Empty;
+    public int? ModelYear { get; set; }
     public int Mileage { get; set; }
     public string ImageUrl { get; set; } = "/images/no-car.png";
-    public int Value { get; set; }
+    public int Price { get; set; }
     public string Description { get; set; } = string.Empty;
     public string FuelType { get; set; } = "Unknown";
     public string TransmissionType { get; set; } = "Unknown";

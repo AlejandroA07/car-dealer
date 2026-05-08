@@ -46,7 +46,7 @@ public class UpdateVehicleCommandHandler : IRequestHandler<UpdateVehicleCommand,
         vehicle.TransmissionType = transmissionType;
         vehicle.Mileage = request.Mileage;
         vehicle.Description = request.Description;
-        vehicle.Value = request.Value;
+        vehicle.Price = request.Price;
         vehicle.IsSold = request.IsSold;
 
         // Only update ImageUrl if a new one is provided.

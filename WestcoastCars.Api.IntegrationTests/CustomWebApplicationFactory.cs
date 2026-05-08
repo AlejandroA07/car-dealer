@@ -64,7 +64,6 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
         await SeedData.LoadFuelTypeData(context, seedPresence.HasFuelTypes);
         await SeedData.LoadTransmissionsData(context, seedPresence.HasTransmissionTypes);
         await SeedData.LoadVehicleData(context, seedPresence.HasVehicles);
-        await SeedData.EnsurePostgreSqlIdentitySequencesAsync(context);
 
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();

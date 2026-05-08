@@ -1,38 +1,29 @@
 [
-  {
-    "id": 1,
-    "name": "Manual"
-  },
-  {
-    "id": 2,
-    "name": "Automatic"
-  },
-  {
-    "id": 3,
-    "name": "Auto Clutch"
-  },
-  {
-    "id": 4,
-    "name": "Sequential"
-  },
-  {
-    "id": 5,
-    "name": "Semi Automatic"
-  },
-  {
-    "id": 6,
-    "name": "CVT(con. varying transmission)"
-  },
-  {
-    "id": 7,
-    "name": "CVT / Manual mode"
-  },
-  {
-    "id": 8,
-    "name": "Unknown"
-  },
-  {
-    "id": 9,
-    "name": "Auto / Manual Mode"
-  }
+    {
+        "name":  "Manual"
+    },
+    {
+        "name":  "Automatic"
+    },
+    {
+        "name":  "Auto Clutch"
+    },
+    {
+        "name":  "Sequential"
+    },
+    {
+        "name":  "Semi Automatic"
+    },
+    {
+        "name":  "CVT(con. varying transmission)"
+    },
+    {
+        "name":  "CVT / Manual mode"
+    },
+    {
+        "name":  "Unknown"
+    },
+    {
+        "name":  "Auto / Manual Mode"
+    }
 ]

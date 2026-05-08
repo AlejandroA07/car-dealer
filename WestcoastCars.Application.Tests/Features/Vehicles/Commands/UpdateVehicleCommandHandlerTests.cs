@@ -40,7 +40,7 @@ public class UpdateVehicleCommandHandlerTests
             Id = id,
             RegistrationNumber = regNo,
             Model = "Test Model",
-            ModelYear = "2020",
+            ModelYear = 2020,
             ImageUrl = "test.png",
             Description = "Test Description",
             Manufacturer = new Manufacturer { Id = 1, Name = "Test Make" },
@@ -62,8 +62,8 @@ public class UpdateVehicleCommandHandlerTests
             FuelTypeId = 1,
             TransmissionTypeId = 1,
             Model = "New Model",
-            ModelYear = "2024",
-            Value = 500000,
+            ModelYear = 2024,
+            Price = 500000,
             Description = "New Description"
         };
 
@@ -83,7 +83,7 @@ public class UpdateVehicleCommandHandlerTests
         Assert.Equal(command.RegistrationNumber, existingVehicle.RegistrationNumber);
         Assert.Equal(command.Model, existingVehicle.Model);
         Assert.Equal(command.ModelYear, existingVehicle.ModelYear);
-        Assert.Equal(command.Value, existingVehicle.Value);
+        Assert.Equal(command.Price, existingVehicle.Price);
         Assert.Equal(command.Description, existingVehicle.Description);
         Assert.Equal(command.ManufacturerId, existingVehicle.Manufacturer.Id);
         Assert.Equal(command.FuelTypeId, existingVehicle.FuelType.Id);
@@ -104,8 +104,8 @@ public class UpdateVehicleCommandHandlerTests
             FuelTypeId = 1,
             TransmissionTypeId = 1,
             Model = "New Model",
-            ModelYear = "2024",
-            Value = 500000,
+            ModelYear = 2024,
+            Price = 500000,
             Description = "New Description",
             ImageUrl = string.Empty
         };
@@ -136,8 +136,8 @@ public class UpdateVehicleCommandHandlerTests
             FuelTypeId = 1,
             TransmissionTypeId = 1,
             Model = "New Model",
-            ModelYear = "2024",
-            Value = 500000,
+            ModelYear = 2024,
+            Price = 500000,
             Description = "New Description"
         };
 

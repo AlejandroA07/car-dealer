@@ -122,10 +122,10 @@ public class UnitOfWorkExceptionTranslationTests : IntegrationTestBase
         {
             RegistrationNumber = registrationNumber,
             Model = "Constraint Test",
-            ModelYear = "2024",
+            ModelYear = 2024,
             Mileage = 100,
             ImageUrl = "/images/no-car.png",
-            Value = 500000,
+            Price = 500000,
             Description = "Constraint translation test vehicle",
             ManufacturerId = manufacturerId,
             FuelTypeId = fuelTypeId,

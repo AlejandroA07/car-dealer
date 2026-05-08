@@ -21,9 +21,17 @@ public class WestcoastCarsContext : IdentityDbContext<IdentityUser>
         modelBuilder.HasPostgresExtension("citext");
         modelBuilder.HasPostgresExtension("pg_trgm");
 
-        modelBuilder.Entity<ServiceBooking>()
-            .Property(e => e.CreatedAt)
-            .HasDefaultValueSql("NOW()");
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes()
+            .Where(entityType => typeof(BaseEntity).IsAssignableFrom(entityType.ClrType)))
+        {
+            modelBuilder.Entity(entityType.ClrType)
+                .Property(nameof(BaseEntity.CreatedAt))
+                .HasDefaultValueSql("NOW()");
+
+            modelBuilder.Entity(entityType.ClrType)
+                .Property(nameof(BaseEntity.UpdatedAt))
+                .HasDefaultValueSql("NOW()");
+        }
 
         modelBuilder.Entity<Vehicle>()
             .Property(vehicle => vehicle.RegistrationNumber)
@@ -48,6 +56,12 @@ public class WestcoastCarsContext : IdentityDbContext<IdentityUser>
             .HasIndex(vehicle => vehicle.RegistrationNumber)
             .HasDatabaseName("IX_Vehicles_RegistrationNumber")
             .IsUnique();
+
+        modelBuilder.Entity<ServiceBooking>()
+            .HasOne(serviceBooking => serviceBooking.Vehicle)
+            .WithMany(vehicle => vehicle.ServiceBookings)
+            .HasForeignKey(serviceBooking => serviceBooking.VehicleId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         // Manufacturer name uniqueness is migration-managed via a PostgreSQL lower("Name") index
         // because the same column also needs a trigram GIN index for fast ILIKE substring search.
@@ -75,5 +89,36 @@ public class WestcoastCarsContext : IdentityDbContext<IdentityUser>
             .HasIndex(transmissionType => transmissionType.Name)
             .HasDatabaseName("IX_TransmissionTypes_Name")
             .IsUnique();
+    }
+
+    public override int SaveChanges()
+    {
+        SetAuditTimestamps();
+        return base.SaveChanges();
+    }
+
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        SetAuditTimestamps();
+        return base.SaveChangesAsync(cancellationToken);
+    }
+
+    private void SetAuditTimestamps()
+    {
+        var utcNow = DateTime.UtcNow;
+
+        foreach (var entry in ChangeTracker.Entries<BaseEntity>())
+        {
+            if (entry.State == EntityState.Added)
+            {
+                entry.Entity.CreatedAt = utcNow;
+                entry.Entity.UpdatedAt = utcNow;
+            }
+            else if (entry.State == EntityState.Modified)
+            {
+                entry.Property(entity => entity.CreatedAt).IsModified = false;
+                entry.Entity.UpdatedAt = utcNow;
+            }
+        }
     }
 }
