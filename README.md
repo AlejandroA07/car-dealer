@@ -47,6 +47,26 @@ ADMIN_PASSWORD=change-me
 docker compose up --build
 ```
 
+### Faster rebuild workflow for development
+
+If you change only one app, rebuild only that service instead of the whole stack:
+
+```bash
+docker compose build api
+docker compose up -d api
+```
+
+```bash
+docker compose build web
+docker compose up -d web
+```
+
+If you want optional runtime memory guardrails while testing locally, include:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.memory.yml up --build
+```
+
 ### 3) Open the app
 
 - Web UI: `http://localhost:5002`
@@ -202,6 +222,30 @@ dotnet user-secrets set "Services:ApiUrl" "http://localhost:5001" --project West
 dotnet run --project WestcoastCars.Api/WestcoastCars.Api.csproj
 dotnet run --project WestcoastCars.Web/WestcoastCars.Web.csproj
 ```
+
+### Recommended inner-loop workflow
+
+For the lightest local edit/build/run cycle:
+
+1. Keep only PostgreSQL in Docker:
+   ```bash
+   docker compose up -d db
+   ```
+2. Run the applications locally with watch:
+   ```bash
+   dotnet watch --project WestcoastCars.Api/WestcoastCars.Api.csproj
+   ```
+   ```bash
+   dotnet watch --project WestcoastCars.Web/WestcoastCars.Web.csproj
+   ```
+
+Use full Docker rebuilds when you need container/runtime parity, not for every code edit.
+
+## Docker + WSL memory tuning
+
+For machine-side tuning and measurement steps, see:
+
+- `C:\Users\aleja\projects\active\westcoast-cars\docs\docker-wsl-memory.md`
 
 ## Tests
 

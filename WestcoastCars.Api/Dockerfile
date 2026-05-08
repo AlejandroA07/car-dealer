@@ -9,16 +9,11 @@ WORKDIR /src
 # Copy the solution file and all project files
 COPY ["westcoast-cars.sln", "."]
 
-# API projects
+# API project
 COPY ["WestcoastCars.Api/WestcoastCars.Api.csproj", "WestcoastCars.Api/"]
-COPY ["WestcoastCars.Api.Tests/WestcoastCars.Api.Tests.csproj", "WestcoastCars.Api.Tests/"]
-
-# Web project
-COPY ["WestcoastCars.Web/WestcoastCars.Web.csproj", "WestcoastCars.Web/"]
 
 # Core projects
 COPY ["WestcoastCars.Application/WestcoastCars.Application.csproj", "WestcoastCars.Application/"]
-COPY ["WestcoastCars.Application.Tests/WestcoastCars.Application.Tests.csproj", "WestcoastCars.Application.Tests/"]
 COPY ["WestcoastCars.Contracts/WestcoastCars.Contracts.csproj", "WestcoastCars.Contracts/"]
 COPY ["WestcoastCars.Domain/WestcoastCars.Domain.csproj", "WestcoastCars.Domain/"]
 COPY ["WestcoastCars.Infrastructure/WestcoastCars.Infrastructure.csproj", "WestcoastCars.Infrastructure/"]
@@ -32,7 +27,7 @@ COPY . .
 # Set the working directory to the API project
 WORKDIR "/src/WestcoastCars.Api"
 # Publish the application, creating the compiled output.
-RUN dotnet publish "WestcoastCars.Api.csproj" -c Release -o /app/publish
+RUN dotnet publish "WestcoastCars.Api.csproj" -c Release -o /app/publish --no-restore
 
 # ====================================================================================
 # STAGE 2: Final Runtime Image

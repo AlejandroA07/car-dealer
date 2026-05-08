@@ -1,0 +1,12 @@
+services:
+  api:
+    mem_reservation: 512m
+    mem_limit: 768m
+
+  web:
+    mem_reservation: 256m
+    mem_limit: 512m
+
+  db:
+    mem_reservation: 256m
+    mem_limit: 512m
