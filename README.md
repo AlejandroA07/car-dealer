@@ -1,6 +1,15 @@
 # Westcoast Cars (Modular Monolith)
 
-Westcoast Cars is a .NET 9 sample application for a car dealership platform. It ships as a Docker Compose stack with a Web UI, one merged API, and one PostgreSQL database. Authentication endpoints are hosted inside the main API.
+[![CI](https://github.com/AlejandroA07/car-dealer/actions/workflows/ci.yml/badge.svg)](https://github.com/AlejandroA07/car-dealer/actions/workflows/ci.yml)
+
+Westcoast Cars is a .NET 10 sample application for a car dealership platform. It ships as a Docker Compose stack with a Web UI, one merged API, and one PostgreSQL database. Authentication endpoints are hosted inside the main API.
+
+## CI
+
+This repository uses GitHub Actions for formatting, build, test, and Docker image validation:
+
+- Workflow: [`CI`](https://github.com/AlejandroA07/car-dealer/actions/workflows/ci.yml)
+- Normal CI intentionally excludes the live Blocket E2E test so PR feedback stays fast and stable
 
 ## Architecture
 
@@ -10,13 +19,25 @@ This repository runs as a Docker Compose stack:
 - **api** (`WestcoastCars.Api`): REST API for inventory, service bookings, and authentication/authorization
 - **db**: PostgreSQL database used by EF Core
 
+```mermaid
+flowchart LR
+    browser["Browser"] --> web["WestcoastCars.Web"]
+    web --> api["WestcoastCars.Api"]
+    api --> db["PostgreSQL"]
+```
+
 The API uses one EF Core context:
 
 - `WestcoastCarsContext`: business tables and ASP.NET Core Identity tables in the default PostgreSQL schema
 
+For sanitized architecture and decision records that are safe to share, see:
+
+- [`public-docs/architecture-overview.md`](public-docs/architecture-overview.md)
+- [`public-docs/adr/`](public-docs/adr/)
+
 ## Tech stack
 
-- .NET 9 / ASP.NET Core
+- .NET 10 / ASP.NET Core
 - PostgreSQL 16
 - Docker + Docker Compose
 
@@ -71,6 +92,7 @@ docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-co
 
 - Web UI: `http://localhost:5002`
 - API: `http://localhost:5001`
+- Swagger UI (local Development only): `http://localhost:5001/swagger`
 
 ## Deployment (Oracle Cloud Always Free VM)
 
@@ -187,7 +209,7 @@ Tip: Railway PostgreSQL services expose variables such as `PGHOST`, `PGPORT`, `P
 
 ### Prerequisites
 
-- .NET 9 SDK
+- .NET 10 SDK
 - PostgreSQL 16+
 
 ### Create database
@@ -223,6 +245,14 @@ dotnet run --project WestcoastCars.Api/WestcoastCars.Api.csproj
 dotnet run --project WestcoastCars.Web/WestcoastCars.Web.csproj
 ```
 
+### Local API explorer
+
+When the API runs locally in the Development environment, Swagger UI is available at:
+
+- `http://localhost:5001/swagger`
+
+Swagger stays disabled in production by design, so local development is the supported way to inspect and try the API interactively.
+
 ### Recommended inner-loop workflow
 
 For the lightest local edit/build/run cycle:
@@ -243,9 +273,7 @@ Use full Docker rebuilds when you need container/runtime parity, not for every c
 
 ## Docker + WSL memory tuning
 
-For machine-side tuning and measurement steps, see:
-
-- `C:\Users\aleja\projects\active\westcoast-cars\docs\docker-wsl-memory.md`
+Machine-specific tuning notes are intentionally kept as local-only documentation and are not part of the shared repository.
 
 ## Tests
 
@@ -281,7 +309,7 @@ POST /api/v1/vehicles/import/blocket
 Requirements:
 - Authenticated user with `Admin` or `Salesperson` role
 - `BlocketApi` settings configured in `WestcoastCars.Api/appsettings*.json`
-- `JwtSettings__Secret` configured consistently for the API and auth service
+- `JwtSettings__Secret` configured for the API
 
 Example payload:
 

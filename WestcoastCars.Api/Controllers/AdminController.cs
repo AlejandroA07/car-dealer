@@ -9,6 +9,9 @@ namespace WestcoastCars.Api.Controllers;
 /// <summary>
 /// Administrative operations for user management. Requires Admin role.
 /// </summary>
+/// <remarks>
+/// This controller exposes privileged user-management endpoints for local and deployed administration flows.
+/// </remarks>
 [ApiController]
 [Route("api/admin")]
 [Tags("Administration")]
@@ -31,6 +34,9 @@ public class AdminController : ControllerBase
     /// <response code="400">Invalid data or user already exists.</response>
     /// <response code="401">Unauthorized.</response>
     /// <response code="403">Forbidden (requires Admin role).</response>
+    /// <remarks>
+    /// Use this endpoint to provision a new application user and assign the requested role in a single operation.
+    /// </remarks>
     [HttpPost("create-user")]
     [ProducesResponseType(200)]
     [ProducesResponseType(400)]

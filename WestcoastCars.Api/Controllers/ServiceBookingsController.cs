@@ -32,6 +32,7 @@ public class ServiceBookingsController : ControllerBase
     /// Lists all service bookings. Requires Admin or Salesperson role.
     /// </summary>
     /// <returns>A collection of service bookings.</returns>
+    /// <response code="200">Service bookings returned successfully.</response>
     [HttpGet]
     [Authorize(Roles = "Admin,Salesperson")]
     [ProducesResponseType(typeof(IEnumerable<ServiceBookingSummaryDto>), 200)]
@@ -49,6 +50,7 @@ public class ServiceBookingsController : ControllerBase
     /// </summary>
     /// <param name="dto">Booking details.</param>
     /// <returns>The ID of the created booking.</returns>
+    /// <response code="200">Service booking created successfully.</response>
     [HttpPost]
     [AllowAnonymous]
     [ProducesResponseType(typeof(CreateServiceBookingResponseDto), 200)]
