@@ -16,6 +16,7 @@ public class VehicleDto
     /// Vehicle registration number (plate).
     /// </summary>
     [Required(ErrorMessage = "RegistrationNumber måste anges")]
+    [MaxLength(10)]
     public string RegistrationNumber { get; set; } = string.Empty;
 
     /// <summary>
@@ -28,6 +29,7 @@ public class VehicleDto
     /// Model name (e.g., "Model S", "Golf").
     /// </summary>
     [Required(ErrorMessage = "Bilmodell måste anges")]
+    [MaxLength(100)]
     public string Model { get; set; } = string.Empty;
 
     /// <summary>
@@ -63,6 +65,7 @@ public class VehicleDto
     /// <summary>
     /// Detailed description of the vehicle's condition and features.
     /// </summary>
+    [MaxLength(4000)]
     public string Description { get; set; } = string.Empty;
 
     /// <summary>
@@ -73,5 +76,6 @@ public class VehicleDto
     /// <summary>
     /// Relative path or URL to the vehicle's primary image.
     /// </summary>
+    [MaxLength(500)]
     public string ImageUrl { get; set; } = string.Empty;
 }

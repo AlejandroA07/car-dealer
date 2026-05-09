@@ -19,7 +19,8 @@ COPY ["WestcoastCars.Web/WestcoastCars.Web.csproj", "WestcoastCars.Web/"]
 COPY ["WestcoastCars.Contracts/WestcoastCars.Contracts.csproj", "WestcoastCars.Contracts/"]
 
 # Restore only what this service needs (avoids requiring test projects during container builds)
-RUN dotnet restore "WestcoastCars.Web/WestcoastCars.Web.csproj"
+RUN --mount=type=cache,target=/root/.nuget/packages \
+    dotnet restore "WestcoastCars.Web/WestcoastCars.Web.csproj"
 
 # Copy the rest of the source code into the container
 COPY . .
@@ -37,6 +38,8 @@ RUN dotnet publish "WestcoastCars.Web.csproj" -c Release -o /app/publish --no-re
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble
 WORKDIR /app
 
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+
 # Copy the published build output from the 'build' stage
 COPY --from=build /app/publish .
 
@@ -44,5 +47,9 @@ COPY --from=build /app/publish .
 RUN mkdir /app/keys
 RUN chown app /app/keys
 
-# Set the entrypoint for the container to run the application
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD curl -f http://localhost:8080/ || exit 1
+
 ENTRYPOINT ["dotnet", "WestcoastCars.Web.dll"]

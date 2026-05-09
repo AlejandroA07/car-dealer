@@ -33,38 +33,9 @@ public class WestcoastCarsContext : IdentityDbContext<IdentityUser>
                 .HasDefaultValueSql("NOW()");
         }
 
-        modelBuilder.Entity<Vehicle>()
-            .Property(vehicle => vehicle.RegistrationNumber)
-            .HasColumnType("citext");
-
-        modelBuilder.Entity<Vehicle>()
-            .HasIndex(vehicle => vehicle.ExternalListingId);
-
-        modelBuilder.Entity<Vehicle>()
-            .HasIndex(vehicle => vehicle.Source);
-
-        modelBuilder.Entity<Vehicle>()
-            .HasIndex(vehicle => vehicle.IsSold);
-
-        modelBuilder.Entity<Vehicle>()
-            .HasIndex(vehicle => vehicle.Model)
-            .HasDatabaseName("IX_Vehicles_Model")
-            .HasMethod("GIN")
-            .HasOperators("gin_trgm_ops");
-
-        modelBuilder.Entity<Vehicle>()
-            .HasIndex(vehicle => vehicle.RegistrationNumber)
-            .HasDatabaseName("IX_Vehicles_RegistrationNumber")
-            .IsUnique();
-
-        modelBuilder.Entity<ServiceBooking>()
-            .HasOne(serviceBooking => serviceBooking.Vehicle)
-            .WithMany(vehicle => vehicle.ServiceBookings)
-            .HasForeignKey(serviceBooking => serviceBooking.VehicleId)
-            .OnDelete(DeleteBehavior.SetNull);
-
-        // Manufacturer name uniqueness is migration-managed via a PostgreSQL lower("Name") index
-        // because the same column also needs a trigram GIN index for fast ILIKE substring search.
+        modelBuilder.Entity<Manufacturer>()
+            .Property(m => m.Name)
+            .HasMaxLength(50);
 
         modelBuilder.Entity<Manufacturer>()
             .HasIndex(manufacturer => manufacturer.Name)
@@ -89,6 +60,95 @@ public class WestcoastCarsContext : IdentityDbContext<IdentityUser>
             .HasIndex(transmissionType => transmissionType.Name)
             .HasDatabaseName("IX_TransmissionTypes_Name")
             .IsUnique();
+
+        modelBuilder.Entity<Vehicle>()
+            .Property(vehicle => vehicle.RegistrationNumber)
+            .HasColumnType("citext");
+
+        modelBuilder.Entity<Vehicle>()
+            .Property(vehicle => vehicle.Model)
+            .HasMaxLength(100);
+
+        modelBuilder.Entity<Vehicle>()
+            .Property(vehicle => vehicle.Description)
+            .HasMaxLength(4000);
+
+        modelBuilder.Entity<Vehicle>()
+            .Property(vehicle => vehicle.ImageUrl)
+            .HasMaxLength(500);
+
+        modelBuilder.Entity<Vehicle>()
+            .Property(vehicle => vehicle.ExternalListingId)
+            .HasMaxLength(100);
+
+        modelBuilder.Entity<Vehicle>()
+            .Property(vehicle => vehicle.Source)
+            .HasMaxLength(50);
+
+        modelBuilder.Entity<Vehicle>()
+            .Property(vehicle => vehicle.SourceUrl)
+            .HasMaxLength(500);
+
+        modelBuilder.Entity<Vehicle>()
+            .Property(vehicle => vehicle.Color)
+            .HasMaxLength(50);
+
+        modelBuilder.Entity<Vehicle>()
+            .Property(vehicle => vehicle.City)
+            .HasMaxLength(100);
+
+        modelBuilder.Entity<Vehicle>()
+            .HasIndex(vehicle => vehicle.ExternalListingId);
+
+        modelBuilder.Entity<Vehicle>()
+            .HasIndex(vehicle => vehicle.Source);
+
+        modelBuilder.Entity<Vehicle>()
+            .HasIndex(vehicle => vehicle.IsSold);
+
+        modelBuilder.Entity<Vehicle>()
+            .HasIndex(vehicle => vehicle.Model)
+            .HasDatabaseName("IX_Vehicles_Model")
+            .HasMethod("GIN")
+            .HasOperators("gin_trgm_ops");
+
+        modelBuilder.Entity<Vehicle>()
+            .HasIndex(vehicle => vehicle.RegistrationNumber)
+            .HasDatabaseName("IX_Vehicles_RegistrationNumber")
+            .IsUnique();
+
+        modelBuilder.Entity<ServiceBooking>()
+            .Property(sb => sb.VehicleRegistrationNumber)
+            .HasMaxLength(10);
+
+        modelBuilder.Entity<ServiceBooking>()
+            .Property(sb => sb.ServiceType)
+            .HasMaxLength(50);
+
+        modelBuilder.Entity<ServiceBooking>()
+            .Property(sb => sb.CustomerName)
+            .HasMaxLength(100);
+
+        modelBuilder.Entity<ServiceBooking>()
+            .Property(sb => sb.CustomerEmail)
+            .HasMaxLength(256);
+
+        modelBuilder.Entity<ServiceBooking>()
+            .Property(sb => sb.CustomerPhone)
+            .HasMaxLength(50);
+
+        modelBuilder.Entity<ServiceBooking>()
+            .Property(sb => sb.Description)
+            .HasMaxLength(2000);
+
+        modelBuilder.Entity<ServiceBooking>()
+            .HasOne(serviceBooking => serviceBooking.Vehicle)
+            .WithMany(vehicle => vehicle.ServiceBookings)
+            .HasForeignKey(serviceBooking => serviceBooking.VehicleId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Manufacturer name uniqueness is migration-managed via a PostgreSQL lower("Name") index
+        // because the same column also needs a trigram GIN index for fast ILIKE substring search.
     }
 
     public override int SaveChanges()

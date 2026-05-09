@@ -1,6 +1,7 @@
 
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using Moq;
 using WestcoastCars.Api.Controllers;
 using WestcoastCars.Application.Features.Transmissions.Commands.Create;
@@ -25,7 +26,7 @@ public class TransmissionsControllerTests
     public TransmissionsControllerTests()
     {
         _mediatorMock = new Mock<IMediator>();
-        _controller = new TransmissionsController(_mediatorMock.Object);
+        _controller = new TransmissionsController(_mediatorMock.Object, new MemoryCache(new MemoryCacheOptions()));
     }
 
     [Fact]

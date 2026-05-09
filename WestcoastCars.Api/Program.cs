@@ -24,6 +24,7 @@ using System.Threading.RateLimiting;
 
 using WestcoastCars.Api.Swagger.Examples;
 using Swashbuckle.AspNetCore.Filters;
+using Microsoft.AspNetCore.HttpLogging;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using WestcoastCars.Api.Observability;
@@ -31,7 +32,6 @@ using WestcoastCars.Api.Observability;
 // ... other usings ...
 
 using WestcoastCars.Application;
-using System.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,7 +53,8 @@ builder.Services.AddOpenTelemetry()
             .AddAspNetCoreInstrumentation()
             .AddHttpClientInstrumentation()
             .AddRuntimeInstrumentation()
-            .AddMeter(AppTelemetry.MeterName);
+            .AddMeter(AppTelemetry.MeterName)
+            .AddPrometheusExporter();
     });
 
 // Configure Options
@@ -92,6 +93,21 @@ builder.Services.AddRateLimiter(options =>
     });
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
+
+builder.Services.AddMemoryCache();
+
+builder.Services.AddHttpLogging(logging =>
+{
+    logging.LoggingFields = HttpLoggingFields.RequestMethod
+        | HttpLoggingFields.RequestPath
+        | HttpLoggingFields.ResponseStatusCode
+        | HttpLoggingFields.Duration;
+});
+
+if (!builder.Environment.IsDevelopment())
+{
+    builder.Logging.AddJsonConsole();
+}
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
@@ -240,26 +256,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseStaticFiles();
 
-app.Use(async (context, next) =>
-{
-    var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
-    var startedAt = Stopwatch.StartNew();
-
-    try
-    {
-        await next();
-    }
-    finally
-    {
-        startedAt.Stop();
-        logger.LogInformation(
-            "HTTP {Method} {Path} responded {StatusCode} in {ElapsedMilliseconds} ms",
-            context.Request.Method,
-            context.Request.Path,
-            context.Response.StatusCode,
-            startedAt.ElapsedMilliseconds);
-    }
-});
+app.UseHttpLogging();
 
 app.UseRateLimiter();
 
@@ -269,6 +266,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapHealthChecks("/health");
+app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions { Predicate = _ => false });
+app.MapHealthChecks("/health/ready");
+app.MapPrometheusScrapingEndpoint();
 app.MapControllers();
 
 app.Run();

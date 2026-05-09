@@ -8,19 +8,27 @@ public class CreateServiceBookingCommandValidator : AbstractValidator<CreateServ
     public CreateServiceBookingCommandValidator()
     {
         RuleFor(command => command.VehicleRegistrationNumber)
-            .NotEmpty();
+            .NotEmpty()
+            .MaximumLength(10);
 
         RuleFor(command => command.ServiceType)
-            .NotEmpty();
+            .NotEmpty()
+            .MaximumLength(50);
 
         RuleFor(command => command.CustomerName)
-            .NotEmpty();
+            .NotEmpty()
+            .MaximumLength(100);
 
         RuleFor(command => command.CustomerEmail)
             .NotEmpty()
-            .EmailAddress();
+            .EmailAddress()
+            .MaximumLength(256);
 
         RuleFor(command => command.CustomerPhone)
-            .NotEmpty();
+            .NotEmpty()
+            .MaximumLength(50);
+
+        RuleFor(command => command.Description)
+            .MaximumLength(2000);
     }
 }

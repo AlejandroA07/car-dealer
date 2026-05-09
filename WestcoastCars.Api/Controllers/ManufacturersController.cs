@@ -2,6 +2,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using WestcoastCars.Application.Features.Manufacturers.Commands.Create;
 using WestcoastCars.Application.Features.Manufacturers.Commands.Delete;
 using WestcoastCars.Application.Features.Manufacturers.Commands.Update;
@@ -21,10 +22,13 @@ namespace WestcoastCars.Api.Controllers;
 public class ManufacturersController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly IMemoryCache _cache;
+    private const string CacheKey = "lookup:manufacturers";
 
-    public ManufacturersController(IMediator mediator)
+    public ManufacturersController(IMediator mediator, IMemoryCache cache)
     {
         _mediator = mediator;
+        _cache = cache;
     }
 
     /// <summary>
@@ -36,8 +40,12 @@ public class ManufacturersController : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<NamedObjectDto>), 200)]
     public async Task<IActionResult> ListAll()
     {
-        var result = await _mediator.Send(new ListAllManufacturersQuery());
-        return Ok(result);
+        if (!_cache.TryGetValue(CacheKey, out IEnumerable<NamedObjectDto> cached))
+        {
+            cached = await _mediator.Send(new ListAllManufacturersQuery());
+            _cache.Set(CacheKey, cached, TimeSpan.FromMinutes(10));
+        }
+        return Ok(cached);
     }
 
     /// <summary>
@@ -70,6 +78,7 @@ public class ManufacturersController : ControllerBase
     {
         var command = new CreateManufacturerCommand { Name = model.Name };
         var result = await _mediator.Send(command);
+        _cache.Remove(CacheKey);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
@@ -94,6 +103,7 @@ public class ManufacturersController : ControllerBase
         }
         var command = new UpdateManufacturerCommand { Id = id, Name = model.Name };
         await _mediator.Send(command);
+        _cache.Remove(CacheKey);
         return NoContent();
     }
 
@@ -112,6 +122,7 @@ public class ManufacturersController : ControllerBase
     {
         var command = new DeleteManufacturerCommand { Id = id };
         await _mediator.Send(command);
+        _cache.Remove(CacheKey);
         return NoContent();
     }
 }

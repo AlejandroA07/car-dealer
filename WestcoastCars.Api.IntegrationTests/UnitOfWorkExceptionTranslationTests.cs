@@ -20,7 +20,7 @@ public class UnitOfWorkExceptionTranslationTests : IntegrationTestBase
     {
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<WestcoastCarsContext>();
-        var unitOfWork = new UnitOfWork(context);
+        var unitOfWork = new UnitOfWork(context, new PostgreSqlVehicleTextSearchMatcher());
         var (manufacturerId, fuelTypeId, transmissionTypeId) = await GetLookupIdsAsync(context);
         var registrationNumber = $"DBDUP{Guid.NewGuid():N}"[..10].ToUpperInvariant();
 
@@ -39,7 +39,7 @@ public class UnitOfWorkExceptionTranslationTests : IntegrationTestBase
     {
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<WestcoastCarsContext>();
-        var unitOfWork = new UnitOfWork(context);
+        var unitOfWork = new UnitOfWork(context, new PostgreSqlVehicleTextSearchMatcher());
         var (_, fuelTypeId, transmissionTypeId) = await GetLookupIdsAsync(context);
 
         context.Vehicles.Add(CreateVehicle(
@@ -58,7 +58,7 @@ public class UnitOfWorkExceptionTranslationTests : IntegrationTestBase
     {
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<WestcoastCarsContext>();
-        var unitOfWork = new UnitOfWork(context);
+        var unitOfWork = new UnitOfWork(context, new PostgreSqlVehicleTextSearchMatcher());
         var (manufacturerId, _, transmissionTypeId) = await GetLookupIdsAsync(context);
 
         context.Vehicles.Add(CreateVehicle(
@@ -77,7 +77,7 @@ public class UnitOfWorkExceptionTranslationTests : IntegrationTestBase
     {
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<WestcoastCarsContext>();
-        var unitOfWork = new UnitOfWork(context);
+        var unitOfWork = new UnitOfWork(context, new PostgreSqlVehicleTextSearchMatcher());
         var (manufacturerId, fuelTypeId, _) = await GetLookupIdsAsync(context);
 
         context.Vehicles.Add(CreateVehicle(
@@ -96,7 +96,7 @@ public class UnitOfWorkExceptionTranslationTests : IntegrationTestBase
     {
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<WestcoastCarsContext>();
-        var unitOfWork = new UnitOfWork(context);
+        var unitOfWork = new UnitOfWork(context, new PostgreSqlVehicleTextSearchMatcher());
 
         context.Set<IdentityUserRole<string>>().Add(new IdentityUserRole<string>
         {

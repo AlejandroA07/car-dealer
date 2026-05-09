@@ -1,5 +1,7 @@
-# Production-like environment configuration.
-# This configuration simulates Docker Secrets by using a local file for the PostgreSQL password.
+# Local prod-like testing overlay — NOT used for VPS deployment.
+# Simulates Docker Secrets via a local file so the secrets path can be tested
+# before deploying. Exposes ports directly for local inspection.
+# For VPS deployment use docker-compose.deploy.yml instead.
 
 secrets:
   db_password:

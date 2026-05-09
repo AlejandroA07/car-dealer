@@ -94,6 +94,22 @@ docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-co
 - API: `http://localhost:5001`
 - Swagger UI (local Development only): `http://localhost:5001/swagger`
 
+## Infrastructure assumptions
+
+The VPS environment is provisioned manually. The assumptions below capture what is required to reproduce it:
+
+| Component | Requirement |
+|-----------|-------------|
+| Provider | Oracle Cloud Always Free (AMD shape) |
+| OS | Ubuntu 22.04 LTS |
+| Docker Engine | 24+ |
+| Docker Compose plugin | v2 (included with Docker Engine 24+) |
+| Inbound firewall | 22/tcp (SSH), 80/tcp (HTTP) |
+| Reverse proxy / TLS | None — Docker exposes port 80 directly. Add nginx + Certbot if HTTPS is needed. |
+| Data persistence | `postgres_data` Docker volume + `./dpkeys` bind mount for Data Protection keys |
+
+---
+
 ## Deployment (Oracle Cloud Always Free VM)
 
 This project is easiest to deploy on a single Linux VM using Docker Compose. The recommended setup exposes only the `web` service publicly over HTTP on port 80.
@@ -162,6 +178,35 @@ docker compose logs -f web
 
 Open:
 - `http://<YOUR_VM_PUBLIC_IP>/`
+
+### Rollback
+
+If a deployment breaks the app, roll back by checking out the previous commit and rebuilding:
+
+```bash
+git checkout <previous-commit-sha>
+docker compose --env-file .env \
+  -f docker-compose.yml \
+  -f docker-compose.prod.yml \
+  -f docker-compose.deploy.yml \
+  up -d --build
+```
+
+If the new commit also shipped a database migration that needs to be reversed, run this **before** restarting the containers:
+
+```bash
+dotnet ef database update <PreviousMigrationName> \
+  --project WestcoastCars.Infrastructure \
+  --startup-project WestcoastCars.Api
+```
+
+To find the previous migration name:
+
+```bash
+dotnet ef migrations list \
+  --project WestcoastCars.Infrastructure \
+  --startup-project WestcoastCars.Api
+```
 
 ### Scaling note: Web Data Protection keys
 

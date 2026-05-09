@@ -1,6 +1,7 @@
 
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using Moq;
 using WestcoastCars.Api.Controllers;
 using WestcoastCars.Application.Features.FuelTypes.Commands.Create;
@@ -25,7 +26,7 @@ public class FuelTypesControllerTests
     public FuelTypesControllerTests()
     {
         _mediatorMock = new Mock<IMediator>();
-        _controller = new FuelTypesController(_mediatorMock.Object);
+        _controller = new FuelTypesController(_mediatorMock.Object, new MemoryCache(new MemoryCacheOptions()));
     }
 
     [Fact]

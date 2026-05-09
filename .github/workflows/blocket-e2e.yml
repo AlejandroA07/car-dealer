@@ -18,7 +18,7 @@ jobs:
           dotnet-version: "10.0.x"
 
       - name: Restore
-        run: dotnet restore
+        run: dotnet restore --locked-mode
 
       - name: Run external Blocket E2E suite
         run: dotnet test --configuration Release --filter "Category=ExternalE2E" --logger "trx;LogFileName=blocket-e2e.trx" --results-directory ./TestResults

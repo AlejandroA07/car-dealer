@@ -10,16 +10,20 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
 {
     private const int DefaultPageSize = 20;
     private const int MaxPageSize = 100;
+    private readonly IVehicleTextSearchMatcher _textSearchMatcher;
 
-    public VehicleRepository(WestcoastCarsContext context) : base(context)
+    public VehicleRepository(WestcoastCarsContext context)
+        : this(context, new CaseInsensitiveVehicleTextSearchMatcher())
     {
+    }
+
+    public VehicleRepository(WestcoastCarsContext context, IVehicleTextSearchMatcher textSearchMatcher) : base(context)
+    {
+        _textSearchMatcher = textSearchMatcher;
     }
 
     public async Task<Vehicle?> FindByRegistrationNumberAsync(string regNo)
     {
-        var isPostgreSql = IsPostgreSql();
-        var normalizedRegNo = regNo.ToLowerInvariant();
-
         var query = _context.Vehicles
             .AsNoTracking()
             .Where(v => v.RegistrationNumber != null)
@@ -27,9 +31,7 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
             .Include(v => v.FuelType)
             .Include(v => v.TransmissionType);
 
-        return isPostgreSql
-            ? await query.SingleOrDefaultAsync(v => v.RegistrationNumber == regNo)
-            : await query.SingleOrDefaultAsync(v => v.RegistrationNumber.ToLower() == normalizedRegNo);
+        return await _textSearchMatcher.FindByRegistrationNumberAsync(query, regNo);
     }
 
     public async Task<PagedResult<Vehicle>> GetAllPagedAsync(PagedQueryDto pagination)
@@ -57,22 +59,15 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
     public async Task<PagedResult<Vehicle>> SearchAsync(VehicleSearchDto search)
     {
         var query = _context.Vehicles.AsNoTracking().AsQueryable();
-        var isPostgreSql = IsPostgreSql();
 
         if (!string.IsNullOrWhiteSpace(search.Make))
         {
-            var makePattern = $"%{EscapeLikePattern(search.Make)}%";
-            query = isPostgreSql
-                ? query.Where(v => EF.Functions.ILike(v.Manufacturer.Name, makePattern, "\\"))
-                : query.Where(v => EF.Functions.Like(v.Manufacturer.Name.ToLower(), makePattern.ToLower()));
+            query = _textSearchMatcher.ApplyManufacturerFilter(query, search.Make);
         }
 
         if (!string.IsNullOrWhiteSpace(search.Model))
         {
-            var modelPattern = $"%{EscapeLikePattern(search.Model)}%";
-            query = isPostgreSql
-                ? query.Where(v => EF.Functions.ILike(v.Model, modelPattern, "\\"))
-                : query.Where(v => EF.Functions.Like(v.Model.ToLower(), modelPattern.ToLower()));
+            query = _textSearchMatcher.ApplyModelFilter(query, search.Model);
         }
 
         if (search.MinYear.HasValue)
@@ -154,16 +149,4 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
             PageSize = normalizedPageSize
         };
     }
-
-    private static string EscapeLikePattern(string value) =>
-        value
-            .Replace("\\", "\\\\")
-            .Replace("%", "\\%")
-            .Replace("_", "\\_");
-
-    private bool IsPostgreSql() =>
-        string.Equals(
-            _context.Database.ProviderName,
-            "Npgsql.EntityFrameworkCore.PostgreSQL",
-            StringComparison.Ordinal);
 }

@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Moq;
 using WestcoastCars.Api.Controllers;
@@ -33,7 +34,7 @@ public class VehiclesControllerTests
         _mediatorMock = new Mock<IMediator>();
         _loggerMock = new Mock<ILogger<VehiclesController>>();
         _telemetry = new AppTelemetry();
-        _controller = new VehiclesController(_mediatorMock.Object, _loggerMock.Object, _telemetry);
+        _controller = new VehiclesController(_mediatorMock.Object, _loggerMock.Object, _telemetry, Mock.Of<IMemoryCache>());
     }
 
     [Fact]

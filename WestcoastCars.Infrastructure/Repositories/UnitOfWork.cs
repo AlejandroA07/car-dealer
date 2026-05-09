@@ -16,10 +16,10 @@ public class UnitOfWork : IUnitOfWork
     public ITransmissionTypeRepository TransmissionTypeRepository { get; }
     public IServiceBookingRepository ServiceBookingRepository { get; }
 
-    public UnitOfWork(WestcoastCarsContext context)
+    public UnitOfWork(WestcoastCarsContext context, IVehicleTextSearchMatcher vehicleTextSearchMatcher)
     {
         _context = context;
-        VehicleRepository = new VehicleRepository(context);
+        VehicleRepository = new VehicleRepository(context, vehicleTextSearchMatcher);
         ManufacturerRepository = new ManufacturerRepository(context);
         FuelTypeRepository = new FuelTypeRepository(context);
         TransmissionTypeRepository = new TransmissionTypeRepository(context);

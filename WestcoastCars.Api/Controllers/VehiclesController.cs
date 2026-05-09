@@ -12,6 +12,7 @@ using WestcoastCars.Application.Features.Vehicles.Commands.Delete;
 using WestcoastCars.Application.Features.Vehicles.Commands.MarkAsSold;
 using WestcoastCars.Application.Features.Vehicles.Commands.SyncBlocket;
 using WestcoastCars.Application.Features.Vehicles.Queries.Search;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using WestcoastCars.Api.Observability;
 using System.Diagnostics;
@@ -29,12 +30,14 @@ public class VehiclesController : ControllerBase
     private readonly IMediator _mediator;
     private readonly ILogger<VehiclesController> _logger;
     private readonly AppTelemetry _telemetry;
+    private readonly IMemoryCache _cache;
 
-    public VehiclesController(IMediator mediator, ILogger<VehiclesController> logger, AppTelemetry telemetry)
+    public VehiclesController(IMediator mediator, ILogger<VehiclesController> logger, AppTelemetry telemetry, IMemoryCache cache)
     {
         _mediator = mediator;
         _logger = logger;
         _telemetry = telemetry;
+        _cache = cache;
     }
 
     /// <summary>
@@ -200,6 +203,9 @@ public class VehiclesController : ControllerBase
             _telemetry.RecordBlocketSync("success", startedAt.Elapsed, request.Limit);
             activity?.SetTag("blocket_sync.total_imported", result.TotalImported);
             activity?.SetTag("blocket_sync.total_replaced", result.TotalReplaced);
+            _cache.Remove("lookup:manufacturers");
+            _cache.Remove("lookup:fueltypes");
+            _cache.Remove("lookup:transmissions");
             return Ok(result);
         }
         catch

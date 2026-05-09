@@ -1,3 +1,9 @@
+# VPS deployment overlay.
+# Usage: docker compose -f docker-compose.yml -f docker-compose.deploy.yml up -d
+# Secrets: POSTGRES_PASSWORD, JWT_SECRET, ADMIN_PASSWORD must be set in a .env file
+#          on the VPS (chmod 600 .env). For stronger isolation, migrate to Docker
+#          Secrets by updating the API to read the password from /run/secrets/db_password.
+
 services:
   # Public entrypoint
   web:
@@ -13,3 +19,7 @@ services:
     ports: []
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
+
+  # Remove the public database port — internal Docker network only
+  db:
+    ports: []

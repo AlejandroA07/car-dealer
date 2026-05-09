@@ -54,7 +54,7 @@ public class ServiceBookingsIntegrationTests : IntegrationTestBase
         {
             VehicleRegistrationNumber = "UNKNOWN1",
             ServiceType = "Brake service",
-            BookingDate = new DateTime(2026, 5, 8),
+            BookingDate = DateTime.SpecifyKind(new DateTime(2026, 5, 8), DateTimeKind.Utc),
             CustomerName = "Missing Vehicle",
             CustomerEmail = "missing@example.com",
             CustomerPhone = "0700000001",

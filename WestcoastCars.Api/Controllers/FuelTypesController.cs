@@ -2,6 +2,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using WestcoastCars.Application.Features.FuelTypes.Commands.Create;
 using WestcoastCars.Application.Features.FuelTypes.Commands.Delete;
 using WestcoastCars.Application.Features.FuelTypes.Commands.Update;
@@ -21,10 +22,13 @@ namespace WestcoastCars.Api.Controllers;
 public class FuelTypesController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly IMemoryCache _cache;
+    private const string CacheKey = "lookup:fueltypes";
 
-    public FuelTypesController(IMediator mediator)
+    public FuelTypesController(IMediator mediator, IMemoryCache cache)
     {
         _mediator = mediator;
+        _cache = cache;
     }
 
     /// <summary>
@@ -36,8 +40,12 @@ public class FuelTypesController : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<NamedObjectDto>), 200)]
     public async Task<IActionResult> ListAll()
     {
-        var result = await _mediator.Send(new ListAllFuelTypesQuery());
-        return Ok(result);
+        if (!_cache.TryGetValue(CacheKey, out IEnumerable<NamedObjectDto> cached))
+        {
+            cached = await _mediator.Send(new ListAllFuelTypesQuery());
+            _cache.Set(CacheKey, cached, TimeSpan.FromMinutes(10));
+        }
+        return Ok(cached);
     }
 
     /// <summary>
@@ -70,6 +78,7 @@ public class FuelTypesController : ControllerBase
     {
         var command = new CreateFuelTypeCommand { Name = model.Name };
         var result = await _mediator.Send(command);
+        _cache.Remove(CacheKey);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
@@ -94,6 +103,7 @@ public class FuelTypesController : ControllerBase
         }
         var command = new UpdateFuelTypeCommand { Id = id, Name = model.Name };
         await _mediator.Send(command);
+        _cache.Remove(CacheKey);
         return NoContent();
     }
 
@@ -112,6 +122,7 @@ public class FuelTypesController : ControllerBase
     {
         var command = new DeleteFuelTypeCommand { Id = id };
         await _mediator.Send(command);
+        _cache.Remove(CacheKey);
         return NoContent();
     }
 }

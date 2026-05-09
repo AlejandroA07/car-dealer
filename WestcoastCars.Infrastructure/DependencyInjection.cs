@@ -37,6 +37,7 @@ public static class DependencyInjection
         {
             services.AddDbContext<WestcoastCarsContext>(options =>
                 options.UseSqlite(connectionString));
+            services.AddScoped<IVehicleTextSearchMatcher, CaseInsensitiveVehicleTextSearchMatcher>();
         }
         else
         {
@@ -46,6 +47,7 @@ public static class DependencyInjection
                     postgresOptions.MigrationsHistoryTable("__EFMigrationsHistory_WestcoastCars");
                     postgresOptions.EnableRetryOnFailure();
                 }));
+            services.AddScoped<IVehicleTextSearchMatcher, PostgreSqlVehicleTextSearchMatcher>();
         }
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
