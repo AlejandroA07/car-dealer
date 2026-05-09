@@ -27,6 +27,10 @@ public class DeleteManufacturerCommandHandler : IRequestHandler<DeleteManufactur
             throw new NotFoundException($"Manufacturer with id '{request.Id}' not found.");
         }
 
+        var hasVehicles = await _unitOfWork.VehicleRepository.FirstOrDefaultAsync(v => v.ManufacturerId == request.Id);
+        if (hasVehicles is not null)
+            throw new ConflictException($"Cannot delete manufacturer '{manufacturerToDelete.Name}' because it has vehicles assigned to it.");
+
         repository.Remove(manufacturerToDelete!);
 
         await _unitOfWork.CompleteOrThrowAsync("Failed to delete manufacturer");

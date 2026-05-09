@@ -53,7 +53,7 @@ public class VehicleRepositoryTests
     }
 
     [Fact]
-    public async Task GetAllForReplacementAsync_ShouldReturnOnlyBlocketVehicles()
+    public async Task GetAllImportedFromBlocketAsync_ShouldReturnOnlyBlocketVehicles()
     {
         var databaseName = Guid.NewGuid().ToString();
         await SeedVehicleAsync(databaseName, "BLK123", "Blocket");
@@ -62,7 +62,7 @@ public class VehicleRepositoryTests
         await using var queryContext = CreateContext(databaseName);
         var repository = new VehicleRepository(queryContext);
 
-        var vehicles = (await repository.GetAllForReplacementAsync()).ToList();
+        var vehicles = (await repository.GetAllImportedFromBlocketAsync()).ToList();
 
         Assert.Single(vehicles);
         Assert.Equal("BLK123", vehicles[0].RegistrationNumber);

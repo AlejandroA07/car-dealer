@@ -26,6 +26,10 @@ public class DeleteFuelTypeCommandHandler : IRequestHandler<DeleteFuelTypeComman
             throw new NotFoundException($"FuelType with id '{request.Id}' not found.");
         }
 
+        var hasVehicles = await _unitOfWork.VehicleRepository.FirstOrDefaultAsync(v => v.FuelTypeId == request.Id);
+        if (hasVehicles is not null)
+            throw new ConflictException($"Cannot delete fuel type '{fuelTypeToDelete.Name}' because it has vehicles assigned to it.");
+
         repository.Remove(fuelTypeToDelete!);
 
         await _unitOfWork.CompleteOrThrowAsync("Failed to delete fuel type");

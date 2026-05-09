@@ -1,5 +1,5 @@
 using Moq;
-using WestcoastCars.Application.Features.Vehicles.Commands.SyncBlocket;
+using WestcoastCars.Application.Features.Vehicles.Commands.RefreshInventoryFromBlocket;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Application.Models.Blocket;
 using WestcoastCars.Domain.Entities;
@@ -7,7 +7,7 @@ using Xunit;
 
 namespace WestcoastCars.Application.Tests.Features.Vehicles.Commands;
 
-public class SyncBlocketVehiclesCommandHandlerTests
+public class RefreshInventoryFromBlocketCommandHandlerTests
 {
     private readonly Mock<IBlocketApiClient> _blocketApiClientMock;
     private readonly Mock<IBlocketVehicleImportMapper> _mapperMock;
@@ -16,9 +16,9 @@ public class SyncBlocketVehiclesCommandHandlerTests
     private readonly Mock<IManufacturerRepository> _manufacturerRepositoryMock;
     private readonly Mock<IFuelTypeRepository> _fuelTypeRepositoryMock;
     private readonly Mock<ITransmissionTypeRepository> _transmissionTypeRepositoryMock;
-    private readonly SyncBlocketVehiclesCommandHandler _handler;
+    private readonly RefreshInventoryFromBlocketCommandHandler _handler;
 
-    public SyncBlocketVehiclesCommandHandlerTests()
+    public RefreshInventoryFromBlocketCommandHandlerTests()
     {
         _blocketApiClientMock = new Mock<IBlocketApiClient>();
         _mapperMock = new Mock<IBlocketVehicleImportMapper>();
@@ -36,7 +36,7 @@ public class SyncBlocketVehiclesCommandHandlerTests
 
         SetupLookupRepositories();
 
-        _handler = new SyncBlocketVehiclesCommandHandler(_blocketApiClientMock.Object, _mapperMock.Object, _unitOfWorkMock.Object);
+        _handler = new RefreshInventoryFromBlocketCommandHandler(_blocketApiClientMock.Object, _mapperMock.Object, _unitOfWorkMock.Object);
     }
 
     [Fact]
@@ -66,7 +66,7 @@ public class SyncBlocketVehiclesCommandHandlerTests
                 ModelYear = 2024
             });
 
-        var result = await _handler.Handle(new SyncBlocketVehiclesCommand { Limit = 999 }, CancellationToken.None);
+        var result = await _handler.Handle(new RefreshInventoryFromBlocketCommand { Limit = 999 }, CancellationToken.None);
 
         Assert.Equal(999, result.RequestedLimit);
         Assert.Equal(50, result.AppliedLimit);
@@ -113,7 +113,7 @@ public class SyncBlocketVehiclesCommandHandlerTests
                 ModelYear = 2024
             });
 
-        var result = await _handler.Handle(new SyncBlocketVehiclesCommand { Limit = 3 }, CancellationToken.None);
+        var result = await _handler.Handle(new RefreshInventoryFromBlocketCommand { Limit = 3 }, CancellationToken.None);
 
         Assert.Equal(2, result.PagesFetched);
         Assert.Equal(4, result.TotalFetched);
@@ -131,7 +131,7 @@ public class SyncBlocketVehiclesCommandHandlerTests
             .Setup(client => client.SearchCarsAsync(It.IsAny<BlocketCarSearchRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new BlocketCarSearchResponse());
 
-        var result = await _handler.Handle(new SyncBlocketVehiclesCommand { Limit = 10 }, CancellationToken.None);
+        var result = await _handler.Handle(new RefreshInventoryFromBlocketCommand { Limit = 10 }, CancellationToken.None);
 
         Assert.Equal(1, result.PagesFetched);
         Assert.Equal(0, result.TotalFetched);
@@ -156,7 +156,7 @@ public class SyncBlocketVehiclesCommandHandlerTests
             .ReturnsAsync([]);
 
         _vehicleRepositoryMock
-            .Setup(repository => repository.GetAllForReplacementAsync())
+            .Setup(repository => repository.GetAllImportedFromBlocketAsync())
             .ReturnsAsync(existingVehicles);
 
         _blocketApiClientMock
@@ -190,12 +190,12 @@ public class SyncBlocketVehiclesCommandHandlerTests
                 Description = "Imported"
             });
 
-        var result = await _handler.Handle(new SyncBlocketVehiclesCommand { Limit = 1 }, CancellationToken.None);
+        var result = await _handler.Handle(new RefreshInventoryFromBlocketCommand { Limit = 1 }, CancellationToken.None);
 
         Assert.Equal(1, result.TotalReplaced);
         Assert.Equal(1, result.TotalImported);
         _vehicleRepositoryMock.Verify(repository => repository.GetAllAsync(), Times.Never);
-        _vehicleRepositoryMock.Verify(repository => repository.GetAllForReplacementAsync(), Times.Once);
+        _vehicleRepositoryMock.Verify(repository => repository.GetAllImportedFromBlocketAsync(), Times.Once);
         _vehicleRepositoryMock.Verify(repository => repository.RemoveRange(It.Is<IEnumerable<Vehicle>>(vehicles =>
             vehicles.Count() == 1 &&
             vehicles.Single().Source == "Blocket")), Times.Once);
@@ -210,7 +210,7 @@ public class SyncBlocketVehiclesCommandHandlerTests
             .Setup(client => client.SearchCarsAsync(It.IsAny<BlocketCarSearchRequest>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("Boom"));
 
-        await Assert.ThrowsAsync<HttpRequestException>(() => _handler.Handle(new SyncBlocketVehiclesCommand(), CancellationToken.None));
+        await Assert.ThrowsAsync<HttpRequestException>(() => _handler.Handle(new RefreshInventoryFromBlocketCommand(), CancellationToken.None));
 
         _vehicleRepositoryMock.Verify(repository => repository.RemoveRange(It.IsAny<IEnumerable<Vehicle>>()), Times.Never);
         _vehicleRepositoryMock.Verify(repository => repository.AddRangeAsync(It.IsAny<IEnumerable<Vehicle>>()), Times.Never);
@@ -243,7 +243,7 @@ public class SyncBlocketVehiclesCommandHandlerTests
             .Returns(new BlocketVehicleImportData { ExternalListingId = "1", RegistrationNumber = "REG1", Manufacturer = "VOLVO", FuelType = "Petrol", TransmissionType = "Automatic", Model = "B", ModelYear = 2024, ImageUrl = "x", Description = "x" })
             .Returns(new BlocketVehicleImportData { ExternalListingId = "2", RegistrationNumber = "REG2", Manufacturer = "VOLVO", FuelType = "Petrol", TransmissionType = "Automatic", Model = "C", ModelYear = 2024, ImageUrl = "x", Description = "x" });
 
-        var result = await _handler.Handle(new SyncBlocketVehiclesCommand { Limit = 3 }, CancellationToken.None);
+        var result = await _handler.Handle(new RefreshInventoryFromBlocketCommand { Limit = 3 }, CancellationToken.None);
 
         Assert.Equal(2, result.TotalImported);
         Assert.Equal(1, result.TotalSkipped);
@@ -295,7 +295,7 @@ public class SyncBlocketVehiclesCommandHandlerTests
                 Description = "x"
             });
 
-        var result = await _handler.Handle(new SyncBlocketVehiclesCommand { Limit = 2 }, CancellationToken.None);
+        var result = await _handler.Handle(new RefreshInventoryFromBlocketCommand { Limit = 2 }, CancellationToken.None);
 
         Assert.Equal(1, result.TotalPrepared);
         Assert.Equal(1, result.TotalImported);
@@ -366,7 +366,7 @@ public class SyncBlocketVehiclesCommandHandlerTests
                 Description = "x"
             });
 
-        var result = await _handler.Handle(new SyncBlocketVehiclesCommand { Limit = 3 }, CancellationToken.None);
+        var result = await _handler.Handle(new RefreshInventoryFromBlocketCommand { Limit = 3 }, CancellationToken.None);
 
         Assert.Equal(1, result.TotalPrepared);
         Assert.Equal(1, result.TotalImported);
@@ -413,7 +413,7 @@ public class SyncBlocketVehiclesCommandHandlerTests
                 ImportedAt = importedAt
             });
 
-        await _handler.Handle(new SyncBlocketVehiclesCommand { Limit = 2 }, CancellationToken.None);
+        await _handler.Handle(new RefreshInventoryFromBlocketCommand { Limit = 2 }, CancellationToken.None);
 
         _manufacturerRepositoryMock.Verify(repository => repository.GetAllAsync(), Times.Once);
         _fuelTypeRepositoryMock.Verify(repository => repository.GetAllAsync(), Times.Once);
@@ -473,7 +473,7 @@ public class SyncBlocketVehiclesCommandHandlerTests
                 Description = "x"
             });
 
-        await _handler.Handle(new SyncBlocketVehiclesCommand { Limit = 2 }, CancellationToken.None);
+        await _handler.Handle(new RefreshInventoryFromBlocketCommand { Limit = 2 }, CancellationToken.None);
 
         _manufacturerRepositoryMock.Verify(repository => repository.AddAsync(It.Is<Manufacturer>(manufacturer => manufacturer.Name == "Saab")), Times.Once);
         _fuelTypeRepositoryMock.Verify(repository => repository.AddAsync(It.Is<FuelType>(fuelType => fuelType.Name == "Diesel")), Times.Once);
@@ -483,7 +483,7 @@ public class SyncBlocketVehiclesCommandHandlerTests
     private void SetupLookupRepositories()
     {
         _vehicleRepositoryMock
-            .Setup(repository => repository.GetAllForReplacementAsync())
+            .Setup(repository => repository.GetAllImportedFromBlocketAsync())
             .ReturnsAsync([]);
 
         _manufacturerRepositoryMock

@@ -1,7 +1,7 @@
 namespace WestcoastCars.Domain.Entities;
 
-public class Manufacturer : NamedEntity
+public class Manufacturer : BaseEntity
 {
-    // Navigation property. I can occur per several cars, That's what this line says to ef 
+    public required string Name { get; set; }
     public ICollection<Vehicle> Vehicles { get; set; } = new List<Vehicle>();
 }

@@ -8,7 +8,7 @@ using WestcoastCars.Api.Observability;
 using WestcoastCars.Application.Features.Vehicles.Commands.Create;
 using WestcoastCars.Application.Features.Vehicles.Commands.Delete;
 using WestcoastCars.Application.Features.Vehicles.Commands.MarkAsSold;
-using WestcoastCars.Application.Features.Vehicles.Commands.SyncBlocket;
+using WestcoastCars.Application.Features.Vehicles.Commands.RefreshInventoryFromBlocket;
 using WestcoastCars.Application.Features.Vehicles.Commands.Update;
 using WestcoastCars.Application.Features.Vehicles.Queries.GetById;
 using WestcoastCars.Application.Features.Vehicles.Queries.GetByRegNo;
@@ -225,7 +225,7 @@ public class VehiclesControllerTests
     [Fact]
     public async Task SyncBlocket_ShouldReturnOkAndSyncSummary()
     {
-        var syncResult = new SyncBlocketVehiclesResult
+        var syncResult = new RefreshInventoryFromBlocketResult
         {
             RequestedLimit = 50,
             AppliedLimit = 50,
@@ -234,13 +234,13 @@ public class VehiclesControllerTests
         };
 
         _mediatorMock
-            .Setup(mediator => mediator.Send(It.IsAny<SyncBlocketVehiclesCommand>(), default))
+            .Setup(mediator => mediator.Send(It.IsAny<RefreshInventoryFromBlocketCommand>(), default))
             .ReturnsAsync(syncResult);
 
-        var result = await _controller.SyncBlocket(new SyncBlocketVehiclesCommand { Limit = 50 });
+        var result = await _controller.SyncBlocket(new RefreshInventoryFromBlocketCommand { Limit = 50 });
 
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var returnValue = Assert.IsType<SyncBlocketVehiclesResult>(okResult.Value);
+        var returnValue = Assert.IsType<RefreshInventoryFromBlocketResult>(okResult.Value);
         Assert.Equal(50, returnValue.TotalImported);
         Assert.Equal(12, returnValue.TotalReplaced);
     }
@@ -249,13 +249,13 @@ public class VehiclesControllerTests
     public async Task SyncBlocket_ShouldUseDefaultCommand_WhenBodyIsNull()
     {
         _mediatorMock
-            .Setup(mediator => mediator.Send(It.IsAny<SyncBlocketVehiclesCommand>(), default))
-            .ReturnsAsync(new SyncBlocketVehiclesResult());
+            .Setup(mediator => mediator.Send(It.IsAny<RefreshInventoryFromBlocketCommand>(), default))
+            .ReturnsAsync(new RefreshInventoryFromBlocketResult());
 
         await _controller.SyncBlocket(null);
 
         _mediatorMock.Verify(mediator => mediator.Send(
-            It.Is<SyncBlocketVehiclesCommand>(command => command.Limit == 50),
+            It.Is<RefreshInventoryFromBlocketCommand>(command => command.Limit == 50),
             default), Times.Once);
     }
 

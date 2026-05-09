@@ -49,7 +49,7 @@ public class ManufacturersIntegrationTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task DeleteManufacturer_ShouldCascadeDeleteReferencedVehicles_WithCurrentSchema()
+    public async Task DeleteManufacturer_ShouldReturnConflict_WhenVehiclesAreAssigned()
     {
         var client = await CreateAuthenticatedClientAsync();
         var manufacturerResponse = await client.PostAsJsonAsync("/api/v1/manufacturers", new NamedObjectDto
@@ -79,9 +79,9 @@ public class ManufacturersIntegrationTests : IntegrationTestBase
 
         var response = await client.DeleteAsync($"/api/v1/manufacturers/{manufacturer.Id}");
 
-        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
 
         var getVehicleResponse = await _client.GetAsync($"/api/v1/vehicles/{createdVehicle!.Id}");
-        getVehicleResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        getVehicleResponse.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 }

@@ -30,5 +30,9 @@ public class CreateServiceBookingCommandValidator : AbstractValidator<CreateServ
 
         RuleFor(command => command.Description)
             .MaximumLength(2000);
+
+        RuleFor(command => command.BookingDate)
+            .GreaterThan(_ => DateTime.UtcNow)
+            .WithMessage("Booking date must be in the future.");
     }
 }

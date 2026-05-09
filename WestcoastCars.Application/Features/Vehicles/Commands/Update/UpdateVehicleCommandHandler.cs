@@ -47,7 +47,8 @@ public class UpdateVehicleCommandHandler : IRequestHandler<UpdateVehicleCommand,
         vehicle.Mileage = request.Mileage;
         vehicle.Description = request.Description;
         vehicle.Price = request.Price;
-        vehicle.IsSold = request.IsSold;
+        if (request.IsSold && !vehicle.IsSold) vehicle.MarkAsSold();
+        else if (!request.IsSold && vehicle.IsSold) vehicle.MarkAsAvailable();
 
         // Only update ImageUrl if a new one is provided.
         if (!string.IsNullOrEmpty(request.ImageUrl))

@@ -3,9 +3,9 @@ using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Application.Models.Blocket;
 using WestcoastCars.Domain.Entities;
 
-namespace WestcoastCars.Application.Features.Vehicles.Commands.SyncBlocket;
+namespace WestcoastCars.Application.Features.Vehicles.Commands.RefreshInventoryFromBlocket;
 
-public class SyncBlocketVehiclesCommandHandler : IRequestHandler<SyncBlocketVehiclesCommand, SyncBlocketVehiclesResult>
+public class RefreshInventoryFromBlocketCommandHandler : IRequestHandler<RefreshInventoryFromBlocketCommand, RefreshInventoryFromBlocketResult>
 {
     private const int MaxImportLimit = 50;
 
@@ -13,14 +13,14 @@ public class SyncBlocketVehiclesCommandHandler : IRequestHandler<SyncBlocketVehi
     private readonly IBlocketVehicleImportMapper _mapper;
     private readonly IUnitOfWork _unitOfWork;
 
-    public SyncBlocketVehiclesCommandHandler(IBlocketApiClient blocketApiClient, IBlocketVehicleImportMapper mapper, IUnitOfWork unitOfWork)
+    public RefreshInventoryFromBlocketCommandHandler(IBlocketApiClient blocketApiClient, IBlocketVehicleImportMapper mapper, IUnitOfWork unitOfWork)
     {
         _blocketApiClient = blocketApiClient;
         _mapper = mapper;
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<SyncBlocketVehiclesResult> Handle(SyncBlocketVehiclesCommand request, CancellationToken cancellationToken)
+    public async Task<RefreshInventoryFromBlocketResult> Handle(RefreshInventoryFromBlocketCommand request, CancellationToken cancellationToken)
     {
         var appliedLimit = NormalizeLimit(request.Limit);
         var preparedVehicles = new List<BlocketVehicleImportData>(appliedLimit);
@@ -79,7 +79,7 @@ public class SyncBlocketVehiclesCommandHandler : IRequestHandler<SyncBlocketVehi
         }
 
         var importedVehicles = await BuildVehicleEntitiesAsync(preparedVehicles);
-        var existingVehicles = (await _unitOfWork.VehicleRepository.GetAllForReplacementAsync()).ToList();
+        var existingVehicles = (await _unitOfWork.VehicleRepository.GetAllImportedFromBlocketAsync()).ToList();
 
         _unitOfWork.VehicleRepository.RemoveRange(existingVehicles);
 
@@ -90,7 +90,7 @@ public class SyncBlocketVehiclesCommandHandler : IRequestHandler<SyncBlocketVehi
 
         await _unitOfWork.CompleteAsync();
 
-        return new SyncBlocketVehiclesResult
+        return new RefreshInventoryFromBlocketResult
         {
             RequestedLimit = request.Limit,
             AppliedLimit = appliedLimit,
@@ -151,7 +151,6 @@ public class SyncBlocketVehiclesCommandHandler : IRequestHandler<SyncBlocketVehi
                 ImageUrl = preparedVehicle.ImageUrl,
                 Price = preparedVehicle.Price,
                 Description = preparedVehicle.Description,
-                IsSold = false,
                 ExternalListingId = preparedVehicle.ExternalListingId,
                 Source = preparedVehicle.Source,
                 SourceUrl = preparedVehicle.SourceUrl,

@@ -11,7 +11,18 @@ public class Vehicle : BaseEntity
     public required string ImageUrl { get; set; }
     public int Price { get; set; }
     public required string Description { get; set; }
-    public bool IsSold { get; set; }
+    public bool IsSold { get; private set; }
+
+    public void MarkAsSold()
+    {
+        if (IsSold) throw new InvalidOperationException("Vehicle is already sold.");
+        IsSold = true;
+    }
+
+    public void MarkAsAvailable()
+    {
+        IsSold = false;
+    }
     public string? ExternalListingId { get; set; }
     public string? Source { get; set; }
     public string? SourceUrl { get; set; }

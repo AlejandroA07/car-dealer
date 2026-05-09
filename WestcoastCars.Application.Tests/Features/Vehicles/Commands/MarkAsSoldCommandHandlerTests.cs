@@ -37,8 +37,7 @@ public class MarkAsSoldCommandHandlerTests
             Description = "Test",
             Manufacturer = new Manufacturer { Name = "Make" },
             FuelType = new FuelType { Name = "Fuel" },
-            TransmissionType = new TransmissionType { Name = "Trans" },
-            IsSold = false
+            TransmissionType = new TransmissionType { Name = "Trans" }
         };
 
         _vehicleRepositoryMock.Setup(r => r.GetByIdAsync(vehicleId)).ReturnsAsync(vehicle);
@@ -68,15 +67,14 @@ public class MarkAsSoldCommandHandlerTests
             Description = "Test",
             Manufacturer = new Manufacturer { Name = "Make" },
             FuelType = new FuelType { Name = "Fuel" },
-            TransmissionType = new TransmissionType { Name = "Trans" },
-            IsSold = true
+            TransmissionType = new TransmissionType { Name = "Trans" }
         };
+        vehicle.MarkAsSold();
 
         _vehicleRepositoryMock.Setup(r => r.GetByIdAsync(vehicleId)).ReturnsAsync(vehicle);
 
-        var exception = await Assert.ThrowsAsync<ConflictException>(() => _handler.Handle(new MarkAsSoldCommand { Id = vehicleId }, CancellationToken.None));
+        await Assert.ThrowsAsync<ConflictException>(() => _handler.Handle(new MarkAsSoldCommand { Id = vehicleId }, CancellationToken.None));
 
-        Assert.Equal($"Vehicle with ID {vehicleId} is already marked as sold", exception.Message);
         _vehicleRepositoryMock.Verify(r => r.Update(It.IsAny<Vehicle>()), Times.Never);
         _unitOfWorkMock.Verify(u => u.CompleteAsync(), Times.Never);
     }
@@ -96,8 +94,7 @@ public class MarkAsSoldCommandHandlerTests
             Description = "Test",
             Manufacturer = new Manufacturer { Name = "Make" },
             FuelType = new FuelType { Name = "Fuel" },
-            TransmissionType = new TransmissionType { Name = "Trans" },
-            IsSold = false
+            TransmissionType = new TransmissionType { Name = "Trans" }
         };
 
         _vehicleRepositoryMock.Setup(r => r.GetByIdAsync(vehicleId)).ReturnsAsync(vehicle);

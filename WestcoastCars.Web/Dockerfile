@@ -28,7 +28,8 @@ COPY . .
 # Set the working directory to the Web project
 WORKDIR "/src/WestcoastCars.Web"
 # Publish the application, creating the compiled output.
-RUN dotnet publish "WestcoastCars.Web.csproj" -c Release -o /app/publish --no-restore
+RUN --mount=type=cache,target=/root/.nuget/packages \
+    dotnet publish "WestcoastCars.Web.csproj" -c Release -o /app/publish --no-restore
 
 # ====================================================================================
 # STAGE 2: Final Runtime Image

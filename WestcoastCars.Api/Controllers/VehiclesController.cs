@@ -10,7 +10,7 @@ using WestcoastCars.Application.Features.Vehicles.Commands.Create;
 using WestcoastCars.Application.Features.Vehicles.Commands.Update;
 using WestcoastCars.Application.Features.Vehicles.Commands.Delete;
 using WestcoastCars.Application.Features.Vehicles.Commands.MarkAsSold;
-using WestcoastCars.Application.Features.Vehicles.Commands.SyncBlocket;
+using WestcoastCars.Application.Features.Vehicles.Commands.RefreshInventoryFromBlocket;
 using WestcoastCars.Application.Features.Vehicles.Queries.Search;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -186,12 +186,12 @@ public class VehiclesController : ControllerBase
     /// <returns>A summary of the sync result.</returns>
     [HttpPost("import/blocket")]
     [Authorize(Roles = "Admin,Salesperson")]
-    [ProducesResponseType(typeof(SyncBlocketVehiclesResult), 200)]
+    [ProducesResponseType(typeof(RefreshInventoryFromBlocketResult), 200)]
     [ProducesResponseType(401)]
     [ProducesResponseType(403)]
-    public async Task<IActionResult> SyncBlocket([FromBody] SyncBlocketVehiclesCommand command)
+    public async Task<IActionResult> SyncBlocket([FromBody] RefreshInventoryFromBlocketCommand command)
     {
-        var request = command ?? new SyncBlocketVehiclesCommand();
+        var request = command ?? new RefreshInventoryFromBlocketCommand();
         _logger.LogInformation("Starting manual Blocket sync with limit {Limit}", request.Limit);
         using var activity = _telemetry.StartBlocketSyncActivity(request.Limit);
         var startedAt = Stopwatch.StartNew();

@@ -49,7 +49,7 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
         return await ToPagedResultAsync(query, pagination.Page, pagination.PageSize);
     }
 
-    public async Task<IEnumerable<Vehicle>> GetAllForReplacementAsync()
+    public async Task<IEnumerable<Vehicle>> GetAllImportedFromBlocketAsync()
     {
         return await _context.Vehicles
             .Where(vehicle => vehicle.Source == "Blocket")

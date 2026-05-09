@@ -41,10 +41,11 @@ public class CreateVehicleCommandHandler : IRequestHandler<CreateVehicleCommand,
             TransmissionType = transmissionType,
             FuelType = fuelType,
             Price = request.Price,
-            IsSold = request.IsSold,
             Description = request.Description,
             ImageUrl = string.IsNullOrEmpty(request.ImageUrl) ? DefaultCarImageName : request.ImageUrl
         };
+
+        if (request.IsSold) vehicle.MarkAsSold();
 
         await _unitOfWork.VehicleRepository.AddAsync(vehicle);
 

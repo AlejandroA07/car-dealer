@@ -1,8 +1,8 @@
 using WestcoastCars.Application.Models.Blocket;
 
-namespace WestcoastCars.Application.Features.Vehicles.Commands.SyncBlocket;
+namespace WestcoastCars.Application.Features.Vehicles.Commands.RefreshInventoryFromBlocket;
 
-public class SyncBlocketVehiclesResult
+public class RefreshInventoryFromBlocketResult
 {
     public int RequestedLimit { get; set; }
     public int AppliedLimit { get; set; }

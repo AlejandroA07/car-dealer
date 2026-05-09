@@ -2,7 +2,6 @@ using MediatR;
 using WestcoastCars.Application.Exceptions;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Domain.Entities;
-using WestcoastCars.Domain.Common.Enums;
 
 namespace WestcoastCars.Application.Features.ServiceBookings.Commands.Create;
 
@@ -27,8 +26,7 @@ public class CreateServiceBookingCommandHandler : IRequestHandler<CreateServiceB
             CustomerName = request.CustomerName,
             CustomerEmail = request.CustomerEmail,
             CustomerPhone = request.CustomerPhone,
-            Description = request.Description,
-            Status = BookingStatus.Pending
+            Description = request.Description
         };
 
         await _unitOfWork.ServiceBookingRepository.AddAsync(booking);

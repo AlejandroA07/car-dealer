@@ -128,7 +128,6 @@ public static class SeedData
                 ImageUrl = dto.ImageUrl,
                 Price = dto.Price,
                 Description = dto.Description,
-                IsSold = dto.IsSold,
                 ManufacturerId = manufacturer.Id,
                 FuelTypeId = fuelType.Id,
                 TransmissionTypeId = transmissionType.Id,
@@ -136,6 +135,7 @@ public static class SeedData
                 FuelType = fuelType,
                 TransmissionType = transmissionType
             };
+            if (dto.IsSold) vehicle.MarkAsSold();
             vehicles.Add(vehicle);
         }
 
@@ -200,7 +200,7 @@ public static class SeedData
         string lookupName,
         string vehicleRegistrationNumber,
         string lookupType)
-        where TLookup : NamedEntity
+        where TLookup : class
     {
         if (lookupsByName.TryGetValue(lookupName, out var lookup))
         {

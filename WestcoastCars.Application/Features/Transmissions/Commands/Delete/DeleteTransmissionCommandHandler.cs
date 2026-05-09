@@ -26,6 +26,10 @@ public class DeleteTransmissionCommandHandler : IRequestHandler<DeleteTransmissi
             throw new NotFoundException($"TransmissionType with id '{request.Id}' not found.");
         }
 
+        var hasVehicles = await _unitOfWork.VehicleRepository.FirstOrDefaultAsync(v => v.TransmissionTypeId == request.Id);
+        if (hasVehicles is not null)
+            throw new ConflictException($"Cannot delete transmission type '{transmissionTypeToDelete.Name}' because it has vehicles assigned to it.");
+
         repository.Remove(transmissionTypeToDelete!);
 
         await _unitOfWork.CompleteOrThrowAsync("Failed to delete transmission type");

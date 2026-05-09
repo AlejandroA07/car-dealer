@@ -23,7 +23,7 @@ public class ServiceBookingsIntegrationTests : IntegrationTestBase
         {
             VehicleRegistrationNumber = registrationNumber,
             ServiceType = "Annual service",
-            BookingDate = DateTime.SpecifyKind(new DateTime(2026, 5, 8), DateTimeKind.Utc),
+            BookingDate = DateTime.UtcNow.AddDays(7),
             CustomerName = "Integration Customer",
             CustomerEmail = "integration@example.com",
             CustomerPhone = "0700000000",
@@ -37,9 +37,9 @@ public class ServiceBookingsIntegrationTests : IntegrationTestBase
 
         var listResponse = await adminClient.GetAsync("/api/v1/service-bookings");
         listResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-        var bookings = await listResponse.Content.ReadFromJsonAsync<IEnumerable<ServiceBookingSummaryDto>>();
+        var bookings = await listResponse.Content.ReadFromJsonAsync<PagedResult<ServiceBookingSummaryDto>>();
         bookings.Should().NotBeNull();
-        bookings!.Should().Contain(booking =>
+        bookings!.Items.Should().Contain(booking =>
             booking.Id == createdBooking.Id &&
             booking.VehicleRegistrationNumber == registrationNumber &&
             booking.CustomerName == "Integration Customer");
@@ -54,7 +54,7 @@ public class ServiceBookingsIntegrationTests : IntegrationTestBase
         {
             VehicleRegistrationNumber = "UNKNOWN1",
             ServiceType = "Brake service",
-            BookingDate = DateTime.SpecifyKind(new DateTime(2026, 5, 8), DateTimeKind.Utc),
+            BookingDate = DateTime.UtcNow.AddDays(7),
             CustomerName = "Missing Vehicle",
             CustomerEmail = "missing@example.com",
             CustomerPhone = "0700000001",
@@ -68,9 +68,9 @@ public class ServiceBookingsIntegrationTests : IntegrationTestBase
 
         var listResponse = await adminClient.GetAsync("/api/v1/service-bookings");
         listResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-        var bookings = await listResponse.Content.ReadFromJsonAsync<IEnumerable<ServiceBookingSummaryDto>>();
+        var bookings = await listResponse.Content.ReadFromJsonAsync<PagedResult<ServiceBookingSummaryDto>>();
         bookings.Should().NotBeNull();
-        bookings!.Should().Contain(booking =>
+        bookings!.Items.Should().Contain(booking =>
             booking.Id == createdBooking.Id &&
             booking.VehicleRegistrationNumber == "UNKNOWN1" &&
             booking.CustomerName == "Missing Vehicle");

@@ -2,7 +2,6 @@ using AutoMapper;
 using Microsoft.Extensions.Logging.Abstractions;
 using WestcoastCars.Application.Mappings;
 using WestcoastCars.Contracts.DTOs;
-using WestcoastCars.Domain.Common.Enums;
 using WestcoastCars.Domain.Entities;
 using Xunit;
 
@@ -48,7 +47,7 @@ public class MappingProfileTests
     {
         var publishedAt = new DateTime(2026, 5, 8, 10, 30, 0, DateTimeKind.Utc);
         var vehicle = CreateVehicle("xc60.png");
-        vehicle.IsSold = true;
+        vehicle.MarkAsSold();
         vehicle.Price = 525000;
         vehicle.Color = "Blue";
         vehicle.City = "Gothenburg";
@@ -124,9 +123,9 @@ public class MappingProfileTests
             CustomerEmail = "alex@example.com",
             CustomerPhone = "0701234567",
             Description = "Oil change",
-            Status = BookingStatus.Confirmed,
             CreatedAt = createdAt
         };
+        booking.Confirm();
 
         var summary = _mapper.Map<ServiceBookingSummaryDto>(booking);
 

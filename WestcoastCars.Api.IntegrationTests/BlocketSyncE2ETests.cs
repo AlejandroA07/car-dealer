@@ -5,7 +5,7 @@ using System.Net.Http.Json;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
-using WestcoastCars.Application.Features.Vehicles.Commands.SyncBlocket;
+using WestcoastCars.Application.Features.Vehicles.Commands.RefreshInventoryFromBlocket;
 using WestcoastCars.Infrastructure.Data;
 using Xunit;
 
@@ -23,7 +23,7 @@ public class BlocketSyncE2ETests : IntegrationTestBase
     {
         var client = await CreateAuthenticatedClientAsync();
 
-        var response = await client.PostAsJsonAsync("/api/v1/vehicles/import/blocket", new SyncBlocketVehiclesCommand
+        var response = await client.PostAsJsonAsync("/api/v1/vehicles/import/blocket", new RefreshInventoryFromBlocketCommand
         {
             Limit = 50,
             Models = "VOLVO",
@@ -32,7 +32,7 @@ public class BlocketSyncE2ETests : IntegrationTestBase
 
         var responseBody = await response.Content.ReadAsStringAsync();
         response.StatusCode.Should().Be(HttpStatusCode.OK, responseBody);
-        var result = await response.Content.ReadFromJsonAsync<SyncBlocketVehiclesResult>();
+        var result = await response.Content.ReadFromJsonAsync<RefreshInventoryFromBlocketResult>();
         result.Should().NotBeNull();
         result!.AppliedLimit.Should().Be(50);
         result.TotalImported.Should().Be(50);
@@ -46,7 +46,7 @@ public class BlocketSyncE2ETests : IntegrationTestBase
         }
 
         // Run again and verify cap still holds
-        var secondResponse = await client.PostAsJsonAsync("/api/v1/vehicles/import/blocket", new SyncBlocketVehiclesCommand
+        var secondResponse = await client.PostAsJsonAsync("/api/v1/vehicles/import/blocket", new RefreshInventoryFromBlocketCommand
         {
             Limit = 50,
             Models = "VOLVO",

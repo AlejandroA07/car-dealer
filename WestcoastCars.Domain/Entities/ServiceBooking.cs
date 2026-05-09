@@ -13,5 +13,26 @@ public class ServiceBooking : BaseEntity
     public string CustomerEmail { get; set; } = string.Empty;
     public string CustomerPhone { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
-    public BookingStatus Status { get; set; } = BookingStatus.Pending;
+    public BookingStatus Status { get; private set; } = BookingStatus.Pending;
+
+    public void Confirm()
+    {
+        if (Status != BookingStatus.Pending)
+            throw new InvalidOperationException($"Cannot confirm a booking with status '{Status}'.");
+        Status = BookingStatus.Confirmed;
+    }
+
+    public void Cancel()
+    {
+        if (Status == BookingStatus.Completed)
+            throw new InvalidOperationException("Cannot cancel a completed booking.");
+        Status = BookingStatus.Cancelled;
+    }
+
+    public void Complete()
+    {
+        if (Status != BookingStatus.Confirmed)
+            throw new InvalidOperationException($"Cannot complete a booking with status '{Status}'.");
+        Status = BookingStatus.Completed;
+    }
 }

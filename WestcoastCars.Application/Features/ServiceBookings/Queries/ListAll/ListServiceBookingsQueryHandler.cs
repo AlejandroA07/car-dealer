@@ -1,27 +1,35 @@
 using AutoMapper;
 using MediatR;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Contracts.DTOs;
 
 namespace WestcoastCars.Application.Features.ServiceBookings.Queries.ListAll;
 
-public class ListServiceBookingsQueryHandler : IRequestHandler<ListServiceBookingsQuery, IEnumerable<ServiceBookingSummaryDto>>
+public class ListServiceBookingsQueryHandler : IRequestHandler<ListServiceBookingsQuery, PagedResult<ServiceBookingSummaryDto>>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public ListServiceBookingsQueryHandler(IUnitOfWork unitOfWork, IMapper _mapper)
+    public ListServiceBookingsQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
     {
         _unitOfWork = unitOfWork;
-        this._mapper = _mapper;
+        _mapper = mapper;
     }
 
-    public async Task<IEnumerable<ServiceBookingSummaryDto>> Handle(ListServiceBookingsQuery request, CancellationToken cancellationToken)
+    public async Task<PagedResult<ServiceBookingSummaryDto>> Handle(ListServiceBookingsQuery request, CancellationToken cancellationToken)
     {
-        var bookings = await _unitOfWork.ServiceBookingRepository.GetAllAsync();
-        return _mapper.Map<IEnumerable<ServiceBookingSummaryDto>>(bookings);
+        var paged = await _unitOfWork.ServiceBookingRepository.GetPagedAsync(new PagedQueryDto
+        {
+            Page = request.Page,
+            PageSize = request.PageSize
+        });
+
+        return new PagedResult<ServiceBookingSummaryDto>
+        {
+            Items = _mapper.Map<List<ServiceBookingSummaryDto>>(paged.Items),
+            TotalCount = paged.TotalCount,
+            Page = paged.Page,
+            PageSize = paged.PageSize
+        };
     }
 }

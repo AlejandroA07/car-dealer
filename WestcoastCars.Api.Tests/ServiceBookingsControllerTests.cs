@@ -4,6 +4,9 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using WestcoastCars.Api.Controllers;
 using WestcoastCars.Api.Observability;
+using WestcoastCars.Application.Features.ServiceBookings.Commands.Cancel;
+using WestcoastCars.Application.Features.ServiceBookings.Commands.Complete;
+using WestcoastCars.Application.Features.ServiceBookings.Commands.Confirm;
 using WestcoastCars.Application.Features.ServiceBookings.Commands.Create;
 using WestcoastCars.Application.Features.ServiceBookings.Queries.ListAll;
 using WestcoastCars.Contracts.DTOs;
@@ -27,22 +30,23 @@ public class ServiceBookingsControllerTests
     }
 
     [Fact]
-    public async Task ListAll_ShouldReturnOkAndListOfServiceBookings()
+    public async Task ListAll_ShouldReturnOkWithPagedResult()
     {
-        // Arrange
-        var bookings = new List<ServiceBookingSummaryDto>
+        var paged = new PagedResult<ServiceBookingSummaryDto>
         {
-            new() { Id = 1, VehicleRegistrationNumber = "ABC123" }
+            Items = [new() { Id = 1, VehicleRegistrationNumber = "ABC123" }],
+            TotalCount = 1,
+            Page = 1,
+            PageSize = 20
         };
-        _mediatorMock.Setup(m => m.Send(It.IsAny<ListServiceBookingsQuery>(), default)).ReturnsAsync(bookings);
+        _mediatorMock.Setup(m => m.Send(It.IsAny<ListServiceBookingsQuery>(), default)).ReturnsAsync(paged);
 
-        // Act
-        var result = await _controller.ListAll();
+        var result = await _controller.ListAll(new PagedQueryDto());
 
-        // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var returnValue = Assert.IsAssignableFrom<IEnumerable<ServiceBookingSummaryDto>>(okResult.Value);
-        Assert.Single(returnValue);
+        var returnValue = Assert.IsType<PagedResult<ServiceBookingSummaryDto>>(okResult.Value);
+        Assert.Single(returnValue.Items);
+        Assert.Equal(1, returnValue.TotalCount);
         _mediatorMock.Verify(m => m.Send(It.IsAny<ListServiceBookingsQuery>(), default), Times.Once);
     }
 
@@ -78,6 +82,39 @@ public class ServiceBookingsControllerTests
         var response = Assert.IsType<CreateServiceBookingResponseDto>(okResult.Value);
         Assert.Equal(10, response.Id);
         _loggerMock.VerifyLog(LogLevel.Information, "Creating new service booking for vehicle", Times.Once());
+    }
+
+    [Fact]
+    public async Task Confirm_ShouldReturnNoContent()
+    {
+        _mediatorMock.Setup(m => m.Send(It.IsAny<ConfirmServiceBookingCommand>(), default)).ReturnsAsync(Unit.Value);
+
+        var result = await _controller.Confirm(1);
+
+        Assert.IsType<NoContentResult>(result);
+        _mediatorMock.Verify(m => m.Send(It.Is<ConfirmServiceBookingCommand>(c => c.Id == 1), default), Times.Once);
+    }
+
+    [Fact]
+    public async Task Cancel_ShouldReturnNoContent()
+    {
+        _mediatorMock.Setup(m => m.Send(It.IsAny<CancelServiceBookingCommand>(), default)).ReturnsAsync(Unit.Value);
+
+        var result = await _controller.Cancel(1);
+
+        Assert.IsType<NoContentResult>(result);
+        _mediatorMock.Verify(m => m.Send(It.Is<CancelServiceBookingCommand>(c => c.Id == 1), default), Times.Once);
+    }
+
+    [Fact]
+    public async Task Complete_ShouldReturnNoContent()
+    {
+        _mediatorMock.Setup(m => m.Send(It.IsAny<CompleteServiceBookingCommand>(), default)).ReturnsAsync(Unit.Value);
+
+        var result = await _controller.Complete(1);
+
+        Assert.IsType<NoContentResult>(result);
+        _mediatorMock.Verify(m => m.Send(It.Is<CompleteServiceBookingCommand>(c => c.Id == 1), default), Times.Once);
     }
 
     [Fact]
