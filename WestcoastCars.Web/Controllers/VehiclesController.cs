@@ -98,27 +98,12 @@ public class VehiclesController : Controller
             }
 
             var result = await _vehicleService.SyncBlocketAsync(model);
-
-            if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
-            {
-                TempData["error"] = result.ErrorMessage;
-            }
-            else if (!string.IsNullOrWhiteSpace(result.InfoMessage))
-            {
-                TempData["info"] = result.InfoMessage;
-            }
-            else
-            {
-                TempData["success"] = $"Blocket sync completed. Imported {result.TotalImported} vehicles.";
-            }
-
             return View("SyncBlocket", result);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error in Blocket sync");
             model.ErrorMessage = "An unexpected error occurred while running the Blocket sync.";
-            TempData["error"] = model.ErrorMessage;
             return View("SyncBlocket", model);
         }
     }

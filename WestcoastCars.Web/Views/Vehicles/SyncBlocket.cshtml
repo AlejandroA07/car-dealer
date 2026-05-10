@@ -115,4 +115,37 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            var form = document.querySelector('.admin-sync-form');
+            if (form) {
+                form.addEventListener('submit', function () {
+                    var btn = form.querySelector('button[type="submit"]');
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Synkar...';
+                    }
+                    if (typeof toastr !== 'undefined') {
+                        toastr.info('Hämtar från Blocket, det kan ta 15–30 sekunder…', 'Synkar', {
+                            timeOut: 0,
+                            extendedTimeOut: 0,
+                            closeButton: false,
+                            tapToDismiss: false,
+                            progressBar: false
+                        });
+                    }
+                });
+            }
+
+            if (typeof toastr !== 'undefined') {
+                @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage)) {
+                    @:toastr.error(@Json.Serialize(Model.ErrorMessage), 'Fel');
+                } else if (!string.IsNullOrWhiteSpace(Model.InfoMessage)) {
+                    @:toastr.info(@Json.Serialize(Model.InfoMessage), 'Info');
+                } else if (Model.HasResult) {
+                    @:toastr.success('Synken är klar. @Model.TotalImported bilar importerade.', 'Klart');
+                }
+            }
+        }());
+    </script>
 }
