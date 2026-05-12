@@ -1,0 +1,158 @@
+@model WestcoastCars.Web.ViewModels.Vehicles.HanteraDatabaseViewModel
+
+@{
+    ViewData["Title"] = "Hantera Databas";
+}
+
+<section class="admin-editor-page">
+    <div class="site-container admin-workspace-container">
+        @await Html.PartialAsync("_AdminSidebar")
+
+        <main class="admin-workspace-main vehicle-editor-main">
+            <header class="vehicle-editor-header">
+                <div>
+                    <span class="vehicle-editor-kicker">Databashantering</span>
+                    <h1>Hantera Databas</h1>
+                    <p>Totalt i databasen: <strong>@Model.Summary.Total bilar</strong> &mdash; @Model.Summary.TotalSold sålda, @Model.Summary.TotalUnsold tillgängliga.</p>
+                </div>
+            </header>
+
+            @* Section 1: Sold *@
+            <section class="vehicle-editor-card" style="margin-bottom: 1.5rem;">
+                <div class="vehicle-editor-section-title">
+                    <i class="fa-solid fa-tag"></i>
+                    <h2>Sålda bilar</h2>
+                </div>
+                <table class="admin-data-table">
+                    <thead>
+                        <tr>
+                            <th>Kategori</th>
+                            <th>Antal bilar</th>
+                            <th>Åtgärder</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Sålda bilar</td>
+                            <td>@Model.Summary.TotalSold st</td>
+                            <td>
+                                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                    <form asp-action="BulkDelete" asp-controller="Vehicles" method="post" style="display: contents;"
+                                          onsubmit="return confirm('Är du säker på att du vill radera alla @Model.Summary.TotalSold sålda bilar?')">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="isSold" value="true" />
+                                        <button type="submit" class="btn btn-sm btn-danger">Radera alla sålda</button>
+                                    </form>
+                                    <a asp-action="Index" asp-controller="Vehicles" asp-route-IsSold="true"
+                                       class="btn btn-sm btn-secondary">Visa katalog</a>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            @* Section 2: By Mileage *@
+            <section class="vehicle-editor-card" style="margin-bottom: 1.5rem;">
+                <div class="vehicle-editor-section-title">
+                    <i class="fa-solid fa-gauge-high"></i>
+                    <h2>Miltal</h2>
+                </div>
+                @if (!Model.ByMileage.Any())
+                {
+                    <p class="admin-utility-copy">Inga bilar i databasen.</p>
+                }
+                else
+                {
+                    <table class="admin-data-table">
+                        <thead>
+                            <tr>
+                                <th>Intervall</th>
+                                <th>Antal bilar</th>
+                                <th>Åtgärder</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var band in Model.ByMileage)
+                            {
+                                <tr>
+                                    <td>@band.Label</td>
+                                    <td>@band.Count</td>
+                                    <td>
+                                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                            <form asp-action="BulkDelete" asp-controller="Vehicles" method="post" style="display: contents;"
+                                                  onsubmit="return confirm('Är du säker på att du vill radera alla @band.Count bilar med miltal @band.Label?')">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="minMileage" value="@band.Min" />
+                                                @if (band.Max.HasValue)
+                                                {
+                                                    <input type="hidden" name="maxMileage" value="@band.Max.Value" />
+                                                }
+                                                <button type="submit" class="btn btn-sm btn-danger">Radera</button>
+                                            </form>
+                                            <a href="@Url.Action("Index", "Vehicles", new { MinMileage = band.Min, MaxMileage = band.Max })"
+                                               class="btn btn-sm btn-secondary">Visa katalog</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </section>
+
+            @* Section 3: By Model *@
+            <section class="vehicle-editor-card" style="margin-bottom: 1.5rem;">
+                <div class="vehicle-editor-section-title">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <h2>Modell</h2>
+                </div>
+                @if (!Model.ByModel.Any())
+                {
+                    <p class="admin-utility-copy">Inga bilar i databasen.</p>
+                }
+                else
+                {
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.75rem;">
+                        @foreach (var row in Model.ByModel)
+                        {
+                            <div style="border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1rem;">
+                                <p style="font-weight: 600; margin: 0 0 0.25rem;">@row.Model</p>
+                                <p style="color: #6b7280; font-size: 0.875rem; margin: 0 0 0.75rem;">@row.Count bilar</p>
+                                <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                                    <form asp-action="BulkDelete" asp-controller="Vehicles" method="post" style="display: contents;"
+                                          onsubmit="return confirm('Är du säker på att du vill radera alla @row.Count bilar med modell @row.Model?')">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="model" value="@row.Model" />
+                                        <button type="submit" class="btn btn-sm btn-danger">Radera</button>
+                                    </form>
+                                    <a asp-action="Index" asp-controller="Vehicles" asp-route-Model="@row.Model"
+                                       class="btn btn-sm btn-secondary">Visa katalog</a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </section>
+
+            @* Danger zone *@
+            <section class="vehicle-editor-card" style="border: 2px solid #dc2626; margin-top: 2rem;">
+                <div class="vehicle-editor-section-title">
+                    <i class="fa-solid fa-triangle-exclamation" style="color: #dc2626;"></i>
+                    <h2 style="color: #dc2626;">Farlig zon</h2>
+                </div>
+                <p class="admin-utility-copy">
+                    Detta raderar <strong>alla @Model.Summary.Total bilar</strong> i databasen permanent. Åtgärden kan inte ångras.
+                </p>
+                <form asp-action="DeleteAll" asp-controller="Vehicles" method="post"
+                      onsubmit="return confirm('Är du säker? Detta raderar ALLA @Model.Summary.Total bilar i databasen permanent och kan inte ångras.')">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fa-solid fa-trash"></i>
+                        Rensa hela databasen
+                    </button>
+                </form>
+            </section>
+        </main>
+    </div>
+</section>

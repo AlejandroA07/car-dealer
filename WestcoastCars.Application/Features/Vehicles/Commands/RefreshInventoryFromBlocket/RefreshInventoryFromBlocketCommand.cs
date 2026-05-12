@@ -8,4 +8,8 @@ public class RefreshInventoryFromBlocketCommand : IRequest<RefreshInventoryFromB
     public string? OrgId { get; set; }
     public string? Locations { get; set; }
     public string? Models { get; set; }
+    public int? MinMileage { get; set; }
+    public int? MaxMileage { get; set; }
+    public string? TransmissionFilter { get; set; }
+    public string? FuelTypeFilter { get; set; }
 }

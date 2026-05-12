@@ -66,7 +66,11 @@ public class RefreshInventoryFromBlocketCommandHandler : IRequestHandler<Refresh
                 if (string.IsNullOrWhiteSpace(mappedVehicle.ExternalListingId) ||
                     !seenExternalListingIds.Add(mappedVehicle.ExternalListingId) ||
                     string.IsNullOrWhiteSpace(mappedVehicle.RegistrationNumber) ||
-                    !IsValidModelYear(mappedVehicle.ModelYear))
+                    !IsValidModelYear(mappedVehicle.ModelYear) ||
+                    (request.MinMileage.HasValue && mappedVehicle.Mileage < request.MinMileage.Value) ||
+                    (request.MaxMileage.HasValue && mappedVehicle.Mileage >= request.MaxMileage.Value) ||
+                    (!string.IsNullOrWhiteSpace(request.TransmissionFilter) && !mappedVehicle.TransmissionType.Equals(request.TransmissionFilter, StringComparison.OrdinalIgnoreCase)) ||
+                    (!string.IsNullOrWhiteSpace(request.FuelTypeFilter) && !mappedVehicle.FuelType.Equals(request.FuelTypeFilter, StringComparison.OrdinalIgnoreCase)))
                 {
                     totalSkipped++;
                     continue;

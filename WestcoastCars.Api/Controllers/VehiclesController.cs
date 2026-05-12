@@ -12,6 +12,9 @@ using WestcoastCars.Application.Features.Vehicles.Commands.Delete;
 using WestcoastCars.Application.Features.Vehicles.Commands.MarkAsSold;
 using WestcoastCars.Application.Features.Vehicles.Commands.RefreshInventoryFromBlocket;
 using WestcoastCars.Application.Features.Vehicles.Commands.PurgeSourceRemoved;
+using WestcoastCars.Application.Features.Vehicles.Commands.BulkDelete;
+using WestcoastCars.Application.Features.Vehicles.Commands.DeleteAll;
+using WestcoastCars.Application.Features.Vehicles.Queries.Stats;
 using WestcoastCars.Application.Features.Vehicles.Queries.Search;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -231,6 +234,87 @@ public class VehiclesController : ControllerBase
     {
         _logger.LogInformation("Purging SourceRemoved Blocket vehicles");
         var result = await _mediator.Send(new PurgeSourceRemovedVehiclesCommand());
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Returns vehicle counts grouped by model.
+    /// </summary>
+    [HttpGet("stats/by-model")]
+    [Authorize(Roles = "Admin,Salesperson")]
+    [ProducesResponseType(typeof(IEnumerable<VehicleStatsByModelDto>), 200)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(403)]
+    public async Task<IActionResult> StatsByModel()
+    {
+        var result = await _mediator.Send(new GetVehicleStatsByModelQuery());
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Returns vehicle counts grouped by predefined mileage bands.
+    /// </summary>
+    [HttpGet("stats/by-mileage")]
+    [Authorize(Roles = "Admin,Salesperson")]
+    [ProducesResponseType(typeof(IEnumerable<VehicleStatsByMileageDto>), 200)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(403)]
+    public async Task<IActionResult> StatsByMileage()
+    {
+        var result = await _mediator.Send(new GetVehicleStatsByMileageQuery());
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Returns a summary of total, sold, unsold, and source-removed vehicle counts.
+    /// </summary>
+    [HttpGet("stats/summary")]
+    [Authorize(Roles = "Admin,Salesperson")]
+    [ProducesResponseType(typeof(VehicleStatsSummaryDto), 200)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(403)]
+    public async Task<IActionResult> StatsSummary()
+    {
+        var result = await _mediator.Send(new GetVehicleStatsSummaryQuery());
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Bulk deletes vehicles matching the given filter criteria. Requires Admin role.
+    /// At least one filter must be provided.
+    /// </summary>
+    [HttpDelete("bulk")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(BulkDeleteVehiclesResult), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(403)]
+    public async Task<IActionResult> BulkDelete([FromQuery] string? model, [FromQuery] bool? isSold, [FromQuery] int? minMileage, [FromQuery] int? maxMileage)
+    {
+        if (model is null && isSold is null && minMileage is null && maxMileage is null)
+            return BadRequest("At least one filter must be specified.");
+
+        var result = await _mediator.Send(new BulkDeleteVehiclesCommand
+        {
+            Model = model,
+            IsSold = isSold,
+            MinMileage = minMileage,
+            MaxMileage = maxMileage
+        });
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Permanently deletes all vehicles in the database. Requires Admin role.
+    /// </summary>
+    [HttpDelete("bulk/all")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(DeleteAllVehiclesResult), 200)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(403)]
+    public async Task<IActionResult> DeleteAll()
+    {
+        var result = await _mediator.Send(new DeleteAllVehiclesCommand());
         return Ok(result);
     }
 

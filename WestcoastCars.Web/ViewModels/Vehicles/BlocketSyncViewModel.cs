@@ -16,6 +16,10 @@ public class BlocketSyncViewModel
     [Display(Name = "Brand")]
     public string? Models { get; set; }
 
+    public string? MileageBand { get; set; }
+    public string? TransmissionFilter { get; set; }
+    public string? FuelTypeFilter { get; set; }
+
     public int RequestedLimit { get; set; }
     public int AppliedLimit { get; set; }
     public int PagesFetched { get; set; }

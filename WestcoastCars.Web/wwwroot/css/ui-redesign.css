@@ -1467,11 +1467,13 @@ textarea:focus,
 
 .admin-workspace-main {
   min-width: 0;
+  padding-top: 0;
 }
 
 .vehicle-editor-main {
   display: grid;
   gap: 1.75rem;
+  align-self: start;
 }
 
 .vehicle-editor-header {

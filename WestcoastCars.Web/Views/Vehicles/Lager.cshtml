@@ -1,0 +1,93 @@
+@model WestcoastCars.Web.ViewModels.Vehicles.VehicleListViewModel
+
+@{
+    ViewData["Title"] = "Lager";
+    ViewData["SearchFormAction"] = Url.Action("Lager", "Vehicles");
+    ViewData["ShowStatusFilter"] = true;
+}
+
+<section class="admin-editor-page">
+    <div class="site-container admin-workspace-container">
+        @await Html.PartialAsync("_AdminSidebar")
+
+        <main class="admin-workspace-main vehicle-editor-main">
+            <header class="vehicle-editor-header">
+                <div>
+                    <span class="vehicle-editor-kicker">Lagerhantering</span>
+                    <h1>Lager</h1>
+                </div>
+                <span class="results-pill">@Model.TotalVehicles bilar</span>
+            </header>
+
+            @await Html.PartialAsync("_SearchForm", Model)
+
+            @if (!Model.Vehicles.Any())
+            {
+                <div class="empty-state card-surface catalog-empty-state">
+                    <span class="eyebrow">Inga träffar</span>
+                    <h2>Inga bilar matchade sökningen</h2>
+                    <p>Rensa filtren för att se hela lagret.</p>
+                    <a asp-action="Lager" asp-controller="Vehicles" class="btn btn-primary">Visa alla bilar</a>
+                </div>
+            }
+            else
+            {
+                <div class="vehicle-grid catalog-grid">
+                    @foreach (var vehicle in Model.Vehicles)
+                    {
+                        @await Html.PartialAsync("_VehicleCard", vehicle)
+                    }
+                </div>
+
+                @if (Model.TotalPages > 1)
+                {
+                    <nav class="catalog-pagination" aria-label="Sidnavigering">
+                        <a class="pagination-link pagination-arrow @(Model.HasPreviousPage ? null : "disabled")"
+                           asp-action="Lager" asp-controller="Vehicles"
+                           asp-route-page="@(Model.CurrentPage - 1)"
+                           asp-route-Make="@Model.Search.Make"
+                           asp-route-Model="@Model.Search.Model"
+                           asp-route-MinYear="@Model.Search.MinYear"
+                           asp-route-MaxYear="@Model.Search.MaxYear"
+                           asp-route-MinPrice="@Model.Search.MinPrice"
+                           asp-route-MaxPrice="@Model.Search.MaxPrice"
+                           asp-route-IsSold="@Model.Search.IsSold"
+                           aria-label="Föregående sida">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </a>
+
+                        @for (var p = 1; p <= Model.TotalPages; p++)
+                        {
+                            <a class="pagination-link @(p == Model.CurrentPage ? "active" : null)"
+                               asp-action="Lager" asp-controller="Vehicles"
+                               asp-route-page="@p"
+                               asp-route-Make="@Model.Search.Make"
+                               asp-route-Model="@Model.Search.Model"
+                               asp-route-MinYear="@Model.Search.MinYear"
+                               asp-route-MaxYear="@Model.Search.MaxYear"
+                               asp-route-MinPrice="@Model.Search.MinPrice"
+                               asp-route-MaxPrice="@Model.Search.MaxPrice"
+                               asp-route-IsSold="@Model.Search.IsSold">
+                                @p
+                            </a>
+                        }
+
+                        <a class="pagination-link pagination-arrow @(Model.HasNextPage ? null : "disabled")"
+                           asp-action="Lager" asp-controller="Vehicles"
+                           asp-route-page="@(Model.CurrentPage + 1)"
+                           asp-route-Make="@Model.Search.Make"
+                           asp-route-Model="@Model.Search.Model"
+                           asp-route-MinYear="@Model.Search.MinYear"
+                           asp-route-MaxYear="@Model.Search.MaxYear"
+                           asp-route-MinPrice="@Model.Search.MinPrice"
+                           asp-route-MaxPrice="@Model.Search.MaxPrice"
+                           asp-route-IsSold="@Model.Search.IsSold"
+                           aria-label="Nästa sida">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </a>
+                    </nav>
+                }
+            }
+        </main>
+    </div>
+</section>

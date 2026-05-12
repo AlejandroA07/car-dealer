@@ -284,12 +284,26 @@ public class VehicleService : IVehicleService
     {
         try
         {
+            (int? minMileage, int? maxMileage) = model.MileageBand switch
+            {
+                "0-10000"     => (0,     (int?)10000),
+                "10000-20000" => (10000, (int?)20000),
+                "20000-30000" => (20000, (int?)30000),
+                "30000-40000" => (30000, (int?)40000),
+                "40000-"      => (40000, (int?)null),
+                _             => ((int?)null, (int?)null)
+            };
+
             var response = await _longRunningHttpClient.PostAsJsonAsync($"{_baseUrl}/api/v1/vehicles/import/blocket", new
             {
                 limit = model.Limit,
                 orgId = model.OrgId,
                 locations = model.Locations,
-                models = model.Models
+                models = model.Models,
+                minMileage,
+                maxMileage,
+                transmissionFilter = string.IsNullOrWhiteSpace(model.TransmissionFilter) ? null : model.TransmissionFilter,
+                fuelTypeFilter = string.IsNullOrWhiteSpace(model.FuelTypeFilter) ? null : model.FuelTypeFilter
             });
 
             if (!response.IsSuccessStatusCode)
@@ -371,6 +385,66 @@ public class VehicleService : IVehicleService
         }
     }
 
+    public async Task<HanteraDatabaseViewModel> GetHanteraDatabaseViewModelAsync()
+    {
+        return await ExecuteWithApiFallback(async () =>
+        {
+            var byModelTask = _httpClient.GetFromJsonAsync<IEnumerable<VehicleStatsByModelDto>>($"{_baseUrl}/api/v1/vehicles/stats/by-model", JsonOptions);
+            var byMileageTask = _httpClient.GetFromJsonAsync<IEnumerable<VehicleStatsByMileageDto>>($"{_baseUrl}/api/v1/vehicles/stats/by-mileage", JsonOptions);
+            var summaryTask = _httpClient.GetFromJsonAsync<VehicleStatsSummaryDto>($"{_baseUrl}/api/v1/vehicles/stats/summary", JsonOptions);
+
+            await Task.WhenAll(byModelTask, byMileageTask, summaryTask);
+
+            return new HanteraDatabaseViewModel
+            {
+                ByModel = await byModelTask ?? [],
+                ByMileage = await byMileageTask ?? [],
+                Summary = await summaryTask ?? new VehicleStatsSummaryDto(0, 0, 0, 0)
+            };
+        }, new HanteraDatabaseViewModel(), "loading database stats");
+    }
+
+    public async Task<int> BulkDeleteAsync(string? model, bool? isSold, int? minMileage, int? maxMileage)
+    {
+        return await ExecuteWithApiFallback(async () =>
+        {
+            var queryParams = new Dictionary<string, string?>();
+            if (model is not null) queryParams["model"] = model;
+            if (isSold.HasValue) queryParams["isSold"] = isSold.Value.ToString();
+            if (minMileage.HasValue) queryParams["minMileage"] = minMileage.Value.ToString();
+            if (maxMileage.HasValue) queryParams["maxMileage"] = maxMileage.Value.ToString();
+
+            var url = QueryHelpers.AddQueryString($"{_baseUrl}/api/v1/vehicles/bulk", queryParams);
+            var response = await _httpClient.DeleteAsync(url);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError("Bulk delete failed: {StatusCode}", response.StatusCode);
+                return 0;
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<BulkDeleteResponse>(JsonOptions);
+            return result?.TotalDeleted ?? 0;
+        }, 0, "bulk deleting vehicles");
+    }
+
+    public async Task<int> DeleteAllVehiclesAsync()
+    {
+        return await ExecuteWithApiFallback(async () =>
+        {
+            var response = await _httpClient.DeleteAsync($"{_baseUrl}/api/v1/vehicles/bulk/all");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError("Delete all failed: {StatusCode}", response.StatusCode);
+                return 0;
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<BulkDeleteResponse>(JsonOptions);
+            return result?.TotalDeleted ?? 0;
+        }, 0, "deleting all vehicles");
+    }
+
     private async Task LoadDropdownData(VehicleBaseViewModel viewModel, VehicleDetailsDto vehicleToEdit)
     {
         try
@@ -437,6 +511,8 @@ public class VehicleService : IVehicleService
 
     private Task<List<NamedObjectDto>> GetTransmissionsAsync() =>
         GetCachedDropdownDataAsync(TransmissionsCacheKey, $"{_baseUrl}/api/v1/transmissions");
+
+    private record BulkDeleteResponse(int TotalDeleted);
 
     private async Task<List<NamedObjectDto>> GetCachedDropdownDataAsync(string cacheKey, string requestUri)
     {
