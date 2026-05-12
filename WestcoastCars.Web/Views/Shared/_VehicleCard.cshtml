@@ -1,7 +1,7 @@
 @model WestcoastCars.Contracts.DTOs.VehicleSummaryDto
 @{
-    var title = $"{Model.Manufacturer} {Model.Name}".Trim();
-    if (string.IsNullOrWhiteSpace(title)) title = Model.Model;
+    var title = $"{Model.Manufacturer} {Model.Model}".Trim();
+    if (string.IsNullOrWhiteSpace(title)) title = Model.Name;
 
     var hasMeta = !string.IsNullOrWhiteSpace(Model.Color)
         || !string.IsNullOrWhiteSpace(Model.City)
@@ -33,10 +33,6 @@
 
         <div class="vehicle-card-heading">
             <h3>@title</h3>
-            @if (!string.IsNullOrWhiteSpace(Model.Model))
-            {
-                <p class="vehicle-card-model-line">@Model.Model</p>
-            }
             @if (!string.IsNullOrWhiteSpace(Model.Color))
             {
                 <p class="vehicle-card-color-line">@Model.Color</p>

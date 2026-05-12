@@ -79,10 +79,109 @@ public class VehiclesController : Controller
     }
 
     [Authorize(Roles = "Admin,Salesperson")]
+    [HttpGet("lager")]
+    public async Task<IActionResult> Lager([FromQuery] VehicleSearchDto search, [FromQuery] int page = 1)
+    {
+        try
+        {
+            search.Page = page;
+            const int pageSize = 15;
+            search.PageSize = pageSize;
+
+            bool isFiltered = !string.IsNullOrEmpty(search.Make) ||
+                              !string.IsNullOrEmpty(search.Model) ||
+                              search.MinYear.HasValue ||
+                              search.MaxYear.HasValue ||
+                              search.MinPrice.HasValue ||
+                              search.MaxPrice.HasValue ||
+                              search.IsSold.HasValue;
+
+            var result = isFiltered
+                ? await _vehicleService.SearchVehiclesAsync(search)
+                : await _vehicleService.ListVehiclesAsync(page, pageSize);
+
+            var manufacturers = await _manufacturerService.ListAllAsync();
+            var viewModel = new VehicleListViewModel
+            {
+                Vehicles = result.Items,
+                Search = search,
+                Manufacturers = manufacturers.Select(m => new SelectListItem
+                {
+                    Value = m.Name,
+                    Text = m.Name,
+                    Selected = m.Name == search.Make
+                }).ToList(),
+                CurrentPage = result.Page,
+                PageSize = result.PageSize,
+                TotalVehicles = result.TotalCount
+            };
+
+            return View("Lager", viewModel);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in Lager");
+            return View("Errors");
+        }
+    }
+
+    [Authorize(Roles = "Admin,Salesperson")]
     [HttpGet("sync-blocket")]
     public IActionResult SyncBlocket()
     {
         return View("SyncBlocket", new BlocketSyncViewModel());
+    }
+
+    [Authorize(Roles = "Admin,Salesperson")]
+    [HttpGet("hantera-databas")]
+    public async Task<IActionResult> HanteraDatabas()
+    {
+        try
+        {
+            var viewModel = await _vehicleService.GetHanteraDatabaseViewModelAsync();
+            return View("HanteraDatabas", viewModel);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error loading Hantera Databas page");
+            return View("Errors");
+        }
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPost("hantera-databas/bulk-delete")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> BulkDelete([FromForm] string? model, [FromForm] bool? isSold, [FromForm] int? minMileage, [FromForm] int? maxMileage)
+    {
+        try
+        {
+            var count = await _vehicleService.BulkDeleteAsync(model, isSold, minMileage, maxMileage);
+            TempData["success"] = $"{count} bilar raderades.";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in BulkDelete");
+            TempData["error"] = "Raderingen misslyckades.";
+        }
+        return RedirectToAction(nameof(HanteraDatabas));
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPost("hantera-databas/delete-all")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteAll()
+    {
+        try
+        {
+            var count = await _vehicleService.DeleteAllVehiclesAsync();
+            TempData["success"] = $"Alla {count} bilar raderades permanent.";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in DeleteAll");
+            TempData["error"] = "Raderingen misslyckades.";
+        }
+        return RedirectToAction(nameof(HanteraDatabas));
     }
 
     [Authorize(Roles = "Admin,Salesperson")]

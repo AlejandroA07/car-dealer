@@ -3,11 +3,13 @@
     var currentYear = DateTime.Now.Year;
     var yearOptions = Enumerable.Range(0, 31).Select(offset => currentYear - offset);
     var priceOptions = new[] { 50000, 100000, 150000, 200000, 300000, 400000, 500000, 750000, 1000000 };
+    var formAction = ViewData["SearchFormAction"] as string ?? Url.RouteUrl("VehicleCatalog");
+    var showStatusFilter = ViewData["ShowStatusFilter"] as bool? == true;
 }
 
 <section class="filter-section" aria-label="Filtrera lager">
     <div class="filter-shell">
-        <form asp-route="VehicleCatalog" method="get" class="filter-form">
+        <form action="@formAction" method="get" class="filter-form">
             <div class="filter-group">
                 <label for="Make">Märke</label>
                 <select id="Make" name="Make" asp-items="Model.Manufacturers" class="form-control">
@@ -34,6 +36,17 @@
                     <input type="text" inputmode="numeric" list="price-options" name="MaxPrice" value="@Model.Search.MaxPrice" placeholder="Till" aria-label="Pris till" />
                 </div>
             </div>
+            @if (showStatusFilter)
+            {
+                <div class="filter-group">
+                    <label for="IsSold">Status</label>
+                    <select id="IsSold" name="IsSold" class="form-control">
+                        <option value="" selected="@(Model.Search.IsSold == null)">Alla</option>
+                        <option value="false" selected="@(Model.Search.IsSold == false)">Tillgängliga</option>
+                        <option value="true" selected="@(Model.Search.IsSold == true)">Sålda</option>
+                    </select>
+                </div>
+            }
             <div class="filter-actions">
                 <button type="submit" class="btn btn-primary"><i class="fa-solid fa-filter"></i> Filtrera</button>
             </div>

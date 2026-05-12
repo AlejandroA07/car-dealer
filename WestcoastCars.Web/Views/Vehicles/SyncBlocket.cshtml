@@ -1,7 +1,7 @@
 @model WestcoastCars.Web.ViewModels.Vehicles.BlocketSyncViewModel
 
 @{
-    ViewData["Title"] = "Synka Blocket";
+    ViewData["Title"] = "Hämta Bilar";
 }
 
 <section class="admin-editor-page">
@@ -12,8 +12,8 @@
             <header class="vehicle-editor-header">
                 <div>
                     <span class="vehicle-editor-kicker">Lagerimport</span>
-                    <h1>Synka Blocket</h1>
-                    <p>Hämta aktuella Blocket-annonser och ersätt lagret med en kontrollerad import.</p>
+                    <h1>Hämta Bilar</h1>
+                    <p>Hämta aktuella Blocket-annonser och uppdatera lagret med en kontrollerad import.</p>
                 </div>
             </header>
 
@@ -21,7 +21,7 @@
                 <section class="vehicle-editor-card">
                     <div class="vehicle-editor-section-title">
                         <i class="fa-solid fa-rotate"></i>
-                        <h2>Manuell synkning</h2>
+                        <h2>Manuell upphämtning</h2>
                     </div>
 
                     <p class="admin-utility-copy">
@@ -52,9 +52,42 @@
                             <input asp-for="OrgId" type="text" placeholder="Valfritt handlare-id" />
                         </label>
 
+                        <label class="vehicle-editor-field">
+                            <span>Miltal</span>
+                            <select asp-for="MileageBand" class="form-control">
+                                <option value="">Alla miltal</option>
+                                <option value="0-10000">0 – 10 000 km</option>
+                                <option value="10000-20000">10 000 – 20 000 km</option>
+                                <option value="20000-30000">20 000 – 30 000 km</option>
+                                <option value="30000-40000">30 000 – 40 000 km</option>
+                                <option value="40000-">40 000+ km</option>
+                            </select>
+                        </label>
+
+                        <label class="vehicle-editor-field">
+                            <span>Växellåda</span>
+                            <select asp-for="TransmissionFilter" class="form-control">
+                                <option value="">Alla växellådor</option>
+                                <option value="Automat">Automat</option>
+                                <option value="Manuell">Manuell</option>
+                            </select>
+                        </label>
+
+                        <label class="vehicle-editor-field">
+                            <span>Bränsletyp</span>
+                            <select asp-for="FuelTypeFilter" class="form-control">
+                                <option value="">Alla bränsletyper</option>
+                                <option value="Bensin">Bensin</option>
+                                <option value="Diesel">Diesel</option>
+                                <option value="El">El</option>
+                                <option value="Hybrid">Hybrid</option>
+                                <option value="Laddhybrid">Laddhybrid</option>
+                            </select>
+                        </label>
+
                         <div class="vehicle-editor-actions">
                             <button type="submit" class="btn btn-primary">
-                                Synka Blocket
+                                Hämta Bilar
                                 <i class="fa-solid fa-arrow-right"></i>
                             </button>
                         </div>
@@ -109,7 +142,7 @@
                     }
                     else
                     {
-                        <p class="admin-utility-copy">Ingen synkning har körts från den här sidan ännu.</p>
+                        <p class="admin-utility-copy">Ingen upphämtning har körts från den här sidan ännu.</p>
                     }
                 </section>
             </div>
@@ -127,7 +160,7 @@
                     var btn = form.querySelector('button[type="submit"]');
                     if (btn) {
                         btn.disabled = true;
-                        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Synkar...';
+                        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Hämtar...';
                     }
                     if (typeof toastr !== 'undefined') {
                         toastr.info('Hämtar från Blocket, det kan ta 15–30 sekunder…', 'Synkar', {

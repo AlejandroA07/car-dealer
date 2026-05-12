@@ -15,4 +15,7 @@ public interface IVehicleService
     Task<bool> CreateVehicleAsync(VehicleBaseViewModel vehicleViewModel);
     Task<PagedResult<VehicleSummaryDto>> SearchVehiclesAsync(VehicleSearchDto search);
     Task<BlocketSyncViewModel> SyncBlocketAsync(BlocketSyncViewModel model);
+    Task<HanteraDatabaseViewModel> GetHanteraDatabaseViewModelAsync();
+    Task<int> BulkDeleteAsync(string? model, bool? isSold, int? minMileage, int? maxMileage);
+    Task<int> DeleteAllVehiclesAsync();
 }

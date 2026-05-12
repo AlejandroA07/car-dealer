@@ -117,6 +117,15 @@ public class WestcoastCarsContext : IdentityDbContext<IdentityUser>
             .HasDatabaseName("IX_Vehicles_RegistrationNumber")
             .IsUnique();
 
+        modelBuilder.Entity<Vehicle>()
+            .Property(vehicle => vehicle.SourceStatus)
+            .HasMaxLength(50)
+            .HasDefaultValue("Active");
+
+        modelBuilder.Entity<Vehicle>()
+            .HasIndex(vehicle => vehicle.SourceStatus)
+            .HasDatabaseName("IX_Vehicles_SourceStatus");
+
         modelBuilder.Entity<ServiceBooking>()
             .Property(sb => sb.VehicleRegistrationNumber)
             .HasMaxLength(10);

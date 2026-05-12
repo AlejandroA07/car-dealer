@@ -14,15 +14,15 @@
 <aside class="admin-workspace-sidebar" aria-label="Administrationsmeny">
     <div class="admin-sidebar-brand">
         <span>Westcoast</span>
-        <strong>Admin Suite</strong>
+        <strong>Admin Panel</strong>
     </div>
 
     <nav class="admin-sidebar-nav">
         <a asp-action="Index" asp-controller="Admin" class='@IsActive("Admin", "Index")'>
             <i class="fa-solid fa-chart-line"></i>
-            <span>Dashboard</span>
+            <span>Översikt</span>
         </a>
-        <a asp-route="VehicleCatalog">
+        <a asp-action="Lager" asp-controller="Vehicles" class='@IsActive("Vehicles", "Lager")'>
             <i class="fa-solid fa-car-side"></i>
             <span>Lager</span>
         </a>
@@ -32,7 +32,11 @@
         </a>
         <a asp-action="SyncBlocket" asp-controller="Vehicles" class='@IsActive("Vehicles", "SyncBlocket")'>
             <i class="fa-solid fa-rotate"></i>
-            <span>Synka Blocket</span>
+            <span>Hämta Bilar</span>
+        </a>
+        <a asp-action="HanteraDatabas" asp-controller="Vehicles" class='@IsActive("Vehicles", "HanteraDatabas")'>
+            <i class="fa-solid fa-database"></i>
+            <span>Hantera Databas</span>
         </a>
     </nav>
 
