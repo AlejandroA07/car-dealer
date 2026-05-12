@@ -79,12 +79,16 @@
                     {
                         <div class="admin-sync-stats">
                             <div class="admin-sync-stat">
-                                <span>Importerade</span>
-                                <strong>@Model.TotalImported</strong>
+                                <span>Tillagda</span>
+                                <strong>@Model.TotalAdded</strong>
                             </div>
                             <div class="admin-sync-stat">
-                                <span>Ersatta</span>
-                                <strong>@Model.TotalReplaced</strong>
+                                <span>Uppdaterade</span>
+                                <strong>@Model.TotalUpdated</strong>
+                            </div>
+                            <div class="admin-sync-stat">
+                                <span>Borttagna</span>
+                                <strong>@Model.TotalFlagged</strong>
                             </div>
                             <div class="admin-sync-stat">
                                 <span>Överhoppade</span>
@@ -143,7 +147,7 @@
                 } else if (!string.IsNullOrWhiteSpace(Model.InfoMessage)) {
                     @:toastr.info(@Json.Serialize(Model.InfoMessage), 'Info');
                 } else if (Model.HasResult) {
-                    @:toastr.success('Synken är klar. @Model.TotalImported bilar importerade.', 'Klart');
+                    @:toastr.success('Synken är klar. @Model.TotalAdded tillagda, @Model.TotalUpdated uppdaterade, @Model.TotalFlagged borttagna.', 'Klart');
                 }
             }
         }());

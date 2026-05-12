@@ -35,7 +35,7 @@ public class BlocketSyncE2ETests : IntegrationTestBase
         var result = await response.Content.ReadFromJsonAsync<RefreshInventoryFromBlocketResult>();
         result.Should().NotBeNull();
         result!.AppliedLimit.Should().Be(50);
-        result.TotalImported.Should().Be(50);
+        result.TotalAdded.Should().Be(50);
 
         using (var scope = _factory.Services.CreateScope())
         {

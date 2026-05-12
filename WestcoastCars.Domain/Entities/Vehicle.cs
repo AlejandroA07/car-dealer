@@ -23,6 +23,15 @@ public class Vehicle : BaseEntity
     {
         IsSold = false;
     }
+
+    public string SourceStatus { get; private set; } = "Active";
+    public DateTime? SourceRemovedAt { get; private set; }
+
+    public void MarkAsSourceRemoved(DateTime removedAtUtc)
+    {
+        SourceStatus = "SourceRemoved";
+        SourceRemovedAt = removedAtUtc;
+    }
     public string? ExternalListingId { get; set; }
     public string? Source { get; set; }
     public string? SourceUrl { get; set; }

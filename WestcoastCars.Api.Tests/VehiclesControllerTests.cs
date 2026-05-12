@@ -229,8 +229,9 @@ public class VehiclesControllerTests
         {
             RequestedLimit = 50,
             AppliedLimit = 50,
-            TotalImported = 50,
-            TotalReplaced = 12
+            TotalAdded = 40,
+            TotalUpdated = 10,
+            TotalFlagged = 2
         };
 
         _mediatorMock
@@ -241,8 +242,9 @@ public class VehiclesControllerTests
 
         var okResult = Assert.IsType<OkObjectResult>(result);
         var returnValue = Assert.IsType<RefreshInventoryFromBlocketResult>(okResult.Value);
-        Assert.Equal(50, returnValue.TotalImported);
-        Assert.Equal(12, returnValue.TotalReplaced);
+        Assert.Equal(40, returnValue.TotalAdded);
+        Assert.Equal(10, returnValue.TotalUpdated);
+        Assert.Equal(2, returnValue.TotalFlagged);
     }
 
     [Fact]

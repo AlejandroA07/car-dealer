@@ -11,6 +11,7 @@ using WestcoastCars.Application.Features.Vehicles.Commands.Update;
 using WestcoastCars.Application.Features.Vehicles.Commands.Delete;
 using WestcoastCars.Application.Features.Vehicles.Commands.MarkAsSold;
 using WestcoastCars.Application.Features.Vehicles.Commands.RefreshInventoryFromBlocket;
+using WestcoastCars.Application.Features.Vehicles.Commands.PurgeSourceRemoved;
 using WestcoastCars.Application.Features.Vehicles.Queries.Search;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -201,8 +202,9 @@ public class VehiclesController : ControllerBase
             var result = await _mediator.Send(request);
             startedAt.Stop();
             _telemetry.RecordBlocketSync("success", startedAt.Elapsed, request.Limit);
-            activity?.SetTag("blocket_sync.total_imported", result.TotalImported);
-            activity?.SetTag("blocket_sync.total_replaced", result.TotalReplaced);
+            activity?.SetTag("blocket_sync.total_added", result.TotalAdded);
+            activity?.SetTag("blocket_sync.total_updated", result.TotalUpdated);
+            activity?.SetTag("blocket_sync.total_flagged", result.TotalFlagged);
             _cache.Remove("lookup:manufacturers");
             _cache.Remove("lookup:fueltypes");
             _cache.Remove("lookup:transmissions");
@@ -214,6 +216,22 @@ public class VehiclesController : ControllerBase
             _telemetry.RecordBlocketSync("failure", startedAt.Elapsed, request.Limit);
             throw;
         }
+    }
+
+    /// <summary>
+    /// Permanently deletes all Blocket vehicles flagged as SourceRemoved. Requires Admin role.
+    /// </summary>
+    /// <returns>Count of vehicles deleted.</returns>
+    [HttpDelete("import/blocket/removed")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(PurgeSourceRemovedVehiclesResult), 200)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(403)]
+    public async Task<IActionResult> PurgeSourceRemoved()
+    {
+        _logger.LogInformation("Purging SourceRemoved Blocket vehicles");
+        var result = await _mediator.Send(new PurgeSourceRemovedVehiclesCommand());
+        return Ok(result);
     }
 
     /// <summary>

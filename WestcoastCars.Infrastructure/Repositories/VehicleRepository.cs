@@ -56,6 +56,13 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<Vehicle>> GetAllSourceRemovedFromBlocketAsync()
+    {
+        return await _context.Vehicles
+            .Where(v => v.Source == "Blocket" && v.SourceStatus == "SourceRemoved")
+            .ToListAsync();
+    }
+
     public async Task<PagedResult<Vehicle>> SearchAsync(VehicleSearchDto search)
     {
         var query = _context.Vehicles.AsNoTracking().AsQueryable();

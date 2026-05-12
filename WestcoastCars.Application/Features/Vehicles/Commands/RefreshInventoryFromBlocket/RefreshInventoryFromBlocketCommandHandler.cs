@@ -78,14 +78,45 @@ public class RefreshInventoryFromBlocketCommandHandler : IRequestHandler<Refresh
             currentPage++;
         }
 
-        var importedVehicles = await BuildVehicleEntitiesAsync(preparedVehicles);
-        var existingVehicles = (await _unitOfWork.VehicleRepository.GetAllImportedFromBlocketAsync()).ToList();
+        var existingByExternalId = (await _unitOfWork.VehicleRepository.GetAllImportedFromBlocketAsync())
+            .Where(v => !string.IsNullOrWhiteSpace(v.ExternalListingId))
+            .ToDictionary(v => v.ExternalListingId!, StringComparer.OrdinalIgnoreCase);
 
-        _unitOfWork.VehicleRepository.RemoveRange(existingVehicles);
+        var newVehicles = new List<BlocketVehicleImportData>();
+        var updatedCount = 0;
 
-        if (importedVehicles.Count > 0)
+        foreach (var prepared in preparedVehicles)
         {
-            await _unitOfWork.VehicleRepository.AddRangeAsync(importedVehicles);
+            if (existingByExternalId.TryGetValue(prepared.ExternalListingId!, out var existing))
+            {
+                existing.Price = prepared.Price;
+                existing.Mileage = prepared.Mileage;
+                existing.ImportedAt = prepared.ImportedAt;
+                _unitOfWork.VehicleRepository.Update(existing);
+                updatedCount++;
+            }
+            else
+            {
+                newVehicles.Add(prepared);
+            }
+        }
+
+        var addedVehicles = await BuildVehicleEntitiesAsync(newVehicles);
+        if (addedVehicles.Count > 0)
+        {
+            await _unitOfWork.VehicleRepository.AddRangeAsync(addedVehicles);
+        }
+
+        var removedAtUtc = DateTime.UtcNow;
+        var flaggedCount = 0;
+        foreach (var (extId, vehicle) in existingByExternalId)
+        {
+            if (!seenExternalListingIds.Contains(extId))
+            {
+                vehicle.MarkAsSourceRemoved(removedAtUtc);
+                _unitOfWork.VehicleRepository.Update(vehicle);
+                flaggedCount++;
+            }
         }
 
         await _unitOfWork.CompleteAsync();
@@ -97,8 +128,9 @@ public class RefreshInventoryFromBlocketCommandHandler : IRequestHandler<Refresh
             PagesFetched = pagesFetched,
             TotalFetched = totalFetched,
             TotalPrepared = preparedVehicles.Count,
-            TotalImported = importedVehicles.Count,
-            TotalReplaced = existingVehicles.Count,
+            TotalAdded = addedVehicles.Count,
+            TotalUpdated = updatedCount,
+            TotalFlagged = flaggedCount,
             TotalSkipped = totalSkipped,
             Vehicles = preparedVehicles
         };

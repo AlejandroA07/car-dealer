@@ -187,6 +187,8 @@ partial class WestcoastCarsContextModelSnapshot : ModelSnapshot
             b.Property<DateTime?>("PublishedAt").HasColumnType("timestamp with time zone");
             b.Property<string>("RegistrationNumber").IsRequired().HasColumnType("citext");
             b.Property<string>("Source").HasMaxLength(50).HasColumnType("character varying(50)");
+            b.Property<DateTime?>("SourceRemovedAt").HasColumnType("timestamp with time zone");
+            b.Property<string>("SourceStatus").IsRequired().HasMaxLength(50).HasDefaultValue("Active").HasColumnType("character varying(50)");
             b.Property<string>("SourceUrl").HasMaxLength(500).HasColumnType("character varying(500)");
             b.Property<int>("TransmissionTypeId").HasColumnType("integer");
             b.Property<DateTime>("UpdatedAt").HasDefaultValueSql("NOW()").HasColumnType("timestamp with time zone");
@@ -199,6 +201,7 @@ partial class WestcoastCarsContextModelSnapshot : ModelSnapshot
             b.HasIndex("Model").HasDatabaseName("IX_Vehicles_Model").HasMethod("GIN").HasOperators("gin_trgm_ops");
             b.HasIndex("RegistrationNumber").IsUnique().HasDatabaseName("IX_Vehicles_RegistrationNumber");
             b.HasIndex("Source");
+            b.HasIndex("SourceStatus").HasDatabaseName("IX_Vehicles_SourceStatus");
             b.HasIndex("TransmissionTypeId");
             b.ToTable("Vehicles");
         });
