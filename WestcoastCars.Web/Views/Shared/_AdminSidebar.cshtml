@@ -22,6 +22,10 @@
             <i class="fa-solid fa-chart-line"></i>
             <span>Översikt</span>
         </a>
+        <a asp-action="Lager" asp-controller="Vehicles" class='@IsActive("Vehicles", "Lager")'>
+            <i class="fa-solid fa-car-side"></i>
+            <span>Lager</span>
+        </a>
         <a asp-action="HanteraDatabas" asp-controller="Vehicles" class='@IsActive("Vehicles", "HanteraDatabas")'>
             <i class="fa-solid fa-database"></i>
             <span>Hantera Databas</span>

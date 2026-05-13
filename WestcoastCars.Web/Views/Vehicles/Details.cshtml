@@ -106,9 +106,12 @@
             <aside class="details-side-stack">
                 <section class="details-location-card" aria-labelledby="details-location-title">
                     <h2 id="details-location-title">Plats</h2>
-                    <div class="details-map-preview" aria-hidden="true">
-                        <i class="fa-solid fa-location-dot"></i>
-                    </div>
+                    <a href="https://maps.google.com/maps?q=@Uri.EscapeDataString(cityText)"
+                       target="_blank" rel="noopener noreferrer" class="details-map-preview-link" aria-label="Öppna @cityText i Google Maps">
+                        <div class="details-map-preview" aria-hidden="true">
+                            <i class="fa-solid fa-location-dot"></i>
+                        </div>
+                    </a>
                     <strong>Westcoast Cars</strong>
                     <p>@cityText</p>
                     <div class="details-open-row">

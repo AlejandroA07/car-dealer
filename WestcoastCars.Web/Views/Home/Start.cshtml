@@ -60,24 +60,30 @@
     </div>
 </section>
 
-<section id="plats" class="location-section site-container">
-    <div class="location-map" aria-label="Karta till Westcoast Cars">
-        <div class="map-grid" aria-hidden="true"></div>
-        <div class="map-pin">
-            <i class="fa-solid fa-location-dot"></i>
-            <span>Westcoast Cars</span>
+<section id="kontakt" class="location-section site-container">
+    <a href="https://www.google.com/maps/place/Annebergsgatan+25,+214+66+Malm%C3%B6"
+       target="_blank" rel="noopener noreferrer" class="location-map-link" aria-label="Öppna Annebergsgatan 25 i Google Maps">
+        <div class="location-map">
+            <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
         </div>
-    </div>
+    </a>
 
     <div class="location-copy">
-        <span class="eyebrow">Plats</span>
-        <h2>Besök vår bilhall på västkusten.</h2>
+        <span class="eyebrow">Kontakt</span>
+        <h2>Besök vår bilhall eller hör av dig direkt.</h2>
         <p>
             Kom förbi för att se aktuella bilar, prata med oss om nästa steg eller boka en personlig genomgång.
         </p>
-        <div class="location-actions">
-            <a href="#kontakt" class="btn btn-primary">Kontakta oss</a>
-            <a asp-action="Index" asp-controller="Service" class="btn btn-secondary">Boka service</a>
+        <p class="location-contact-label">eller kontakta oss på</p>
+        <div class="location-contact-links">
+            <a href="mailto:västkusten.bilar@gmail.com" class="location-contact-item">
+                <i class="fa-regular fa-envelope"></i>
+                västkusten.bilar@gmail.com
+            </a>
+            <a href="tel:+46720392470" class="location-contact-item">
+                <i class="fa-solid fa-phone"></i>
+                +46 720 392 470
+            </a>
         </div>
     </div>
 </section>

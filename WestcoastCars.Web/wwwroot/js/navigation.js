@@ -17,6 +17,7 @@ $(document).ready(function () {
 
     $('#menuBtn').on('click', openSidebar);
     $('#closeBtn, #sidebarOverlay').on('click', closeSidebar);
+    $('#sidebar a').on('click', closeSidebar);
 
     $(document).on('keyup', function (event) {
         if (event.key === 'Escape') {

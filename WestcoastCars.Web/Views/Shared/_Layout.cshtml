@@ -37,7 +37,7 @@
 
     @if (!hideChrome)
     {
-        <footer id="kontakt" class="site-footer">
+        <footer class="site-footer">
             <div class="site-container site-footer-content">
                 <div class="site-footer-brand">
                     <p class="site-footer-title">Westcoast Cars</p>
@@ -47,7 +47,7 @@
                 <div class="site-footer-group">
                     <h2>Snabblänkar</h2>
                     <a asp-action="Index" asp-controller="Home" asp-fragment="kontakt">Kontakt</a>
-                    <a asp-action="Index" asp-controller="Home" asp-fragment="plats">Plats</a>
+                    <a asp-route="VehicleCatalog">Katalog</a>
                 </div>
 
                 <div class="site-footer-group">
@@ -82,26 +82,26 @@
                 <li><a asp-route="VehicleCatalog"><i class="fa-solid fa-car"></i> Katalog</a></li>
                 <li><a asp-action="Index" asp-controller="Service"><i class="fa-solid fa-wrench"></i> Service</a></li>
                 <li><a asp-action="Index" asp-controller="Home" asp-fragment="kontakt"><i class="fa-solid fa-envelope"></i> Kontakt</a></li>
-                <li><a asp-action="Index" asp-controller="Home" asp-fragment="plats"><i class="fa-solid fa-location-dot"></i> Plats</a></li>
+                @if (User.IsInRole("Admin") || User.IsInRole("Salesperson"))
+                {
+                    <li><a asp-action="Index" asp-controller="Admin"><i class="fa-solid fa-chart-line"></i> Översikt</a></li>
+                }
+            </ul>
+
+            <div class="sidebar-auth">
                 @if (User.Identity?.IsAuthenticated != true)
                 {
-                    <li><a asp-action="Login" asp-controller="Auth"><i class="fa-solid fa-right-to-bracket"></i> Logga in</a></li>
+                    <a asp-action="Login" asp-controller="Auth"><i class="fa-solid fa-right-to-bracket"></i> Logga in</a>
                 }
                 else
                 {
-                    @if (User.IsInRole("Admin") || User.IsInRole("Salesperson"))
-                    {
-                        <li><a asp-action="Index" asp-controller="Admin"><i class="fa-solid fa-chart-line"></i> Översikt</a></li>
-                    }
-                    <li>
-                        <form asp-controller="Auth" asp-action="Logout" method="post" style="margin: 0;">
-                            <button type="submit" class="sidebar-logout-btn">
-                                <i class="fa-solid fa-right-from-bracket"></i> Logga ut
-                            </button>
-                        </form>
-                    </li>
+                    <form asp-controller="Auth" asp-action="Logout" method="post" style="margin: 0;">
+                        <button type="submit" class="sidebar-logout-btn">
+                            <i class="fa-solid fa-right-from-bracket"></i> Logga ut
+                        </button>
+                    </form>
                 }
-            </ul>
+            </div>
         </aside>
     }
 
