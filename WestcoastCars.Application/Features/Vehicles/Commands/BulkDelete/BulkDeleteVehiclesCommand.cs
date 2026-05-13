@@ -4,6 +4,7 @@ namespace WestcoastCars.Application.Features.Vehicles.Commands.BulkDelete;
 
 public class BulkDeleteVehiclesCommand : IRequest<BulkDeleteVehiclesResult>
 {
+    public string? Make { get; set; }
     public string? Model { get; set; }
     public bool? IsSold { get; set; }
     public int? MinMileage { get; set; }

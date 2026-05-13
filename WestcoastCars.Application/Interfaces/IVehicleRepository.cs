@@ -15,6 +15,6 @@ public interface IVehicleRepository : IRepository<Vehicle>
     Task<IEnumerable<VehicleStatsByModelDto>> GetStatsByModelAsync();
     Task<IEnumerable<VehicleStatsByMileageDto>> GetStatsByMileageAsync();
     Task<VehicleStatsSummaryDto> GetStatsSummaryAsync();
-    Task<IReadOnlyList<Vehicle>> GetForBulkDeleteAsync(string? model, bool? isSold, int? minMileage, int? maxMileage);
+    Task<IReadOnlyList<Vehicle>> GetForBulkDeleteAsync(string? make, string? model, bool? isSold, int? minMileage, int? maxMileage);
     Task<IReadOnlyList<Vehicle>> GetAllForDeleteAsync();
 }

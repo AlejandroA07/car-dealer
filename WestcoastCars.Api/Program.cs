@@ -208,12 +208,6 @@ using (var scope = app.Services.CreateScope())
             await context.Database.EnsureCreatedAsync();
         }
 
-        var seedPresence = await SeedData.GetSeedPresenceAsync(context);
-        await SeedData.LoadManufacturerData(context, seedPresence.HasManufacturers);
-        await SeedData.LoadFuelTypeData(context, seedPresence.HasFuelTypes);
-        await SeedData.LoadTransmissionsData(context, seedPresence.HasTransmissionTypes);
-        await SeedData.LoadVehicleData(context, seedPresence.HasVehicles);
-
         var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
         var adminOptions = builder.Configuration.GetSection(AdminOptions.SectionName).Get<AdminOptions>();

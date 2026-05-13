@@ -36,7 +36,8 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
 
     public async Task<PagedResult<Vehicle>> GetAllPagedAsync(PagedQueryDto pagination)
     {
-        var query = _context.Vehicles.AsNoTracking().AsQueryable();
+        var query = _context.Vehicles.AsNoTracking()
+            .Where(v => v.SourceStatus != "SourceRemoved");
         return await ToPagedResultAsync(query, pagination.Page, pagination.PageSize);
     }
 
@@ -44,7 +45,7 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
     {
         var query = _context.Vehicles
             .AsNoTracking()
-            .Where(v => !v.IsSold);
+            .Where(v => !v.IsSold && v.SourceStatus != "SourceRemoved");
 
         return await ToPagedResultAsync(query, pagination.Page, pagination.PageSize);
     }
@@ -65,7 +66,9 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
 
     public async Task<PagedResult<Vehicle>> SearchAsync(VehicleSearchDto search)
     {
-        var query = _context.Vehicles.AsNoTracking().AsQueryable();
+        var query = _context.Vehicles.AsNoTracking()
+            .Where(v => v.SourceStatus != "SourceRemoved")
+            .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(search.Make))
         {
@@ -97,6 +100,16 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
             query = query.Where(v => v.Price <= search.MaxPrice.Value);
         }
 
+        if (search.MinMileage.HasValue)
+        {
+            query = query.Where(v => v.Mileage >= search.MinMileage.Value);
+        }
+
+        if (search.MaxMileage.HasValue)
+        {
+            query = query.Where(v => v.Mileage < search.MaxMileage.Value);
+        }
+
         if (search.IsSold.HasValue)
         {
             query = query.Where(v => v.IsSold == search.IsSold.Value);
@@ -117,13 +130,14 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
     public async Task<IEnumerable<VehicleStatsByModelDto>> GetStatsByModelAsync()
     {
         var rows = await _context.Vehicles
-            .Where(v => v.RegistrationNumber != null)
-            .GroupBy(v => new { ManufacturerName = v.Manufacturer.Name, v.Model })
-            .Select(g => new { FullName = g.Key.ManufacturerName + " " + g.Key.Model, Count = g.Count() })
+            .Where(v => v.RegistrationNumber != null && v.SourceStatus != "SourceRemoved")
+            .Join(_context.Manufacturers, v => v.ManufacturerId, m => m.Id, (v, m) => m.Name)
+            .GroupBy(name => name)
+            .Select(g => new { Name = g.Key, Count = g.Count() })
             .OrderByDescending(x => x.Count)
             .ToListAsync();
 
-        return rows.Select(x => new VehicleStatsByModelDto(x.FullName, x.Count));
+        return rows.Select(x => new VehicleStatsByModelDto(x.Name, x.Count));
     }
 
     public async Task<IEnumerable<VehicleStatsByMileageDto>> GetStatsByMileageAsync()
@@ -131,7 +145,7 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
         var result = new List<VehicleStatsByMileageDto>();
         foreach (var (label, min, max) in MileageBands)
         {
-            var query = _context.Vehicles.Where(v => v.RegistrationNumber != null && v.Mileage >= min);
+            var query = _context.Vehicles.Where(v => v.RegistrationNumber != null && v.SourceStatus != "SourceRemoved" && v.Mileage >= min);
             if (max.HasValue) query = query.Where(v => v.Mileage < max.Value);
             var count = await query.CountAsync();
             result.Add(new VehicleStatsByMileageDto(label, min, max, count));
@@ -142,15 +156,16 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
     public async Task<VehicleStatsSummaryDto> GetStatsSummaryAsync()
     {
         var baseQuery = _context.Vehicles.Where(v => v.RegistrationNumber != null);
-        var total = await baseQuery.CountAsync();
-        var totalSold = await baseQuery.CountAsync(v => v.IsSold);
+        var totalSold = await baseQuery.CountAsync(v => v.IsSold && v.SourceStatus != "SourceRemoved");
+        var totalUnsold = await baseQuery.CountAsync(v => !v.IsSold && v.SourceStatus != "SourceRemoved");
         var totalSourceRemoved = await baseQuery.CountAsync(v => v.SourceStatus == "SourceRemoved");
-        return new VehicleStatsSummaryDto(total, totalSold, total - totalSold, totalSourceRemoved);
+        return new VehicleStatsSummaryDto(totalSold + totalUnsold, totalSold, totalUnsold, totalSourceRemoved);
     }
 
-    public async Task<IReadOnlyList<Vehicle>> GetForBulkDeleteAsync(string? model, bool? isSold, int? minMileage, int? maxMileage)
+    public async Task<IReadOnlyList<Vehicle>> GetForBulkDeleteAsync(string? make, string? model, bool? isSold, int? minMileage, int? maxMileage)
     {
         var query = _context.Vehicles.Where(v => v.RegistrationNumber != null).AsQueryable();
+        if (make is not null) query = query.Where(v => v.Manufacturer.Name == make);
         if (model is not null) query = query.Where(v => v.Model == model);
         if (isSold.HasValue) query = query.Where(v => v.IsSold == isSold.Value);
         if (minMileage.HasValue) query = query.Where(v => v.Mileage >= minMileage.Value);

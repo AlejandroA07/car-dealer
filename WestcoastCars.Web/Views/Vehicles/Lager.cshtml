@@ -16,7 +16,19 @@
                     <span class="vehicle-editor-kicker">Lagerhantering</span>
                     <h1>Lager</h1>
                 </div>
-                <span class="results-pill">@Model.TotalVehicles bilar</span>
+                <div class="catalog-header-actions">
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <form asp-action="SeedVehicles" asp-controller="Vehicles" method="post" style="display:contents">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-secondary btn-sm">
+                                <i class="fa-solid fa-database"></i> Seeda bilar
+                            </button>
+                        </form>
+                    }
+                    <a asp-action="Lager" asp-controller="Vehicles" asp-route-IsSold="true" class="btn btn-secondary btn-sm">Sålda bilar</a>
+                    <span class="results-pill">@Model.TotalVehicles bilar</span>
+                </div>
             </header>
 
             @await Html.PartialAsync("_SearchForm", Model)

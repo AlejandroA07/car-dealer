@@ -13,7 +13,22 @@
                     Utforska aktuella bilar med tydliga filter, lugna kort och snabb väg till detaljerna.
                 </p>
             </div>
-            <div class="results-pill">@Model.TotalVehicles bilar</div>
+            <div class="catalog-header-actions">
+                @if (User.IsInRole("Admin"))
+                {
+                    <form asp-action="SeedVehicles" asp-controller="Vehicles" method="post" style="display:contents">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-secondary btn-sm">
+                            <i class="fa-solid fa-database"></i> Seeda bilar
+                        </button>
+                    </form>
+                }
+                @if (User.IsInRole("Admin") || User.IsInRole("Salesperson"))
+                {
+                    <a asp-action="Index" asp-controller="Vehicles" asp-route-IsSold="true" class="btn btn-secondary btn-sm">Sålda bilar</a>
+                }
+                <div class="results-pill">@Model.TotalVehicles bilar</div>
+            </div>
         </header>
 
         @await Html.PartialAsync("_SearchForm", Model)

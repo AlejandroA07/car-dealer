@@ -26,7 +26,7 @@ public class BlocketSyncE2ETests : IntegrationTestBase
         var response = await client.PostAsJsonAsync("/api/v1/vehicles/import/blocket", new RefreshInventoryFromBlocketCommand
         {
             Limit = 50,
-            Models = "VOLVO",
+            Manufacturers = "VOLVO",
             Locations = "STOCKHOLM"
         });
 
@@ -49,7 +49,7 @@ public class BlocketSyncE2ETests : IntegrationTestBase
         var secondResponse = await client.PostAsJsonAsync("/api/v1/vehicles/import/blocket", new RefreshInventoryFromBlocketCommand
         {
             Limit = 50,
-            Models = "VOLVO",
+            Manufacturers = "VOLVO",
             Locations = "STOCKHOLM"
         });
 

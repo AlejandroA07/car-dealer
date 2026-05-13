@@ -689,6 +689,13 @@ p { color: var(--wc-text-muted); line-height: 1.7; }
   font-size: 1.04rem;
 }
 
+.catalog-header-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
 .catalog-page .filter-section {
   max-width: none;
   margin: 0 0 4.25rem;
@@ -1663,6 +1670,25 @@ textarea:focus,
 .vehicle-editor-error:empty,
 .vehicle-editor-validation:empty {
   display: none;
+}
+
+.vehicle-editor-range {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.vehicle-editor-range input {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+}
+
+.vehicle-editor-range-sep {
+  color: var(--wc-text-muted);
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  user-select: none;
 }
 
 .vehicle-editor-toggle {
@@ -3509,4 +3535,98 @@ textarea:focus,
     flex-direction: column;
     align-items: center;
   }
+}
+
+/* Admin data table */
+.admin-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.admin-data-table th,
+.admin-data-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.admin-data-table th {
+  font-weight: 600;
+  color: #374151;
+  white-space: nowrap;
+}
+
+.admin-data-table td:first-child {
+  min-width: 180px;
+}
+
+.admin-data-table td:nth-child(2) {
+  min-width: 100px;
+}
+
+/* Sync form 3-column grid */
+.sync-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem 1.5rem;
+  align-items: start;
+}
+
+.sync-submit-cell {
+  display: flex;
+  align-items: flex-end;
+  padding-top: 0.25rem;
+}
+
+@media (max-width: 900px) {
+  .sync-form-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .sync-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Custom confirm dialog */
+.admin-confirm-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  border: none;
+  border-radius: var(--wc-radius);
+  padding: 1.75rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  max-width: 420px;
+  width: 90%;
+  background: var(--wc-surface-container);
+  color: var(--wc-on-surface);
+}
+
+.admin-confirm-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.admin-confirm-dialog-title {
+  font-size: 1rem;
+  font-weight: 650;
+  margin: 0 0 0.6rem;
+}
+
+.admin-confirm-dialog-message {
+  font-size: 0.9rem;
+  color: var(--wc-text-muted);
+  margin: 0 0 1.5rem;
+  line-height: 1.6;
+}
+
+.admin-confirm-dialog-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
 }

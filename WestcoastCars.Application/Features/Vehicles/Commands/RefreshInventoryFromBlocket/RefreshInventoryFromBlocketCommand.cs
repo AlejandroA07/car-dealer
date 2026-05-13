@@ -7,9 +7,13 @@ public class RefreshInventoryFromBlocketCommand : IRequest<RefreshInventoryFromB
     public int Limit { get; set; } = 50;
     public string? OrgId { get; set; }
     public string? Locations { get; set; }
-    public string? Models { get; set; }
+    public string? Manufacturers { get; set; }
     public int? MinMileage { get; set; }
     public int? MaxMileage { get; set; }
     public string? TransmissionFilter { get; set; }
     public string? FuelTypeFilter { get; set; }
+    public int? YearFrom { get; set; }
+    public int? YearTo { get; set; }
+    public int? PriceFrom { get; set; }
+    public int? PriceTo { get; set; }
 }

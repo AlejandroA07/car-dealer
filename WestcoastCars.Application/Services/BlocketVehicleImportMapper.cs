@@ -9,6 +9,12 @@ public class BlocketVehicleImportMapper : IBlocketVehicleImportMapper
 {
     private const string DefaultImageUrl = "/images/no-car.png";
 
+    // Blocket uses these Swedish placeholders when data is missing — treat all as unknown
+    private static readonly HashSet<string> BlocketUnknownValues = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "okänd", "unknown", "ej angiven", "saknas", "övrigt"
+    };
+
     private static readonly Dictionary<string, string> FuelMappings = new(StringComparer.OrdinalIgnoreCase)
     {
         ["Bensin"] = "Petrol",
@@ -63,11 +69,13 @@ public class BlocketVehicleImportMapper : IBlocketVehicleImportMapper
 
     private static string NormalizeManufacturer(string? searchMake, BlocketCarAdDetails? adDetails)
     {
-        var manufacturer = NormalizeOptional(searchMake)
-            ?? GetSpecification(adDetails, "Märke")
-            ?? "Unknown";
+        var candidate = NormalizeOptional(searchMake);
+        if (candidate is null || BlocketUnknownValues.Contains(candidate))
+            candidate = GetSpecification(adDetails, "Märke");
+        if (candidate is null || BlocketUnknownValues.Contains(candidate))
+            return "Unknown";
 
-        return manufacturer.Trim();
+        return candidate.Trim();
     }
 
     private static string NormalizeModel(string? model, string? heading, BlocketCarAdDetails? adDetails)
@@ -141,7 +149,7 @@ public class BlocketVehicleImportMapper : IBlocketVehicleImportMapper
             ?? GetSpecification(adDetails, "Drivmedel")
             ?? NormalizeOptional(adDetails?.Fuel);
 
-        if (string.IsNullOrWhiteSpace(rawFuel))
+        if (string.IsNullOrWhiteSpace(rawFuel) || BlocketUnknownValues.Contains(rawFuel))
         {
             return "Unknown";
         }
@@ -157,7 +165,7 @@ public class BlocketVehicleImportMapper : IBlocketVehicleImportMapper
             ?? GetSpecification(adDetails, "Växellåda")
             ?? NormalizeOptional(adDetails?.Transmission);
 
-        if (string.IsNullOrWhiteSpace(rawTransmission))
+        if (string.IsNullOrWhiteSpace(rawTransmission) || BlocketUnknownValues.Contains(rawTransmission))
         {
             return "Unknown";
         }

@@ -38,13 +38,13 @@
                             <td>
                                 <div style="display: flex; gap: 0.5rem; align-items: center;">
                                     <form asp-action="BulkDelete" asp-controller="Vehicles" method="post" style="display: contents;"
-                                          onsubmit="return confirm('Är du säker på att du vill radera alla @Model.Summary.TotalSold sålda bilar?')">
+                                          data-confirm="Är du säker på att du vill radera alla @Model.Summary.TotalSold sålda bilar? Åtgärden kan inte ångras.">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="isSold" value="true" />
                                         <button type="submit" class="btn btn-sm btn-danger">Radera alla sålda</button>
                                     </form>
-                                    <a asp-action="Index" asp-controller="Vehicles" asp-route-IsSold="true"
-                                       class="btn btn-sm btn-secondary">Visa katalog</a>
+                                    <a asp-action="Lager" asp-controller="Vehicles" asp-route-IsSold="true"
+                                       class="btn btn-sm btn-secondary">Visa i katalog</a>
                                 </div>
                             </td>
                         </tr>
@@ -79,9 +79,9 @@
                                     <td>@band.Label</td>
                                     <td>@band.Count</td>
                                     <td>
-                                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
                                             <form asp-action="BulkDelete" asp-controller="Vehicles" method="post" style="display: contents;"
-                                                  onsubmit="return confirm('Är du säker på att du vill radera alla @band.Count bilar med miltal @band.Label?')">
+                                                  data-confirm="Är du säker på att du vill radera alla @band.Count bilar med miltal @band.Label? Åtgärden kan inte ångras.">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="minMileage" value="@band.Min" />
                                                 @if (band.Max.HasValue)
@@ -90,8 +90,10 @@
                                                 }
                                                 <button type="submit" class="btn btn-sm btn-danger">Radera</button>
                                             </form>
-                                            <a href="@Url.Action("Index", "Vehicles", new { MinMileage = band.Min, MaxMileage = band.Max })"
-                                               class="btn btn-sm btn-secondary">Visa katalog</a>
+                                            <a asp-action="Lager" asp-controller="Vehicles"
+                                               asp-route-MinMileage="@band.Min"
+                                               asp-route-MaxMileage="@band.Max"
+                                               class="btn btn-sm btn-secondary">Visa i katalog</a>
                                         </div>
                                     </td>
                                 </tr>
@@ -101,11 +103,11 @@
                 }
             </section>
 
-            @* Section 3: By Model *@
+            @* Section 3: By Manufacturer *@
             <section class="vehicle-editor-card" style="margin-bottom: 1.5rem;">
                 <div class="vehicle-editor-section-title">
                     <i class="fa-solid fa-layer-group"></i>
-                    <h2>Modell</h2>
+                    <h2>Tillverkare</h2>
                 </div>
                 @if (!Model.ByModel.Any())
                 {
@@ -121,13 +123,13 @@
                                 <p style="color: #6b7280; font-size: 0.875rem; margin: 0 0 0.75rem;">@row.Count bilar</p>
                                 <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
                                     <form asp-action="BulkDelete" asp-controller="Vehicles" method="post" style="display: contents;"
-                                          onsubmit="return confirm('Är du säker på att du vill radera alla @row.Count bilar med modell @row.Model?')">
+                                          data-confirm="Är du säker på att du vill radera alla @row.Count bilar från @row.Model? Åtgärden kan inte ångras.">
                                         @Html.AntiForgeryToken()
-                                        <input type="hidden" name="model" value="@row.Model" />
+                                        <input type="hidden" name="make" value="@row.Model" />
                                         <button type="submit" class="btn btn-sm btn-danger">Radera</button>
                                     </form>
-                                    <a asp-action="Index" asp-controller="Vehicles" asp-route-Model="@row.Model"
-                                       class="btn btn-sm btn-secondary">Visa katalog</a>
+                                    <a asp-action="Lager" asp-controller="Vehicles" asp-route-Make="@row.Model"
+                                       class="btn btn-sm btn-secondary">Visa i katalog</a>
                                 </div>
                             </div>
                         }
@@ -145,7 +147,7 @@
                     Detta raderar <strong>alla @Model.Summary.Total bilar</strong> i databasen permanent. Åtgärden kan inte ångras.
                 </p>
                 <form asp-action="DeleteAll" asp-controller="Vehicles" method="post"
-                      onsubmit="return confirm('Är du säker? Detta raderar ALLA @Model.Summary.Total bilar i databasen permanent och kan inte ångras.')">
+                      data-confirm="Är du säker? Detta raderar ALLA @Model.Summary.Total bilar i databasen permanent och kan inte ångras.">
                     @Html.AntiForgeryToken()
                     <button type="submit" class="btn btn-danger">
                         <i class="fa-solid fa-trash"></i>
@@ -156,3 +158,49 @@
         </main>
     </div>
 </section>
+
+<dialog id="confirm-dialog" class="admin-confirm-dialog">
+    <p class="admin-confirm-dialog-title">Bekräfta åtgärd</p>
+    <p id="confirm-dialog-message" class="admin-confirm-dialog-message"></p>
+    <div class="admin-confirm-dialog-actions">
+        <button type="button" id="confirm-dialog-cancel" class="btn btn-secondary">Avbryt</button>
+        <button type="button" id="confirm-dialog-ok" class="btn btn-danger">Radera</button>
+    </div>
+</dialog>
+
+@section Scripts {
+    <script>
+        (function () {
+            var dialog = document.getElementById('confirm-dialog');
+            var msgEl = document.getElementById('confirm-dialog-message');
+            var pendingForm = null;
+
+            document.querySelectorAll('form[data-confirm]').forEach(function (form) {
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    msgEl.textContent = form.dataset.confirm;
+                    pendingForm = form;
+                    dialog.showModal();
+                });
+            });
+
+            document.getElementById('confirm-dialog-cancel').addEventListener('click', function () {
+                pendingForm = null;
+                dialog.close();
+            });
+
+            document.getElementById('confirm-dialog-ok').addEventListener('click', function () {
+                dialog.close();
+                if (pendingForm) {
+                    var f = pendingForm;
+                    pendingForm = null;
+                    f.submit();
+                }
+            });
+
+            dialog.addEventListener('cancel', function () {
+                pendingForm = null;
+            });
+        }());
+    </script>
+}

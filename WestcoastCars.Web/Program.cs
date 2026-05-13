@@ -4,6 +4,7 @@ using WestcoastCars.Web.Handlers;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using WestcoastCars.Web.Configurations;
+using System.IdentityModel.Tokens.Jwt;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,6 +60,24 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         options.Cookie.SameSite = SameSiteMode.Strict;
         options.Cookie.HttpOnly = true;
+        options.Events = new CookieAuthenticationEvents
+        {
+            OnValidatePrincipal = async context =>
+            {
+                var token = context.Properties.GetTokenValue("access_token");
+                if (string.IsNullOrEmpty(token)) return;
+
+                var handler = new JwtSecurityTokenHandler();
+                if (!handler.CanReadToken(token)) return;
+
+                var jwt = handler.ReadJwtToken(token);
+                if (jwt.ValidTo < DateTime.UtcNow)
+                {
+                    context.RejectPrincipal();
+                    await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                }
+            }
+        };
     });
 
 // Configure data protection to persist keys from configuration.

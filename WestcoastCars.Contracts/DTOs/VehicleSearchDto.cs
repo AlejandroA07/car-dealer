@@ -8,5 +8,7 @@ public class VehicleSearchDto : PagedQueryDto
     public int? MaxYear { get; set; }
     public int? MinPrice { get; set; }
     public int? MaxPrice { get; set; }
+    public int? MinMileage { get; set; }
+    public int? MaxMileage { get; set; }
     public bool? IsSold { get; set; }
 }

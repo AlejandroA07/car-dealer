@@ -22,25 +22,18 @@
             <i class="fa-solid fa-chart-line"></i>
             <span>Översikt</span>
         </a>
-        <a asp-action="Lager" asp-controller="Vehicles" class='@IsActive("Vehicles", "Lager")'>
-            <i class="fa-solid fa-car-side"></i>
-            <span>Lager</span>
-        </a>
-        <a asp-action="Create" asp-controller="Vehicles" class='@IsActive("Vehicles", "Create")'>
-            <i class="fa-solid fa-plus"></i>
-            <span>Lägg till bil</span>
+        <a asp-action="HanteraDatabas" asp-controller="Vehicles" class='@IsActive("Vehicles", "HanteraDatabas")'>
+            <i class="fa-solid fa-database"></i>
+            <span>Hantera Databas</span>
         </a>
         <a asp-action="SyncBlocket" asp-controller="Vehicles" class='@IsActive("Vehicles", "SyncBlocket")'>
             <i class="fa-solid fa-rotate"></i>
             <span>Hämta Bilar</span>
         </a>
-        <a asp-action="HanteraDatabas" asp-controller="Vehicles" class='@IsActive("Vehicles", "HanteraDatabas")'>
-            <i class="fa-solid fa-database"></i>
-            <span>Hantera Databas</span>
+        <a asp-action="Create" asp-controller="Vehicles" class='@IsActive("Vehicles", "Create")'>
+            <i class="fa-solid fa-plus"></i>
+            <span>Lägg till bil</span>
         </a>
-    </nav>
-
-    <div class="admin-sidebar-group">
         <a asp-action="Create" asp-controller="Manufacturer" class='@IsActive("Manufacturer", "Create")'>
             <i class="fa-solid fa-building"></i>
             <span>Tillverkare</span>
@@ -53,7 +46,7 @@
             <i class="fa-solid fa-gears"></i>
             <span>Växellådor</span>
         </a>
-    </div>
+    </nav>
 
     <div class="admin-sidebar-footer">
         <a asp-action="Index" asp-controller="Home" asp-fragment="kontakt">

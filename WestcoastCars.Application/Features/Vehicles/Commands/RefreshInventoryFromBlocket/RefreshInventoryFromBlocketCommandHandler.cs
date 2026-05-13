@@ -39,7 +39,11 @@ public class RefreshInventoryFromBlocketCommandHandler : IRequestHandler<Refresh
                 SortOrder = "PUBLISHED_DESC",
                 OrgId = request.OrgId,
                 Locations = request.Locations,
-                Models = request.Models
+                Models = request.Manufacturers,
+                YearFrom = request.YearFrom,
+                YearTo = request.YearTo,
+                PriceFrom = request.PriceFrom,
+                PriceTo = request.PriceTo
             }, cancellationToken);
 
             pagesFetched++;

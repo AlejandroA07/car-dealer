@@ -128,6 +128,36 @@ public class VehicleService : IVehicleService
         }, null, $"getting vehicle {id}");
     }
 
+    public async Task<(bool Seeded, string Message)> SeedVehiclesAsync()
+    {
+        return await ExecuteWithApiFallback(async () =>
+        {
+            var response = await _httpClient.PostAsync($"{_baseUrl}/api/v1/seed/vehicles", null);
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError("Seed vehicles failed: {StatusCode}", response.StatusCode);
+                return (false, "Inläsning av fordonsdata misslyckades.");
+            }
+            var result = await response.Content.ReadFromJsonAsync<SeedVehiclesResponse>(JsonOptions);
+            return (result?.Seeded ?? false, result?.Message ?? string.Empty);
+        }, (false, "API:t kunde inte nås."), "seeding vehicles");
+    }
+
+    public async Task<bool> MarkAsSoldAsync(int id)
+    {
+        return await ExecuteWithApiFallback(async () =>
+        {
+            var response = await _httpClient.PatchAsync($"{_baseUrl}/api/v1/vehicles/{id}", null);
+            if (response.IsSuccessStatusCode)
+            {
+                _logger.LogInformation("Vehicle {VehicleId} marked as sold successfully", id);
+                return true;
+            }
+            _logger.LogError("Error marking vehicle {VehicleId} as sold: {StatusCode}", id, response.StatusCode);
+            return false;
+        }, false, $"marking vehicle {id} as sold");
+    }
+
     public async Task<bool> DeleteVehicleAsync(int id)
     {
         return await ExecuteWithApiFallback(async () =>
@@ -259,6 +289,8 @@ public class VehicleService : IVehicleService
         if (search.MaxYear.HasValue) queryParams["MaxYear"] = search.MaxYear.Value.ToString();
         if (search.MinPrice.HasValue) queryParams["MinPrice"] = search.MinPrice.Value.ToString();
         if (search.MaxPrice.HasValue) queryParams["MaxPrice"] = search.MaxPrice.Value.ToString();
+        if (search.MinMileage.HasValue) queryParams["MinMileage"] = search.MinMileage.Value.ToString();
+        if (search.MaxMileage.HasValue) queryParams["MaxMileage"] = search.MaxMileage.Value.ToString();
         if (search.IsSold.HasValue) queryParams["IsSold"] = search.IsSold.Value.ToString();
         queryParams["Page"] = search.Page.ToString();
         queryParams["PageSize"] = search.PageSize.ToString();
@@ -299,11 +331,15 @@ public class VehicleService : IVehicleService
                 limit = model.Limit,
                 orgId = model.OrgId,
                 locations = model.Locations,
-                models = model.Models,
+                models = model.Manufacturers,
                 minMileage,
                 maxMileage,
                 transmissionFilter = string.IsNullOrWhiteSpace(model.TransmissionFilter) ? null : model.TransmissionFilter,
-                fuelTypeFilter = string.IsNullOrWhiteSpace(model.FuelTypeFilter) ? null : model.FuelTypeFilter
+                fuelTypeFilter = string.IsNullOrWhiteSpace(model.FuelTypeFilter) ? null : model.FuelTypeFilter,
+                yearFrom = model.YearFrom,
+                yearTo = model.YearTo,
+                priceFrom = model.PriceFrom,
+                priceTo = model.PriceTo
             });
 
             if (!response.IsSuccessStatusCode)
@@ -334,7 +370,7 @@ public class VehicleService : IVehicleService
                     Limit = model.Limit,
                     OrgId = model.OrgId,
                     Locations = model.Locations,
-                    Models = model.Models,
+                    Manufacturers = model.Manufacturers,
                     ErrorMessage = errorMessage
                 };
             }
@@ -347,7 +383,7 @@ public class VehicleService : IVehicleService
                     Limit = model.Limit,
                     OrgId = model.OrgId,
                     Locations = model.Locations,
-                    Models = model.Models,
+                    Manufacturers = model.Manufacturers,
                     ErrorMessage = "The sync completed but no summary was returned."
                 };
             }
@@ -355,7 +391,7 @@ public class VehicleService : IVehicleService
             result.Limit = model.Limit;
             result.OrgId = model.OrgId;
             result.Locations = model.Locations;
-            result.Models = model.Models;
+            result.Manufacturers = model.Manufacturers;
             result.HasResult = true;
             return result;
         }
@@ -367,8 +403,8 @@ public class VehicleService : IVehicleService
                 Limit = model.Limit,
                 OrgId = model.OrgId,
                 Locations = model.Locations,
-                Models = model.Models,
-                ErrorMessage = "API:t kunde inte nås för Blocket-synkningen."
+                Manufacturers = model.Manufacturers,
+                ErrorMessage = "API:t kunde inte nås. Upphämtningen från Blocket misslyckades."
             };
         }
         catch (TaskCanceledException ex)
@@ -379,8 +415,8 @@ public class VehicleService : IVehicleService
                 Limit = model.Limit,
                 OrgId = model.OrgId,
                 Locations = model.Locations,
-                Models = model.Models,
-                InfoMessage = "Synkningen tar längre tid än väntat men API:t kan fortfarande arbeta i bakgrunden. Vänta en stund och kontrollera fordonslistan igen."
+                Manufacturers = model.Manufacturers,
+                InfoMessage = "Upphämtningen tar längre tid än väntat men API:t kan fortfarande arbeta i bakgrunden. Vänta en stund och kontrollera fordonslistan igen."
             };
         }
     }
@@ -404,18 +440,19 @@ public class VehicleService : IVehicleService
         }, new HanteraDatabaseViewModel(), "loading database stats");
     }
 
-    public async Task<int> BulkDeleteAsync(string? model, bool? isSold, int? minMileage, int? maxMileage)
+    public async Task<int> BulkDeleteAsync(string? make, string? model, bool? isSold, int? minMileage, int? maxMileage)
     {
         return await ExecuteWithApiFallback(async () =>
         {
             var queryParams = new Dictionary<string, string?>();
+            if (make is not null) queryParams["make"] = make;
             if (model is not null) queryParams["model"] = model;
             if (isSold.HasValue) queryParams["isSold"] = isSold.Value.ToString();
             if (minMileage.HasValue) queryParams["minMileage"] = minMileage.Value.ToString();
             if (maxMileage.HasValue) queryParams["maxMileage"] = maxMileage.Value.ToString();
 
             var url = QueryHelpers.AddQueryString($"{_baseUrl}/api/v1/vehicles/bulk", queryParams);
-            var response = await _httpClient.DeleteAsync(url);
+            var response = await _longRunningHttpClient.DeleteAsync(url);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -432,7 +469,7 @@ public class VehicleService : IVehicleService
     {
         return await ExecuteWithApiFallback(async () =>
         {
-            var response = await _httpClient.DeleteAsync($"{_baseUrl}/api/v1/vehicles/bulk/all");
+            var response = await _longRunningHttpClient.DeleteAsync($"{_baseUrl}/api/v1/vehicles/bulk/all");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -513,6 +550,7 @@ public class VehicleService : IVehicleService
         GetCachedDropdownDataAsync(TransmissionsCacheKey, $"{_baseUrl}/api/v1/transmissions");
 
     private record BulkDeleteResponse(int TotalDeleted);
+    private record SeedVehiclesResponse(bool Seeded, string Message);
 
     private async Task<List<NamedObjectDto>> GetCachedDropdownDataAsync(string cacheKey, string requestUri)
     {

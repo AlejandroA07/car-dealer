@@ -38,6 +38,8 @@ public class VehiclesController : Controller
                               search.MaxYear.HasValue ||
                               search.MinPrice.HasValue ||
                               search.MaxPrice.HasValue ||
+                              search.MinMileage.HasValue ||
+                              search.MaxMileage.HasValue ||
                               search.IsSold.HasValue;
 
             if (isFiltered)
@@ -94,6 +96,8 @@ public class VehiclesController : Controller
                               search.MaxYear.HasValue ||
                               search.MinPrice.HasValue ||
                               search.MaxPrice.HasValue ||
+                              search.MinMileage.HasValue ||
+                              search.MaxMileage.HasValue ||
                               search.IsSold.HasValue;
 
             var result = isFiltered
@@ -151,11 +155,11 @@ public class VehiclesController : Controller
     [Authorize(Roles = "Admin")]
     [HttpPost("hantera-databas/bulk-delete")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> BulkDelete([FromForm] string? model, [FromForm] bool? isSold, [FromForm] int? minMileage, [FromForm] int? maxMileage)
+    public async Task<IActionResult> BulkDelete([FromForm] string? make, [FromForm] string? model, [FromForm] bool? isSold, [FromForm] int? minMileage, [FromForm] int? maxMileage)
     {
         try
         {
-            var count = await _vehicleService.BulkDeleteAsync(model, isSold, minMileage, maxMileage);
+            var count = await _vehicleService.BulkDeleteAsync(make, model, isSold, minMileage, maxMileage);
             TempData["success"] = $"{count} bilar raderades.";
         }
         catch (Exception ex)
@@ -222,6 +226,48 @@ public class VehiclesController : Controller
         catch (Exception ex)
         {
             _logger.LogError(ex, $"Error in Details for ID {id}");
+            return View("Errors");
+        }
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPost("seed-vehicles")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SeedVehicles()
+    {
+        try
+        {
+            var (seeded, message) = await _vehicleService.SeedVehiclesAsync();
+            TempData[seeded ? "success" : "info"] = message;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in SeedVehicles");
+            TempData["error"] = "Inläsningen misslyckades.";
+        }
+        return RedirectToAction(nameof(Index));
+    }
+
+    [Authorize(Roles = "Admin,Salesperson")]
+    [HttpPost("mark-as-sold/{id}")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MarkAsSold(int id)
+    {
+        try
+        {
+            var result = await _vehicleService.MarkAsSoldAsync(id);
+            if (result)
+            {
+                TempData["success"] = "Bilen markerades som såld.";
+                return RedirectToAction(nameof(Index));
+            }
+            TempData["error"] = "Kunde inte markera bilen som såld.";
+            return View("Errors");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error in MarkAsSold for ID {id}");
+            TempData["error"] = "An unexpected error occurred";
             return View("Errors");
         }
     }

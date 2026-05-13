@@ -17,20 +17,20 @@
                 </div>
             </header>
 
-            <div class="admin-utility-layout">
-                <section class="vehicle-editor-card">
-                    <div class="vehicle-editor-section-title">
-                        <i class="fa-solid fa-rotate"></i>
-                        <h2>Manuell upphämtning</h2>
-                    </div>
+            <section class="vehicle-editor-card" style="margin-bottom: 1.5rem;">
+                <div class="vehicle-editor-section-title">
+                    <i class="fa-solid fa-rotate"></i>
+                    <h2>Manuell upphämtning</h2>
+                </div>
 
-                    <p class="admin-utility-copy">
-                        Kör en ny import när lagret behöver uppdateras. Begränsningen skyddar sidan från att hämta för mycket data på en gång.
-                    </p>
+                <p class="admin-utility-copy">
+                    Kör en ny import när lagret behöver uppdateras. Begränsningen skyddar sidan från att hämta för mycket data på en gång.
+                </p>
 
-                    <form asp-action="SyncBlocket" asp-controller="Vehicles" method="post" class="vehicle-editor-form admin-sync-form">
-                        @Html.AntiForgeryToken()
+                <form asp-action="SyncBlocket" asp-controller="Vehicles" method="post" class="vehicle-editor-form admin-sync-form">
+                    @Html.AntiForgeryToken()
 
+                    <div class="sync-form-grid">
                         <label class="vehicle-editor-field">
                             <span>Max antal bilar</span>
                             <input asp-for="Limit" type="number" min="1" max="50" />
@@ -43,13 +43,8 @@
                         </label>
 
                         <label class="vehicle-editor-field">
-                            <span>Modeller</span>
-                            <input asp-for="Models" type="text" placeholder="t.ex. VOLVO" />
-                        </label>
-
-                        <label class="vehicle-editor-field">
-                            <span>Organisations-id</span>
-                            <input asp-for="OrgId" type="text" placeholder="Valfritt handlare-id" />
+                            <span>Tillverkare</span>
+                            <input asp-for="Manufacturers" type="text" placeholder="t.ex. VOLVO" />
                         </label>
 
                         <label class="vehicle-editor-field">
@@ -85,67 +80,89 @@
                             </select>
                         </label>
 
-                        <div class="vehicle-editor-actions">
+                        <div class="vehicle-editor-field">
+                            <span>Årsmodell</span>
+                            <div class="vehicle-editor-range">
+                                <input asp-for="YearFrom" type="number" min="1900" max="2100" placeholder="Från" />
+                                <span class="vehicle-editor-range-sep">–</span>
+                                <input asp-for="YearTo" type="number" min="1900" max="2100" placeholder="Till" />
+                            </div>
+                            <span class="vehicle-editor-error" asp-validation-for="YearFrom"></span>
+                            <span class="vehicle-editor-error" asp-validation-for="YearTo"></span>
+                        </div>
+
+                        <div class="vehicle-editor-field">
+                            <span>Pris (SEK)</span>
+                            <div class="vehicle-editor-range">
+                                <input asp-for="PriceFrom" type="number" min="0" placeholder="Från" />
+                                <span class="vehicle-editor-range-sep">–</span>
+                                <input asp-for="PriceTo" type="number" min="0" placeholder="Till" />
+                            </div>
+                            <span class="vehicle-editor-error" asp-validation-for="PriceFrom"></span>
+                            <span class="vehicle-editor-error" asp-validation-for="PriceTo"></span>
+                        </div>
+
+                        <div class="vehicle-editor-field sync-submit-cell">
                             <button type="submit" class="btn btn-primary">
                                 Hämta Bilar
                                 <i class="fa-solid fa-arrow-right"></i>
                             </button>
                         </div>
-                    </form>
-                </section>
+                    </div>
+                </form>
+            </section>
 
-                <section class="vehicle-editor-card vehicle-editor-card-muted">
-                    <div class="vehicle-editor-section-title">
-                        <i class="fa-solid fa-list-check"></i>
-                        <h2>Senaste resultat</h2>
+            <section class="vehicle-editor-card vehicle-editor-card-muted">
+                <div class="vehicle-editor-section-title">
+                    <i class="fa-solid fa-list-check"></i>
+                    <h2>Senaste resultat</h2>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(Model.InfoMessage))
+                {
+                    <p class="admin-utility-copy">@Model.InfoMessage</p>
+                }
+                else if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+                {
+                    <p class="vehicle-editor-validation">@Model.ErrorMessage</p>
+                }
+                else if (Model.HasResult)
+                {
+                    <div class="admin-sync-stats">
+                        <div class="admin-sync-stat">
+                            <span>Tillagda</span>
+                            <strong>@Model.TotalAdded</strong>
+                        </div>
+                        <div class="admin-sync-stat">
+                            <span>Uppdaterade</span>
+                            <strong>@Model.TotalUpdated</strong>
+                        </div>
+                        <div class="admin-sync-stat">
+                            <span>Borttagna</span>
+                            <strong>@Model.TotalFlagged</strong>
+                        </div>
+                        <div class="admin-sync-stat">
+                            <span>Överhoppade</span>
+                            <strong>@Model.TotalSkipped</strong>
+                        </div>
+                        <div class="admin-sync-stat">
+                            <span>Sidor</span>
+                            <strong>@Model.PagesFetched</strong>
+                        </div>
                     </div>
 
-                    @if (!string.IsNullOrWhiteSpace(Model.InfoMessage))
-                    {
-                        <p class="admin-utility-copy">@Model.InfoMessage</p>
-                    }
-                    else if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
-                    {
-                        <p class="vehicle-editor-validation">@Model.ErrorMessage</p>
-                    }
-                    else if (Model.HasResult)
-                    {
-                        <div class="admin-sync-stats">
-                            <div class="admin-sync-stat">
-                                <span>Tillagda</span>
-                                <strong>@Model.TotalAdded</strong>
-                            </div>
-                            <div class="admin-sync-stat">
-                                <span>Uppdaterade</span>
-                                <strong>@Model.TotalUpdated</strong>
-                            </div>
-                            <div class="admin-sync-stat">
-                                <span>Borttagna</span>
-                                <strong>@Model.TotalFlagged</strong>
-                            </div>
-                            <div class="admin-sync-stat">
-                                <span>Överhoppade</span>
-                                <strong>@Model.TotalSkipped</strong>
-                            </div>
-                            <div class="admin-sync-stat">
-                                <span>Sidor</span>
-                                <strong>@Model.PagesFetched</strong>
-                            </div>
-                        </div>
-
-                        <ul class="admin-sync-summary">
-                            <li><span>Begärd gräns</span><strong>@Model.RequestedLimit</strong></li>
-                            <li><span>Använd gräns</span><strong>@Model.AppliedLimit</strong></li>
-                            <li><span>Hämtade från API</span><strong>@Model.TotalFetched</strong></li>
-                            <li><span>Förberedda för import</span><strong>@Model.TotalPrepared</strong></li>
-                        </ul>
-                    }
-                    else
-                    {
-                        <p class="admin-utility-copy">Ingen upphämtning har körts från den här sidan ännu.</p>
-                    }
-                </section>
-            </div>
+                    <ul class="admin-sync-summary">
+                        <li><span>Begärd gräns</span><strong>@Model.RequestedLimit</strong></li>
+                        <li><span>Använd gräns</span><strong>@Model.AppliedLimit</strong></li>
+                        <li><span>Hämtade från API</span><strong>@Model.TotalFetched</strong></li>
+                        <li><span>Förberedda för import</span><strong>@Model.TotalPrepared</strong></li>
+                    </ul>
+                }
+                else
+                {
+                    <p class="admin-utility-copy">Ingen upphämtning har körts från den här sidan ännu.</p>
+                }
+            </section>
         </main>
     </div>
 </section>
@@ -163,7 +180,7 @@
                         btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Hämtar...';
                     }
                     if (typeof toastr !== 'undefined') {
-                        toastr.info('Hämtar från Blocket, det kan ta 15–30 sekunder…', 'Synkar', {
+                        toastr.info('Hämtar från Blocket, det kan ta 15–30 sekunder…', 'Hämtar bilar', {
                             timeOut: 0,
                             extendedTimeOut: 0,
                             closeButton: false,
@@ -180,7 +197,7 @@
                 } else if (!string.IsNullOrWhiteSpace(Model.InfoMessage)) {
                     @:toastr.info(@Json.Serialize(Model.InfoMessage), 'Info');
                 } else if (Model.HasResult) {
-                    @:toastr.success('Synken är klar. @Model.TotalAdded tillagda, @Model.TotalUpdated uppdaterade, @Model.TotalFlagged borttagna.', 'Klart');
+                    @:toastr.success('Upphämtningen är klar. @Model.TotalAdded tillagda, @Model.TotalUpdated uppdaterade, @Model.TotalFlagged borttagna.', 'Klart');
                 }
             }
         }());

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WestcoastCars.Web.Services;
 using WestcoastCars.Web.ViewModels.Admin;
@@ -5,6 +6,7 @@ using WestcoastCars.Web.ViewModels.Admin;
 namespace WestcoastCars.Web.Controllers;
 
 [Route("[controller]")]
+[Authorize(Roles = "Admin,Salesperson")]
 public class AdminController : Controller
 {
     private readonly IVehicleService _vehicleService;

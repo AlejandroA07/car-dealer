@@ -59,11 +59,7 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
             RESTART IDENTITY CASCADE;
             """);
 
-        var seedPresence = await SeedData.GetSeedPresenceAsync(context);
-        await SeedData.LoadManufacturerData(context, seedPresence.HasManufacturers);
-        await SeedData.LoadFuelTypeData(context, seedPresence.HasFuelTypes);
-        await SeedData.LoadTransmissionsData(context, seedPresence.HasTransmissionTypes);
-        await SeedData.LoadVehicleData(context, seedPresence.HasVehicles);
+        await SeedData.LoadVehicleData(context);
 
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();

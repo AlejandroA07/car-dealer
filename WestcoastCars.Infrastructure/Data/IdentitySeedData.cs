@@ -6,24 +6,27 @@ namespace WestcoastCars.Infrastructure.Data;
 
 public static class IdentitySeedData
 {
+    private record SeedUser(string Email, string Role, string FirstName, string LastName);
+
+    private static readonly SeedUser[] Users =
+    [
+        new("admin@westcoast-cars.com",       "Admin",       "Admin",       "One"),
+        new("admin2@westcoast-cars.com",      "Admin",       "Admin",       "Two"),
+        new("salesperson@westcoast-cars.com", "Salesperson", "Sales",       "One"),
+        new("salesperson2@westcoast-cars.com","Salesperson", "Sales",       "Two"),
+        new("user@westcoast-cars.com",        "Customer",    "Test",        "User"),
+        new("user2@westcoast-cars.com",       "Customer",    "Test",        "Two"),
+    ];
+
     public static async Task SeedRolesAndUsers(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, string defaultPassword, ILogger logger)
     {
-        if (!await roleManager.RoleExistsAsync("Admin"))
+        foreach (var role in new[] { "Admin", "Salesperson", "Customer" })
         {
-            await roleManager.CreateAsync(new IdentityRole("Admin"));
-            logger.LogInformation("Created 'Admin' role.");
-        }
-
-        if (!await roleManager.RoleExistsAsync("Salesperson"))
-        {
-            await roleManager.CreateAsync(new IdentityRole("Salesperson"));
-            logger.LogInformation("Created 'Salesperson' role.");
-        }
-
-        if (!await roleManager.RoleExistsAsync("Customer"))
-        {
-            await roleManager.CreateAsync(new IdentityRole("Customer"));
-            logger.LogInformation("Created 'Customer' role.");
+            if (!await roleManager.RoleExistsAsync(role))
+            {
+                await roleManager.CreateAsync(new IdentityRole(role));
+                logger.LogInformation("Created '{Role}' role.", role);
+            }
         }
 
         if (string.IsNullOrEmpty(defaultPassword))
@@ -32,65 +35,36 @@ public static class IdentitySeedData
             return;
         }
 
-        if (await userManager.FindByNameAsync("admin@westcoast-cars.com") == null)
+        foreach (var u in Users)
         {
-            logger.LogInformation("Admin user not found, attempting to create.");
-            var adminUser = new IdentityUser
+            if (await userManager.FindByNameAsync(u.Email) != null)
             {
-                UserName = "admin@westcoast-cars.com",
-                Email = "admin@westcoast-cars.com",
+                logger.LogInformation("User {Email} already exists, skipping.", u.Email);
+                continue;
+            }
+
+            var identityUser = new IdentityUser
+            {
+                UserName = u.Email,
+                Email = u.Email,
                 EmailConfirmed = true
             };
 
-            var result = await userManager.CreateAsync(adminUser, defaultPassword);
+            var result = await userManager.CreateAsync(identityUser, defaultPassword);
             if (result.Succeeded)
             {
-                logger.LogInformation("userManager.CreateAsync succeeded for admin user.");
-                await userManager.AddToRoleAsync(adminUser, "Admin");
-                await userManager.AddClaimsAsync(adminUser, new[]
+                await userManager.AddToRoleAsync(identityUser, u.Role);
+                await userManager.AddClaimsAsync(identityUser, new[]
                 {
-                    new Claim("firstName", "Admin"),
-                    new Claim("lastName", "User")
+                    new Claim("firstName", u.FirstName),
+                    new Claim("lastName",  u.LastName)
                 });
-                logger.LogInformation("Admin user created and assigned to Admin role.");
+                logger.LogInformation("Created user {Email} with role {Role}.", u.Email, u.Role);
             }
             else
             {
                 var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-                logger.LogError("Failed to create admin user. Errors: {Errors}", errors);
-            }
-        }
-        else
-        {
-            logger.LogInformation("Admin user already exists. No action taken.");
-        }
-
-        if (await userManager.FindByNameAsync("user@westcoast-cars.com") == null)
-        {
-            logger.LogInformation("Customer user not found, attempting to create.");
-            var customerUser = new IdentityUser
-            {
-                UserName = "user@westcoast-cars.com",
-                Email = "user@westcoast-cars.com",
-                EmailConfirmed = true
-            };
-
-            var result = await userManager.CreateAsync(customerUser, defaultPassword);
-            if (result.Succeeded)
-            {
-                logger.LogInformation("Customer user created.");
-                await userManager.AddToRoleAsync(customerUser, "Customer");
-                await userManager.AddClaimsAsync(customerUser, new[]
-                {
-                    new Claim("firstName", "Test"),
-                    new Claim("lastName", "User")
-                });
-                logger.LogInformation("Customer user assigned to Customer role.");
-            }
-            else
-            {
-                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-                logger.LogError("Failed to create customer user. Errors: {Errors}", errors);
+                logger.LogError("Failed to create user {Email}. Errors: {Errors}", u.Email, errors);
             }
         }
     }

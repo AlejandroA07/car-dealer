@@ -13,12 +13,24 @@ public class BlocketSyncViewModel
     [Display(Name = "Location")]
     public string? Locations { get; set; }
 
-    [Display(Name = "Brand")]
-    public string? Models { get; set; }
+    [Display(Name = "Tillverkare")]
+    public string? Manufacturers { get; set; }
 
     public string? MileageBand { get; set; }
     public string? TransmissionFilter { get; set; }
     public string? FuelTypeFilter { get; set; }
+
+    [Range(1900, 2100, ErrorMessage = "Year must be between 1900 and 2100.")]
+    public int? YearFrom { get; set; }
+
+    [Range(1900, 2100, ErrorMessage = "Year must be between 1900 and 2100.")]
+    public int? YearTo { get; set; }
+
+    [Range(0, int.MaxValue, ErrorMessage = "Price must be a positive number.")]
+    public int? PriceFrom { get; set; }
+
+    [Range(0, int.MaxValue, ErrorMessage = "Price must be a positive number.")]
+    public int? PriceTo { get; set; }
 
     public int RequestedLimit { get; set; }
     public int AppliedLimit { get; set; }

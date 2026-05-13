@@ -14,11 +14,11 @@ public class BulkDeleteVehiclesCommandHandler : IRequestHandler<BulkDeleteVehicl
 
     public async Task<BulkDeleteVehiclesResult> Handle(BulkDeleteVehiclesCommand request, CancellationToken cancellationToken)
     {
-        if (request.Model is null && request.IsSold is null && request.MinMileage is null && request.MaxMileage is null)
+        if (request.Make is null && request.Model is null && request.IsSold is null && request.MinMileage is null && request.MaxMileage is null)
             throw new InvalidOperationException("At least one filter must be specified for bulk delete.");
 
         var vehicles = await _unitOfWork.VehicleRepository.GetForBulkDeleteAsync(
-            request.Model, request.IsSold, request.MinMileage, request.MaxMileage);
+            request.Make, request.Model, request.IsSold, request.MinMileage, request.MaxMileage);
 
         if (vehicles.Count > 0)
         {
