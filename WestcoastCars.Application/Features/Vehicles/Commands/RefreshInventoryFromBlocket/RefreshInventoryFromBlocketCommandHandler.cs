@@ -63,23 +63,25 @@ public class RefreshInventoryFromBlocketCommandHandler : IRequestHandler<Refresh
                     break;
                 }
 
-                // Intentionally sequential: BlocketApiClient applies a shared process-wide throttle,
-                // so parallel detail requests would only add contention and risk upstream pressure.
-                var adDetails = await _blocketApiClient.GetCarAdAsync(searchItem.Id, cancellationToken);
-                var mappedVehicle = _mapper.Map(searchItem, adDetails, importedAtUtc);
-
-                if (string.IsNullOrWhiteSpace(mappedVehicle.ExternalListingId) ||
-                    !seenExternalListingIds.Add(mappedVehicle.ExternalListingId) ||
-                    string.IsNullOrWhiteSpace(mappedVehicle.RegistrationNumber) ||
-                    !IsValidModelYear(mappedVehicle.ModelYear) ||
-                    (request.MinMileage.HasValue && mappedVehicle.Mileage < request.MinMileage.Value) ||
-                    (request.MaxMileage.HasValue && mappedVehicle.Mileage >= request.MaxMileage.Value) ||
-                    (!string.IsNullOrWhiteSpace(request.TransmissionFilter) && !mappedVehicle.TransmissionType.Equals(request.TransmissionFilter, StringComparison.OrdinalIgnoreCase)) ||
-                    (!string.IsNullOrWhiteSpace(request.FuelTypeFilter) && !mappedVehicle.FuelType.Equals(request.FuelTypeFilter, StringComparison.OrdinalIgnoreCase)))
+                // Pre-filter on search result fields — skip the detail fetch entirely
+                // for listings that clearly won't pass. All filter fields are available
+                // on the search item itself, so no detail request is needed to decide.
+                if (string.IsNullOrWhiteSpace(searchItem.Id) ||
+                    !seenExternalListingIds.Add(searchItem.Id) ||
+                    string.IsNullOrWhiteSpace(searchItem.RegistrationNumber) ||
+                    !IsValidModelYear(searchItem.Year) ||
+                    !PassesMileageFilter(searchItem, request.MinMileage, request.MaxMileage) ||
+                    !PassesTransmissionFilter(searchItem.Transmission, request.TransmissionFilter) ||
+                    !PassesFuelFilter(searchItem.Fuel, request.FuelTypeFilter))
                 {
                     totalSkipped++;
                     continue;
                 }
+
+                // Intentionally sequential: BlocketApiClient applies a shared process-wide throttle,
+                // so parallel detail requests would only add contention and risk upstream pressure.
+                var adDetails = await _blocketApiClient.GetCarAdAsync(searchItem.Id, cancellationToken);
+                var mappedVehicle = _mapper.Map(searchItem, adDetails, importedAtUtc);
 
                 preparedVehicles.Add(mappedVehicle);
             }
@@ -143,6 +145,36 @@ public class RefreshInventoryFromBlocketCommandHandler : IRequestHandler<Refresh
             TotalSkipped = totalSkipped,
             Vehicles = preparedVehicles
         };
+    }
+
+    private static bool PassesMileageFilter(BlocketCarSearchItem item, int? min, int? max)
+    {
+        if (!min.HasValue && !max.HasValue) return true;
+        if (!item.Mileage.HasValue) return true;
+
+        var km = string.Equals(item.MileageUnit, "SCANDINAVIAN_MILE", StringComparison.OrdinalIgnoreCase)
+            ? item.Mileage.Value * 10
+            : item.Mileage.Value;
+
+        return (!min.HasValue || km >= min.Value) && (!max.HasValue || km < max.Value);
+    }
+
+    private static bool PassesTransmissionFilter(string? raw, string? filter)
+    {
+        if (string.IsNullOrWhiteSpace(filter)) return true;
+        if (string.IsNullOrWhiteSpace(raw)) return false;
+        var normalized = BlocketVehicleImportMapper.TransmissionMappings.TryGetValue(raw.Trim(), out var mapped)
+            ? mapped : raw.Trim();
+        return normalized.Equals(filter, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool PassesFuelFilter(string? raw, string? filter)
+    {
+        if (string.IsNullOrWhiteSpace(filter)) return true;
+        if (string.IsNullOrWhiteSpace(raw)) return false;
+        var normalized = BlocketVehicleImportMapper.FuelMappings.TryGetValue(raw.Trim(), out var mapped)
+            ? mapped : raw.Trim();
+        return normalized.Equals(filter, StringComparison.OrdinalIgnoreCase);
     }
 
     private async Task<List<Vehicle>> BuildVehicleEntitiesAsync(IEnumerable<BlocketVehicleImportData> preparedVehicles)

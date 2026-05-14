@@ -15,7 +15,7 @@ public class BlocketVehicleImportMapper : IBlocketVehicleImportMapper
         "okänd", "unknown", "ej angiven", "saknas", "övrigt"
     };
 
-    private static readonly Dictionary<string, string> FuelMappings = new(StringComparer.OrdinalIgnoreCase)
+    internal static readonly Dictionary<string, string> FuelMappings = new(StringComparer.OrdinalIgnoreCase)
     {
         ["Bensin"] = "Petrol",
         ["Diesel"] = "Diesel",
@@ -31,7 +31,7 @@ public class BlocketVehicleImportMapper : IBlocketVehicleImportMapper
         ["Vätgas"] = "Hydrogen"
     };
 
-    private static readonly Dictionary<string, string> TransmissionMappings = new(StringComparer.OrdinalIgnoreCase)
+    internal static readonly Dictionary<string, string> TransmissionMappings = new(StringComparer.OrdinalIgnoreCase)
     {
         ["Automatisk"] = "Automatic",
         ["Automat"] = "Automatic",
