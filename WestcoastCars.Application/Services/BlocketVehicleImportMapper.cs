@@ -63,7 +63,8 @@ public class BlocketVehicleImportMapper : IBlocketVehicleImportMapper
             PublishedAt = NormalizePublishedAt(searchItem.Timestamp),
             ImportedAt = importedAtUtc,
             Color = NormalizeColor(adDetails),
-            City = NormalizeOptional(searchItem.Location)
+            City = NormalizeOptional(searchItem.Location),
+            Equipment = adDetails?.Equipment ?? []
         };
     }
 

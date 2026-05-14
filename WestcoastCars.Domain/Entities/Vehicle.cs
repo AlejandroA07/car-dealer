@@ -39,6 +39,7 @@ public class Vehicle : BaseEntity
     public DateTime? ImportedAt { get; set; }
     public string? Color { get; set; }
     public string? City { get; set; }
+    public string? Equipment { get; set; }
     public int ManufacturerId { get; set; }
     [ForeignKey("ManufacturerId")]
     public required Manufacturer Manufacturer { get; set; }

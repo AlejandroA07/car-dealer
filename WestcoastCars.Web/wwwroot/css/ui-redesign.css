@@ -3216,14 +3216,9 @@ textarea:focus,
   filter: drop-shadow(0 10px 12px rgba(45, 52, 50, 0.12));
 }
 
-.details-location-card strong,
 .details-location-card p {
   display: block;
-  margin: 0;
-}
-
-.details-location-card strong {
-  margin-top: 0.7rem;
+  margin: 0.7rem 0 0;
 }
 
 .details-location-card p,
@@ -3728,4 +3723,111 @@ textarea:focus,
   display: flex;
   gap: 0.75rem;
   justify-content: flex-end;
+}
+
+/* ── Equipment ───────────────────────────────────────── */
+.details-equipment-section {
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  background: var(--wc-surface-card);
+  border-radius: var(--wc-radius-md);
+}
+
+.details-equipment-section h2 {
+  margin: 0 0 0.95rem;
+}
+
+.details-equipment-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.details-equipment-list li {
+  background: var(--wc-surface-container-low);
+  border: 1px solid rgba(173, 179, 176, 0.2);
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8rem;
+  color: var(--wc-text-muted);
+  white-space: nowrap;
+}
+
+/* ── Lightbox ─────────────────────────────────────────── */
+.lightbox-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: rgba(0, 0, 0, 0.92);
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.lightbox-overlay.is-open {
+  display: flex;
+}
+
+.lightbox-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: calc(100vw - 8rem);
+  max-height: 100vh;
+}
+
+.lightbox-content img {
+  max-width: 100%;
+  max-height: calc(100vh - 5rem);
+  object-fit: contain;
+  border-radius: var(--wc-radius-sm);
+}
+
+.lightbox-counter {
+  margin: 0.5rem 0 0;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.82rem;
+}
+
+.lightbox-close,
+.lightbox-prev,
+.lightbox-next {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  font-size: 2.5rem;
+  line-height: 1;
+  padding: 0.5rem;
+  opacity: 0.75;
+  transition: opacity 0.15s;
+  user-select: none;
+}
+
+.lightbox-close {
+  position: fixed;
+  top: 1rem;
+  right: 1.25rem;
+  font-size: 2rem;
+}
+
+.lightbox-close:hover,
+.lightbox-prev:hover,
+.lightbox-next:hover {
+  opacity: 1;
+}
+
+@media (max-width: 600px) {
+  .lightbox-content {
+    max-width: 100vw;
+  }
+  .lightbox-prev,
+  .lightbox-next {
+    font-size: 2rem;
+    padding: 0.25rem;
+  }
 }

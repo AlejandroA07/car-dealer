@@ -8,10 +8,18 @@
         title = $"{Model.Manufacturer} {title}".Trim();
     }
     if (string.IsNullOrWhiteSpace(title)) title = Model.Model;
-    var statusText = Model.IsSold ? "Såld" : "Tillgänglig";
     var colorText = string.IsNullOrWhiteSpace(Model.Color) ? "Ej angivet" : Model.Color;
     var cityText = string.IsNullOrWhiteSpace(Model.City) ? "Göteborg" : Model.City;
-    var sourceText = string.IsNullOrWhiteSpace(Model.Source) ? "Westcoast Cars" : Model.Source;
+
+    var imageList = new List<string>();
+    if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+        imageList.Add(Model.ImageUrl);
+    // When ImageUrls is added to the DTO, replace the above with: imageList = Model.ImageUrls;
+
+    var hasExtraImages = imageList.Count > 1;
+    var hasMoreOverflow = imageList.Count > 4;
+    var thumbCount = hasMoreOverflow ? 3 : imageList.Count - 1;
+    var moreCount = imageList.Count - 4;
 }
 
 <section class="vehicle-details-page">
@@ -19,16 +27,28 @@
         <section class="details-hero-grid" aria-labelledby="vehicle-title">
             <div class="details-gallery">
                 <div class="details-main-image">
-                    <img src="@Model.ImageUrl" alt="@title" />
+                    <img src="@imageList[0]" alt="@title" class="gallery-img" />
                     <span class="details-cert-chip">Nordiskt certifierad</span>
                 </div>
 
-                <div class="details-thumbs" aria-label="Bildöversikt">
-                    <div class="details-thumb is-active"><img src="@Model.ImageUrl" alt="@title exteriör" /></div>
-                    <div class="details-thumb details-thumb-dark"><i class="fa-solid fa-circle-dot"></i></div>
-                    <div class="details-thumb details-thumb-dark"><i class="fa-solid fa-car-rear"></i></div>
-                    <div class="details-thumb details-thumb-more"><span>+12 bilder</span></div>
-                </div>
+                @if (hasExtraImages)
+                {
+                    <div class="details-thumbs" aria-label="Bildöversikt">
+                        @for (int i = 1; i <= thumbCount; i++)
+                        {
+                            <div class="details-thumb">
+                                <img src="@imageList[i]" alt="@title bild @(i + 1)" class="gallery-img" />
+                            </div>
+                        }
+                        @if (hasMoreOverflow)
+                        {
+                            <div class="details-thumb details-thumb-more" data-overflow-index="4">
+                                <img src="@imageList[3]" alt="" class="gallery-img" />
+                                <span>+@moreCount bilder</span>
+                            </div>
+                        }
+                    </div>
+                }
             </div>
 
             <aside class="details-buy-box" aria-label="Pris och nästa steg">
@@ -42,10 +62,7 @@
                 </div>
 
                 <div class="details-action-stack">
-                    <a asp-action="Index" asp-controller="Service" class="btn btn-primary btn-full">
-                        Boka visning <i class="fa-regular fa-calendar"></i>
-                    </a>
-                    <a href="#kontakt" class="btn btn-secondary btn-full">
+                    <a href="/#kontakt" class="btn btn-primary btn-full">
                         Kontakta oss <i class="fa-regular fa-envelope"></i>
                     </a>
                     @if (!string.IsNullOrWhiteSpace(Model.SourceUrl))
@@ -76,7 +93,10 @@
                         <article><span>Bränsle</span><strong>@Model.FuelType</strong></article>
                         <article><span>Växellåda</span><strong>@Model.TransmissionType</strong></article>
                         <article><span>Färg</span><strong>@colorText</strong></article>
-                        <article><span>Källa</span><strong>@sourceText</strong></article>
+                        @if (!string.IsNullOrWhiteSpace(Model.RegistrationNumber))
+                        {
+                            <article><span>Regnr</span><strong>@Model.RegistrationNumber</strong></article>
+                        }
                     </div>
                 </section>
 
@@ -101,6 +121,19 @@
                         </article>
                     </div>
                 </section>
+
+                @if (Model.Equipment.Count > 0)
+                {
+                    <section class="details-equipment-section" aria-labelledby="details-equipment-title">
+                        <h2 id="details-equipment-title">Utrustning</h2>
+                        <ul class="details-equipment-list">
+                            @foreach (var item in Model.Equipment)
+                            {
+                                <li>@item</li>
+                            }
+                        </ul>
+                    </section>
+                }
             </div>
 
             <aside class="details-side-stack">
@@ -112,12 +145,7 @@
                             <i class="fa-solid fa-location-dot"></i>
                         </div>
                     </a>
-                    <strong>Westcoast Cars</strong>
                     <p>@cityText</p>
-                    <div class="details-open-row">
-                        <span><i class="fa-solid fa-circle"></i> Öppet idag</span>
-                        <span>09:00 – 18:00</span>
-                    </div>
                 </section>
 
                 <section class="details-assurance-card" aria-labelledby="details-assurance-title">
@@ -132,3 +160,68 @@
         </section>
     </div>
 </section>
+
+<div id="lightbox" class="lightbox-overlay" role="dialog" aria-modal="true" aria-label="Bildvisare">
+    <button class="lightbox-close" aria-label="Stäng">&times;</button>
+    <button class="lightbox-prev" aria-label="Föregående bild">&#8249;</button>
+    <div class="lightbox-content">
+        <img id="lightbox-img" src="" alt="" />
+        <p id="lightbox-counter" class="lightbox-counter"></p>
+    </div>
+    <button class="lightbox-next" aria-label="Nästa bild">&#8250;</button>
+</div>
+
+<script>
+    (function () {
+        var images = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(imageList));
+        var overlay = document.getElementById('lightbox');
+        var img = document.getElementById('lightbox-img');
+        var counter = document.getElementById('lightbox-counter');
+        var current = 0;
+
+        function openAt(index) {
+            current = Math.max(0, Math.min(index, images.length - 1));
+            img.src = images[current];
+            img.alt = '@Html.Raw(title.Replace("'", "\\'")) bild ' + (current + 1);
+            counter.textContent = images.length > 1 ? (current + 1) + ' / ' + images.length : '';
+            overlay.classList.add('is-open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function close() {
+            overlay.classList.remove('is-open');
+            document.body.style.overflow = '';
+        }
+
+        function prev() { openAt((current - 1 + images.length) % images.length); }
+        function next() { openAt((current + 1) % images.length); }
+
+        // Attach click to all gallery images in DOM order
+        var galleryImgs = document.querySelectorAll('.gallery-img');
+        galleryImgs.forEach(function (el, idx) {
+            el.style.cursor = 'pointer';
+            el.addEventListener('click', function () {
+                // For the overflow thumb, open at overflow start index
+                var overflowParent = el.closest('[data-overflow-index]');
+                var openIndex = overflowParent ? parseInt(overflowParent.dataset.overflowIndex) : idx;
+                openAt(openIndex);
+            });
+        });
+
+        document.querySelector('.lightbox-close').addEventListener('click', close);
+        document.querySelector('.lightbox-prev').addEventListener('click', prev);
+        document.querySelector('.lightbox-next').addEventListener('click', next);
+        overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
+        document.addEventListener('keydown', function (e) {
+            if (!overlay.classList.contains('is-open')) return;
+            if (e.key === 'Escape') close();
+            if (e.key === 'ArrowLeft') prev();
+            if (e.key === 'ArrowRight') next();
+        });
+
+        if (images.length <= 1) {
+            document.querySelector('.lightbox-prev').style.display = 'none';
+            document.querySelector('.lightbox-next').style.display = 'none';
+        }
+    })();
+</script>

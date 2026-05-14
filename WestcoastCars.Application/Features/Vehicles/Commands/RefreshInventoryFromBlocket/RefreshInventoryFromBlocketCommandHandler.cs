@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MediatR;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Application.Models.Blocket;
@@ -198,6 +199,9 @@ public class RefreshInventoryFromBlocketCommandHandler : IRequestHandler<Refresh
                 ImportedAt = preparedVehicle.ImportedAt,
                 Color = preparedVehicle.Color,
                 City = preparedVehicle.City,
+                Equipment = preparedVehicle.Equipment.Count > 0
+                    ? JsonSerializer.Serialize(preparedVehicle.Equipment)
+                    : null,
                 Manufacturer = manufacturer,
                 FuelType = fuelType,
                 TransmissionType = transmissionType

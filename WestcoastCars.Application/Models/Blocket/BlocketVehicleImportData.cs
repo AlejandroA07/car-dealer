@@ -19,4 +19,5 @@ public class BlocketVehicleImportData
     public DateTime ImportedAt { get; set; }
     public string? Color { get; set; }
     public string? City { get; set; }
+    public List<string> Equipment { get; set; } = [];
 }

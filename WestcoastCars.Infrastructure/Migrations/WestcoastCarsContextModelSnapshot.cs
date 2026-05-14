@@ -173,6 +173,7 @@ partial class WestcoastCarsContextModelSnapshot : ModelSnapshot
             NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
             b.Property<string>("City").HasMaxLength(100).HasColumnType("character varying(100)");
             b.Property<string>("Color").HasMaxLength(50).HasColumnType("character varying(50)");
+            b.Property<string>("Equipment").HasColumnType("text");
             b.Property<DateTime>("CreatedAt").HasDefaultValueSql("NOW()").HasColumnType("timestamp with time zone");
             b.Property<string>("Description").IsRequired().HasMaxLength(4000).HasColumnType("character varying(4000)");
             b.Property<string>("ExternalListingId").HasMaxLength(100).HasColumnType("character varying(100)");
