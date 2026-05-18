@@ -12,6 +12,8 @@ using WestcoastCars.Application.Features.Vehicles.Commands.Delete;
 using WestcoastCars.Application.Features.Vehicles.Commands.MarkAsSold;
 using WestcoastCars.Application.Features.Vehicles.Commands.RefreshInventoryFromBlocket;
 using WestcoastCars.Application.Features.Vehicles.Commands.PurgeSourceRemoved;
+using WestcoastCars.Application.Features.Vehicles.Queries.PreviewBlocketVehicles;
+using WestcoastCars.Application.Features.Vehicles.Commands.ImportSelectedBlocketVehicles;
 using WestcoastCars.Application.Features.Vehicles.Commands.BulkDelete;
 using WestcoastCars.Application.Features.Vehicles.Commands.DeleteAll;
 using WestcoastCars.Application.Features.Vehicles.Queries.Stats;
@@ -159,7 +161,16 @@ public class VehiclesController : ControllerBase
             Price = dto.Price,
             Description = dto.Description,
             IsSold = dto.IsSold,
-            ImageUrl = dto.ImageUrl
+            ImageUrl = dto.ImageUrl,
+            Color = dto.Color,
+            WheelDrive = dto.WheelDrive,
+            Horsepower = dto.Horsepower,
+            BodyType = dto.BodyType,
+            Doors = dto.Doors,
+            EngineVolume = dto.EngineVolume,
+            City = dto.City,
+            Equipment = dto.Equipment,
+            GalleryUrls = dto.GalleryUrls
         };
 
         _logger.LogInformation("Creating new vehicle with registration: {RegNo} via MediatR", command.RegistrationNumber);
@@ -219,6 +230,40 @@ public class VehiclesController : ControllerBase
             _telemetry.RecordBlocketSync("failure", startedAt.Elapsed, request.Limit);
             throw;
         }
+    }
+
+    /// <summary>
+    /// Previews Blocket search results without importing. Requires Admin or Salesperson role.
+    /// </summary>
+    [HttpPost("preview/blocket")]
+    [Authorize(Roles = "Admin,Salesperson")]
+    [ProducesResponseType(typeof(List<BlocketPreviewDto>), 200)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(403)]
+    public async Task<IActionResult> PreviewBlocket([FromBody] PreviewBlocketVehiclesQuery query)
+    {
+        var request = query ?? new PreviewBlocketVehiclesQuery();
+        _logger.LogInformation("Previewing Blocket listings with limit {Limit}", request.Limit);
+        var result = await _mediator.Send(request);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Imports a specific selection of Blocket listings by their external IDs. Requires Admin or Salesperson role.
+    /// </summary>
+    [HttpPost("import/blocket/selected")]
+    [Authorize(Roles = "Admin,Salesperson")]
+    [ProducesResponseType(typeof(ImportSelectedResult), 200)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(403)]
+    public async Task<IActionResult> ImportSelected([FromBody] ImportSelectedBlocketVehiclesCommand command)
+    {
+        _logger.LogInformation("Importing {Count} selected Blocket listings", command?.ExternalListingIds.Count ?? 0);
+        var result = await _mediator.Send(command ?? new ImportSelectedBlocketVehiclesCommand());
+        _cache.Remove("lookup:manufacturers");
+        _cache.Remove("lookup:fueltypes");
+        _cache.Remove("lookup:transmissions");
+        return Ok(result);
     }
 
     /// <summary>
@@ -353,7 +398,16 @@ public class VehiclesController : ControllerBase
             Price = dto.Price,
             Description = dto.Description,
             IsSold = dto.IsSold,
-            ImageUrl = dto.ImageUrl
+            ImageUrl = dto.ImageUrl,
+            Color = dto.Color,
+            WheelDrive = dto.WheelDrive,
+            Horsepower = dto.Horsepower,
+            BodyType = dto.BodyType,
+            Doors = dto.Doors,
+            EngineVolume = dto.EngineVolume,
+            City = dto.City,
+            Equipment = dto.Equipment,
+            GalleryUrls = dto.GalleryUrls
         };
 
         _logger.LogInformation("Updating vehicle {Id} via MediatR", id);

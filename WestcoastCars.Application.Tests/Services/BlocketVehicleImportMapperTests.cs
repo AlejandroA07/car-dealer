@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using WestcoastCars.Application.Models.Blocket;
 using WestcoastCars.Application.Services;
 using Xunit;
@@ -6,7 +7,7 @@ namespace WestcoastCars.Application.Tests.Services;
 
 public class BlocketVehicleImportMapperTests
 {
-    private readonly BlocketVehicleImportMapper _mapper = new();
+    private readonly BlocketVehicleImportMapper _mapper = new(NullLogger<BlocketVehicleImportMapper>.Instance);
 
     [Fact]
     public void Map_ShouldNormalizeSwedishFields_AndConvertMileageToKilometers()

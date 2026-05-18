@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Application.Models.Blocket;
 
@@ -8,6 +9,12 @@ namespace WestcoastCars.Application.Services;
 public class BlocketVehicleImportMapper : IBlocketVehicleImportMapper
 {
     private const string DefaultImageUrl = "/images/no-car.png";
+    private readonly ILogger<BlocketVehicleImportMapper> _logger;
+
+    public BlocketVehicleImportMapper(ILogger<BlocketVehicleImportMapper> logger)
+    {
+        _logger = logger;
+    }
 
     // Blocket uses these Swedish placeholders when data is missing — treat all as unknown
     private static readonly HashSet<string> BlocketUnknownValues = new(StringComparer.OrdinalIgnoreCase)
@@ -17,31 +24,36 @@ public class BlocketVehicleImportMapper : IBlocketVehicleImportMapper
 
     internal static readonly Dictionary<string, string> FuelMappings = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["Bensin"] = "Petrol",
+        ["Bensin"] = "Bensin",
         ["Diesel"] = "Diesel",
-        ["El"] = "Electric",
-        ["Elektrisk"] = "Electric",
-        ["Bensin/El"] = "Petrol/Electric",
-        ["Diesel/El"] = "Diesel/Electric",
+        ["El"] = "El",
+        ["Elektrisk"] = "El",
+        ["Bensin/El"] = "Bensin/El",
+        ["Diesel/El"] = "Diesel/El",
         ["Hybrid"] = "Hybrid",
-        ["Laddhybrid"] = "Plug-in Electric Hybrid",
-        ["Etanol"] = "Ethanol",
+        ["Laddhybrid"] = "Laddhybrid",
+        ["Etanol"] = "Etanol",
         ["Gas"] = "Gas",
-        ["Biogas"] = "Bio Gas",
-        ["Vätgas"] = "Hydrogen"
+        ["Biogas"] = "Biogas",
+        ["Vätgas"] = "Vätgas"
     };
 
     internal static readonly Dictionary<string, string> TransmissionMappings = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["Automatisk"] = "Automatic",
-        ["Automat"] = "Automatic",
-        ["Manuell"] = "Manual",
-        ["Manuel"] = "Manual"
+        ["Automatisk"] = "Automat",
+        ["Automat"] = "Automat",
+        ["Manuell"] = "Manuell",
+        ["Manuel"] = "Manuell"
     };
 
     public BlocketVehicleImportData Map(BlocketCarSearchItem searchItem, BlocketCarAdDetails? adDetails, DateTime importedAtUtc)
     {
         ArgumentNullException.ThrowIfNull(searchItem);
+
+        if (adDetails?.Specifications is { Count: > 0 })
+            _logger.LogDebug("Blocket specs for {Id}: {Keys}",
+                searchItem.Id,
+                string.Join(" | ", adDetails.Specifications.Select(kv => $"{kv.Key}={kv.Value}")));
 
         return new BlocketVehicleImportData
         {
@@ -56,6 +68,7 @@ public class BlocketVehicleImportMapper : IBlocketVehicleImportMapper
             Description = NormalizeDescription(searchItem, adDetails),
             FuelType = NormalizeFuelType(searchItem.Fuel, adDetails),
             TransmissionType = NormalizeTransmission(searchItem.Transmission, adDetails),
+            GalleryUrls = NormalizeGalleryUrls(searchItem, adDetails),
             ExternalListingId = searchItem.Id,
             Source = "Blocket",
             SourceUrl = NormalizeOptional(searchItem.CanonicalUrl)
@@ -63,8 +76,20 @@ public class BlocketVehicleImportMapper : IBlocketVehicleImportMapper
             PublishedAt = NormalizePublishedAt(searchItem.Timestamp),
             ImportedAt = importedAtUtc,
             Color = NormalizeColor(adDetails),
+            WheelDrive = GetSpecification(adDetails, "Drivhjul")
+                ?? GetSpecification(adDetails, "Drivning"),
+            Horsepower = ParseHorsepower(GetSpecification(adDetails, "Effekt")),
+            BodyType = GetSpecification(adDetails, "Biltyp")
+                ?? GetSpecification(adDetails, "Chassinummer"),
+            Doors = ParseInteger(GetSpecification(adDetails, "Antal dörrar")),
+            EngineVolume = GetSpecification(adDetails, "Motorvolym"),
             City = NormalizeOptional(searchItem.Location),
-            Equipment = adDetails?.Equipment ?? []
+            Equipment = adDetails?.Equipment ?? [],
+            Seats = ParseInteger(GetSpecification(adDetails, "Säten")),
+            MaxTrailerWeight = ParseInteger(GetSpecification(adDetails, "Max trailervikt")),
+            OwnerCount = ParseInteger(GetSpecification(adDetails, "Antal ägare")),
+            LastInspectionDate = ParseDate(GetSpecification(adDetails, "Senaste besiktningsdatum")),
+            NextInspectionDate = ParseDate(GetSpecification(adDetails, "Nästa besiktningsdatum"))
         };
     }
 
@@ -107,9 +132,9 @@ public class BlocketVehicleImportMapper : IBlocketVehicleImportMapper
     {
         if (searchItem.Mileage.HasValue)
         {
-            return string.Equals(searchItem.MileageUnit, "SCANDINAVIAN_MILE", StringComparison.OrdinalIgnoreCase)
-                ? searchItem.Mileage.Value * 10
-                : searchItem.Mileage.Value;
+            return string.Equals(searchItem.MileageUnit, "km", StringComparison.OrdinalIgnoreCase)
+                ? searchItem.Mileage.Value
+                : searchItem.Mileage.Value * 10;
         }
 
         return ParseMileage(GetSpecification(adDetails, "Miltal"))
@@ -120,7 +145,8 @@ public class BlocketVehicleImportMapper : IBlocketVehicleImportMapper
     private static string NormalizeImageUrl(BlocketCarSearchItem searchItem, BlocketCarAdDetails? adDetails)
     {
         var imageUrl = searchItem.Image?.Url
-            ?? adDetails?.Image?.Url;
+            ?? adDetails?.Image?.Url
+            ?? adDetails?.Images.FirstOrDefault()?.Url;
 
         return NormalizeOptional(imageUrl) ?? DefaultImageUrl;
     }
@@ -137,7 +163,8 @@ public class BlocketVehicleImportMapper : IBlocketVehicleImportMapper
 
     private static string NormalizeDescription(BlocketCarSearchItem searchItem, BlocketCarAdDetails? adDetails)
     {
-        return NormalizeOptional(searchItem.ModelSpecification)
+        return NormalizeOptional(adDetails?.Description)
+            ?? NormalizeOptional(searchItem.ModelSpecification)
             ?? NormalizeOptional(adDetails?.Subtitle)
             ?? NormalizeOptional(searchItem.Heading)
             ?? NormalizeOptional(adDetails?.Title)
@@ -188,8 +215,20 @@ public class BlocketVehicleImportMapper : IBlocketVehicleImportMapper
 
     private static string? NormalizeColor(BlocketCarAdDetails? adDetails)
     {
-        return GetSpecification(adDetails, "Färg")
-            ?? GetSpecification(adDetails, "Färgbeskrivning");
+        return GetSpecification(adDetails, "Färg");
+    }
+
+    // Blocket "Effekt" is typically "150 hk" or "110 kW / 150 hk" — extract the hk value.
+    // Falls back to the first integer found if no explicit hk suffix is present.
+    private static int? ParseHorsepower(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+
+        var hkMatch = System.Text.RegularExpressions.Regex.Match(value, @"(\d+)\s*hk", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        if (hkMatch.Success && int.TryParse(hkMatch.Groups[1].Value, out var hk))
+            return hk;
+
+        return ParseInteger(value);
     }
 
     private static string? GetSpecification(BlocketCarAdDetails? adDetails, string key)
@@ -247,11 +286,36 @@ public class BlocketVehicleImportMapper : IBlocketVehicleImportMapper
             : null;
     }
 
+    private static DateOnly? ParseDate(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        return DateOnly.TryParseExact(value.Trim(),
+            ["yyyy-MM-dd", "yyyy-MM", "dd/MM/yyyy", "dd-MM-yyyy"],
+            CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var d)
+            ? d : null;
+    }
+
     private static bool IsValidModelYear(int year) =>
         year >= 1900 && year <= DateTime.UtcNow.Year + 1;
 
     private static string? NormalizeOptional(string? value)
     {
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+
+    private static List<string> NormalizeGalleryUrls(BlocketCarSearchItem searchItem, BlocketCarAdDetails? adDetails)
+    {
+        var urls = adDetails?.Images
+            .Select(img => img.Url)
+            .Where(u => !string.IsNullOrWhiteSpace(u))
+            .Select(u => u!)
+            .Distinct()
+            .ToList() ?? [];
+
+        // If the ad endpoint returned no gallery, fall back to the search thumbnail
+        if (urls.Count == 0 && !string.IsNullOrWhiteSpace(searchItem.Image?.Url))
+            urls.Add(searchItem.Image.Url);
+
+        return urls;
     }
 }

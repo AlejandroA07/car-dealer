@@ -24,7 +24,8 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.FuelType, opt => opt.MapFrom(src => src.FuelType.Name))
             .ForMember(dest => dest.TransmissionType, opt => opt.MapFrom(src => src.TransmissionType.Name))
             .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => NormalizeImageUrl(src.ImageUrl)))
-            .ForMember(dest => dest.Equipment, opt => opt.MapFrom(src => DeserializeEquipment(src.Equipment)));
+            .ForMember(dest => dest.Equipment, opt => opt.MapFrom(src => DeserializeEquipment(src.Equipment)))
+            .ForMember(dest => dest.ImageUrls, opt => opt.MapFrom(src => BuildImageUrls(src.ImageUrl, src.GalleryUrls)));
 
         CreateMap<ServiceBooking, ServiceBookingSummaryDto>()
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
@@ -35,6 +36,22 @@ public class MappingProfile : Profile
         if (string.IsNullOrWhiteSpace(json)) return [];
         try { return JsonSerializer.Deserialize<List<string>>(json) ?? []; }
         catch { return []; }
+    }
+
+    private static List<string> BuildImageUrls(string? imageUrl, string? galleryJson)
+    {
+        if (!string.IsNullOrWhiteSpace(galleryJson))
+        {
+            try
+            {
+                var gallery = JsonSerializer.Deserialize<List<string>>(galleryJson);
+                if (gallery is { Count: > 0 })
+                    return gallery.Select(NormalizeImageUrl).ToList();
+            }
+            catch { }
+        }
+
+        return [NormalizeImageUrl(imageUrl)];
     }
 
     private static string NormalizeImageUrl(string? imageUrl) =>

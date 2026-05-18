@@ -189,9 +189,9 @@ public class VehiclesController : Controller
     }
 
     [Authorize(Roles = "Admin,Salesperson")]
-    [HttpPost("sync-blocket")]
+    [HttpPost("preview-blocket")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SyncBlocket(BlocketSyncViewModel model)
+    public async Task<IActionResult> PreviewBlocket(BlocketSyncViewModel model)
     {
         try
         {
@@ -200,13 +200,34 @@ public class VehiclesController : Controller
                 return View("SyncBlocket", model);
             }
 
-            var result = await _vehicleService.SyncBlocketAsync(model);
-            return View("SyncBlocket", result);
+            var results = await _vehicleService.PreviewBlocketAsync(model);
+            model.PreviewResults = results;
+            model.HasPreview = true;
+            return View("SyncBlocket", model);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in Blocket sync");
-            model.ErrorMessage = "An unexpected error occurred while running the Blocket sync.";
+            _logger.LogError(ex, "Error in Blocket preview");
+            model.ErrorMessage = "Det gick inte att hämta förhandsgranskningen.";
+            return View("SyncBlocket", model);
+        }
+    }
+
+    [Authorize(Roles = "Admin,Salesperson")]
+    [HttpPost("import-selected")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ImportSelected([FromForm] List<string> externalListingIds, [FromForm] Dictionary<string, string> imageUrlsById)
+    {
+        try
+        {
+            var result = await _vehicleService.ImportSelectedAsync(externalListingIds ?? [], imageUrlsById ?? []);
+            var model = new BlocketSyncViewModel { ImportResult = result };
+            return View("SyncBlocket", model);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in ImportSelected");
+            var model = new BlocketSyncViewModel { ErrorMessage = "Importen misslyckades." };
             return View("SyncBlocket", model);
         }
     }

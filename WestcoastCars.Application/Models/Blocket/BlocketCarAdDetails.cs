@@ -13,6 +13,9 @@ public class BlocketCarAdDetails
     [JsonPropertyName("subtitle")]
     public string? Subtitle { get; set; }
 
+    [JsonPropertyName("description")]
+    public string? Description { get; set; }
+
     [JsonPropertyName("model_year")]
     public string? ModelYearText { get; set; }
 
@@ -39,6 +42,9 @@ public class BlocketCarAdDetails
 
     [JsonPropertyName("image")]
     public BlocketImage? Image { get; set; }
+
+    [JsonPropertyName("images")]
+    public List<BlocketImage> Images { get; set; } = [];
 
     [JsonPropertyName("equipment")]
     public List<string> Equipment { get; set; } = [];

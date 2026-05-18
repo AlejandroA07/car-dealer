@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Net;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Application.Models.Blocket;
@@ -10,6 +11,7 @@ namespace WestcoastCars.Infrastructure.Clients;
 
 public class BlocketApiClient : IBlocketApiClient
 {
+    private readonly ILogger<BlocketApiClient> _logger;
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true
@@ -23,16 +25,18 @@ public class BlocketApiClient : IBlocketApiClient
     private readonly HttpClient _httpClient;
     private readonly BlocketApiOptions _options;
 
-    public BlocketApiClient(HttpClient httpClient, IOptions<BlocketApiOptions> options)
+    public BlocketApiClient(HttpClient httpClient, IOptions<BlocketApiOptions> options, ILogger<BlocketApiClient> logger)
     {
         _httpClient = httpClient;
         _options = options?.Value ?? new BlocketApiOptions();
+        _logger = logger;
     }
 
     public async Task<BlocketCarSearchResponse> SearchCarsAsync(BlocketCarSearchRequest request, CancellationToken cancellationToken = default)
     {
         var queryParameters = new Dictionary<string, string?>
         {
+            ["query"] = request.Query,
             ["page"] = request.Page.ToString(),
             ["sort_order"] = request.SortOrder ?? _options.DefaultSortOrder,
             ["org_id"] = request.OrgId,
@@ -41,17 +45,33 @@ public class BlocketApiClient : IBlocketApiClient
             ["price_from"] = request.PriceFrom?.ToString(),
             ["price_to"] = request.PriceTo?.ToString(),
             ["year_from"] = request.YearFrom?.ToString(),
-            ["year_to"] = request.YearTo?.ToString()
+            ["year_to"] = request.YearTo?.ToString(),
+            ["milage_from"] = request.MilageFrom?.ToString(),
+            ["milage_to"] = request.MilageTo?.ToString(),
+            ["colors"] = request.Colors,
+            ["transmissions"] = request.Transmissions,
+            ["wheel_drive"] = request.WheelDrive,
+            ["horsepower_from"] = request.HorsepowerFrom?.ToString(),
+            ["horsepower_to"] = request.HorsepowerTo?.ToString()
         };
 
         var url = QueryHelpers.AddQueryString("v1/search/car", queryParameters!);
-        return await GetFromJsonAsync<BlocketCarSearchResponse>(url, cancellationToken);
+        _logger.LogDebug("Blocket search: {Url}", url);
+        var response = await GetFromJsonAsync<BlocketCarSearchResponse>(url, cancellationToken);
+        _logger.LogDebug("Blocket search page {Page}: {Count} docs", request.Page, response.Docs.Count);
+        return response;
     }
 
     public async Task<BlocketCarAdDetails> GetCarAdAsync(string id, CancellationToken cancellationToken = default)
     {
         var url = QueryHelpers.AddQueryString("v1/ad/car", new Dictionary<string, string?> { ["id"] = id });
-        return await GetFromJsonAsync<BlocketCarAdDetails>(url, cancellationToken);
+        await WaitForRequestSlotAsync(cancellationToken);
+        using var httpResponse = await _httpClient.GetAsync(url, cancellationToken);
+        httpResponse.EnsureSuccessStatusCode();
+        var raw = await httpResponse.Content.ReadAsStringAsync(cancellationToken);
+        _logger.LogDebug("Blocket ad details raw ({Id}): {Raw}", id, raw.Length > 3000 ? raw[..3000] : raw);
+        return JsonSerializer.Deserialize<BlocketCarAdDetails>(raw, JsonOptions)
+            ?? throw new InvalidOperationException($"Empty ad details for {id}");
     }
 
     private async Task<T> GetFromJsonAsync<T>(string requestUri, CancellationToken cancellationToken)

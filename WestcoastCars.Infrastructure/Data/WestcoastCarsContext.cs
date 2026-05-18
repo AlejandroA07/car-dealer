@@ -94,8 +94,24 @@ public class WestcoastCarsContext : IdentityDbContext<IdentityUser>
             .HasMaxLength(50);
 
         modelBuilder.Entity<Vehicle>()
+            .Property(vehicle => vehicle.WheelDrive)
+            .HasMaxLength(50);
+
+        modelBuilder.Entity<Vehicle>()
+            .Property(vehicle => vehicle.BodyType)
+            .HasMaxLength(50);
+
+        modelBuilder.Entity<Vehicle>()
+            .Property(vehicle => vehicle.EngineVolume)
+            .HasMaxLength(20);
+
+        modelBuilder.Entity<Vehicle>()
             .Property(vehicle => vehicle.City)
             .HasMaxLength(100);
+
+        modelBuilder.Entity<Vehicle>()
+            .Property(vehicle => vehicle.Address)
+            .HasMaxLength(200);
 
         modelBuilder.Entity<Vehicle>()
             .HasIndex(vehicle => vehicle.ExternalListingId);

@@ -2,6 +2,7 @@ using System.Text.Json;
 using MediatR;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Application.Models.Blocket;
+using WestcoastCars.Application.Services;
 using WestcoastCars.Domain.Entities;
 
 namespace WestcoastCars.Application.Features.Vehicles.Commands.RefreshInventoryFromBlocket;
@@ -36,15 +37,23 @@ public class RefreshInventoryFromBlocketCommandHandler : IRequestHandler<Refresh
         {
             var searchResponse = await _blocketApiClient.SearchCarsAsync(new BlocketCarSearchRequest
             {
+                Query = request.Query,
                 Page = currentPage,
-                SortOrder = "PUBLISHED_DESC",
+                SortOrder = request.SortOrder ?? "PUBLISHED_DESC",
                 OrgId = request.OrgId,
                 Locations = request.Locations,
                 Models = request.Manufacturers,
+                PriceFrom = request.PriceFrom,
+                PriceTo = request.PriceTo,
                 YearFrom = request.YearFrom,
                 YearTo = request.YearTo,
-                PriceFrom = request.PriceFrom,
-                PriceTo = request.PriceTo
+                MilageFrom = request.MinMileage.HasValue ? request.MinMileage / 10 : null,
+                MilageTo = request.MaxMileage.HasValue ? request.MaxMileage / 10 : null,
+                Colors = request.Colors,
+                Transmissions = ToApiTransmission(request.TransmissionFilter),
+                WheelDrive = request.WheelDrive,
+                HorsepowerFrom = request.HorsepowerFrom,
+                HorsepowerTo = request.HorsepowerTo
             }, cancellationToken);
 
             pagesFetched++;
@@ -63,13 +72,11 @@ public class RefreshInventoryFromBlocketCommandHandler : IRequestHandler<Refresh
                     break;
                 }
 
-                // Pre-filter on search result fields — skip the detail fetch entirely
-                // for listings that clearly won't pass. All filter fields are available
-                // on the search item itself, so no detail request is needed to decide.
+                // Pre-filter on fields available in the search result — avoids unnecessary detail fetches.
+                // Registration number and model year are NOT pre-filtered here: Blocket omits them
+                // from search results frequently; the mapper falls back to the ad details page.
                 if (string.IsNullOrWhiteSpace(searchItem.Id) ||
                     !seenExternalListingIds.Add(searchItem.Id) ||
-                    string.IsNullOrWhiteSpace(searchItem.RegistrationNumber) ||
-                    !IsValidModelYear(searchItem.Year) ||
                     !PassesMileageFilter(searchItem, request.MinMileage, request.MaxMileage) ||
                     !PassesTransmissionFilter(searchItem.Transmission, request.TransmissionFilter) ||
                     !PassesFuelFilter(searchItem.Fuel, request.FuelTypeFilter))
@@ -82,6 +89,18 @@ public class RefreshInventoryFromBlocketCommandHandler : IRequestHandler<Refresh
                 // so parallel detail requests would only add contention and risk upstream pressure.
                 var adDetails = await _blocketApiClient.GetCarAdAsync(searchItem.Id, cancellationToken);
                 var mappedVehicle = _mapper.Map(searchItem, adDetails, importedAtUtc);
+
+                // If the spec lookup missed the wheel drive key, fall back to the search filter value.
+                // A car that passed the wheel_drive filter IS that drive type.
+                if (string.IsNullOrWhiteSpace(mappedVehicle.WheelDrive) && !string.IsNullOrWhiteSpace(request.WheelDrive))
+                    mappedVehicle.WheelDrive = request.WheelDrive;
+
+                // Skip only after details fetch if critical fields are still missing.
+                if (!mappedVehicle.ModelYear.HasValue)
+                {
+                    totalSkipped++;
+                    continue;
+                }
 
                 preparedVehicles.Add(mappedVehicle);
             }
@@ -103,6 +122,21 @@ public class RefreshInventoryFromBlocketCommandHandler : IRequestHandler<Refresh
                 existing.Price = prepared.Price;
                 existing.Mileage = prepared.Mileage;
                 existing.ImportedAt = prepared.ImportedAt;
+                existing.Color = prepared.Color;
+                existing.WheelDrive = prepared.WheelDrive;
+                existing.Horsepower = prepared.Horsepower;
+                existing.BodyType = prepared.BodyType;
+                existing.Doors = prepared.Doors;
+                existing.EngineVolume = prepared.EngineVolume;
+                existing.City = prepared.City;
+                existing.Address = prepared.Address;
+                existing.Equipment = prepared.Equipment.Count > 0 ? JsonSerializer.Serialize(prepared.Equipment) : null;
+                existing.GalleryUrls = prepared.GalleryUrls.Count > 0 ? JsonSerializer.Serialize(prepared.GalleryUrls) : null;
+                existing.Seats = prepared.Seats;
+                existing.MaxTrailerWeight = prepared.MaxTrailerWeight;
+                existing.OwnerCount = prepared.OwnerCount;
+                existing.LastInspectionDate = prepared.LastInspectionDate;
+                existing.NextInspectionDate = prepared.NextInspectionDate;
                 _unitOfWork.VehicleRepository.Update(existing);
                 updatedCount++;
             }
@@ -152,9 +186,9 @@ public class RefreshInventoryFromBlocketCommandHandler : IRequestHandler<Refresh
         if (!min.HasValue && !max.HasValue) return true;
         if (!item.Mileage.HasValue) return true;
 
-        var km = string.Equals(item.MileageUnit, "SCANDINAVIAN_MILE", StringComparison.OrdinalIgnoreCase)
-            ? item.Mileage.Value * 10
-            : item.Mileage.Value;
+        var km = string.Equals(item.MileageUnit, "km", StringComparison.OrdinalIgnoreCase)
+            ? item.Mileage.Value
+            : item.Mileage.Value * 10;
 
         return (!min.HasValue || km >= min.Value) && (!max.HasValue || km < max.Value);
     }
@@ -217,7 +251,7 @@ public class RefreshInventoryFromBlocketCommandHandler : IRequestHandler<Refresh
 
             vehicles.Add(new Vehicle
             {
-                RegistrationNumber = preparedVehicle.RegistrationNumber!,
+                RegistrationNumber = preparedVehicle.RegistrationNumber,
                 Model = preparedVehicle.Model,
                 ModelYear = preparedVehicle.ModelYear.Value,
                 Mileage = preparedVehicle.Mileage,
@@ -230,10 +264,24 @@ public class RefreshInventoryFromBlocketCommandHandler : IRequestHandler<Refresh
                 PublishedAt = preparedVehicle.PublishedAt,
                 ImportedAt = preparedVehicle.ImportedAt,
                 Color = preparedVehicle.Color,
+                WheelDrive = preparedVehicle.WheelDrive,
+                Horsepower = preparedVehicle.Horsepower,
+                BodyType = preparedVehicle.BodyType,
+                Doors = preparedVehicle.Doors,
+                EngineVolume = preparedVehicle.EngineVolume,
                 City = preparedVehicle.City,
+                Address = preparedVehicle.Address,
                 Equipment = preparedVehicle.Equipment.Count > 0
                     ? JsonSerializer.Serialize(preparedVehicle.Equipment)
                     : null,
+                GalleryUrls = preparedVehicle.GalleryUrls.Count > 0
+                    ? JsonSerializer.Serialize(preparedVehicle.GalleryUrls)
+                    : null,
+                Seats = preparedVehicle.Seats,
+                MaxTrailerWeight = preparedVehicle.MaxTrailerWeight,
+                OwnerCount = preparedVehicle.OwnerCount,
+                LastInspectionDate = preparedVehicle.LastInspectionDate,
+                NextInspectionDate = preparedVehicle.NextInspectionDate,
                 Manufacturer = manufacturer,
                 FuelType = fuelType,
                 TransmissionType = transmissionType
@@ -276,6 +324,13 @@ public class RefreshInventoryFromBlocketCommandHandler : IRequestHandler<Refresh
     {
         return string.IsNullOrWhiteSpace(value) ? fallbackValue : value.Trim();
     }
+
+    private static string? ToApiTransmission(string? filter) => filter switch
+    {
+        "Automat" => "AUTOMATIC",
+        "Manuell" => "MANUAL",
+        _ => null
+    };
 
     private static bool IsValidModelYear(int? modelYear) =>
         modelYear.HasValue &&

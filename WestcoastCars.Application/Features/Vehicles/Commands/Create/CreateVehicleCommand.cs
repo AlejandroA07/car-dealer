@@ -16,4 +16,14 @@ public class CreateVehicleCommand : IRequest<VehicleDetailsDto>
     public string Description { get; set; } = string.Empty;
     public bool IsSold { get; set; }
     public string ImageUrl { get; set; } = string.Empty;
+    public string? Color { get; set; }
+    public string? WheelDrive { get; set; }
+    public int? Horsepower { get; set; }
+    public string? BodyType { get; set; }
+    public int? Doors { get; set; }
+    public string? EngineVolume { get; set; }
+    public string? City { get; set; }
+    public string? Address { get; set; }
+    public string? Equipment { get; set; }
+    public string? GalleryUrls { get; set; }
 }

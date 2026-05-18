@@ -4,7 +4,7 @@ namespace WestcoastCars.Domain.Entities;
 
 public class Vehicle : BaseEntity
 {
-    public required string RegistrationNumber { get; set; }
+    public string? RegistrationNumber { get; set; }
     public required string Model { get; set; }
     public int ModelYear { get; set; }
     public int Mileage { get; set; }
@@ -38,8 +38,20 @@ public class Vehicle : BaseEntity
     public DateTime? PublishedAt { get; set; }
     public DateTime? ImportedAt { get; set; }
     public string? Color { get; set; }
+    public string? WheelDrive { get; set; }
+    public int? Horsepower { get; set; }
+    public string? BodyType { get; set; }
+    public int? Doors { get; set; }
+    public string? EngineVolume { get; set; }
     public string? City { get; set; }
+    public string? Address { get; set; }
     public string? Equipment { get; set; }
+    public string? GalleryUrls { get; set; }
+    public int? Seats { get; set; }
+    public int? MaxTrailerWeight { get; set; }
+    public int? OwnerCount { get; set; }
+    public DateOnly? LastInspectionDate { get; set; }
+    public DateOnly? NextInspectionDate { get; set; }
     public int ManufacturerId { get; set; }
     [ForeignKey("ManufacturerId")]
     public required Manufacturer Manufacturer { get; set; }
