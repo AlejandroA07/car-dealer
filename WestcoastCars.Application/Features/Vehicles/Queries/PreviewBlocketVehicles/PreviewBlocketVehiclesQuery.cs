@@ -1,8 +1,9 @@
 using MediatR;
+using WestcoastCars.Contracts.DTOs;
 
-namespace WestcoastCars.Application.Features.Vehicles.Commands.RefreshInventoryFromBlocket;
+namespace WestcoastCars.Application.Features.Vehicles.Queries.PreviewBlocketVehicles;
 
-public class RefreshInventoryFromBlocketCommand : IRequest<RefreshInventoryFromBlocketResult>
+public class PreviewBlocketVehiclesQuery : IRequest<List<BlocketPreviewDto>>
 {
     public int Limit { get; set; } = 50;
     public string? Query { get; set; }

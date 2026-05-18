@@ -13,21 +13,17 @@
                 <div>
                     <span class="vehicle-editor-kicker">Lagerimport</span>
                     <h1>Hämta Bilar</h1>
-                    <p>Hämta aktuella Blocket-annonser och uppdatera lagret med en kontrollerad import.</p>
+                    <p>Sök bland Blocket-annonser, välj vilka bilar du vill importera och hämta dem till lagret.</p>
                 </div>
             </header>
 
             <section class="vehicle-editor-card" style="margin-bottom: 1.5rem;">
                 <div class="vehicle-editor-section-title">
-                    <i class="fa-solid fa-rotate"></i>
-                    <h2>Manuell upphämtning</h2>
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <h2>Filtrera</h2>
                 </div>
 
-                <p class="admin-utility-copy">
-                    Kör en ny import när lagret behöver uppdateras. Begränsningen skyddar sidan från att hämta för mycket data på en gång.
-                </p>
-
-                <form asp-action="SyncBlocket" asp-controller="Vehicles" method="post" class="vehicle-editor-form admin-sync-form">
+                <form asp-action="PreviewBlocket" asp-controller="Vehicles" method="post" class="vehicle-editor-form admin-sync-form" id="preview-form">
                     @Html.AntiForgeryToken()
 
                     <div class="sync-form-grid">
@@ -38,6 +34,22 @@
                         </label>
 
                         <label class="vehicle-editor-field">
+                            <span>Sortering</span>
+                            <select asp-for="SortOrder" class="form-control">
+                                <option value="">Nyast först (standard)</option>
+                                <option value="PUBLISHED_ASC">Äldst först</option>
+                                <option value="PRICE_ASC">Lägst pris</option>
+                                <option value="PRICE_DESC">Högst pris</option>
+                                <option value="RELEVANCE">Relevans</option>
+                            </select>
+                        </label>
+
+                        <label class="vehicle-editor-field">
+                            <span>Sökord</span>
+                            <input asp-for="Query" type="text" placeholder="t.ex. 320d xdrive drag krok" />
+                        </label>
+
+                        <label class="vehicle-editor-field">
                             <span>Platser</span>
                             <input asp-for="Locations" type="text" placeholder="t.ex. STOCKHOLM" />
                         </label>
@@ -45,6 +57,40 @@
                         <label class="vehicle-editor-field">
                             <span>Tillverkare</span>
                             <input asp-for="Manufacturers" type="text" placeholder="t.ex. VOLVO" />
+                        </label>
+
+                        <label class="vehicle-editor-field">
+                            <span>Färg</span>
+                            <select asp-for="Colors" class="form-control">
+                                <option value="">Alla färger</option>
+                                <option value="SVART">Svart</option>
+                                <option value="VIT">Vit</option>
+                                <option value="GRA">Grå</option>
+                                <option value="SILVER">Silver</option>
+                                <option value="BLA">Blå</option>
+                                <option value="ROD">Röd</option>
+                                <option value="GRON">Grön</option>
+                                <option value="GUL">Gul</option>
+                                <option value="BRUN">Brun</option>
+                                <option value="BEIGE">Beige</option>
+                                <option value="ORANGE">Orange</option>
+                                <option value="LILA">Lila</option>
+                                <option value="ROSA">Rosa</option>
+                                <option value="GULD">Guld</option>
+                                <option value="BRONS">Brons</option>
+                                <option value="TURKOS">Turkos</option>
+                            </select>
+                        </label>
+
+                        <label class="vehicle-editor-field">
+                            <span>Drivning</span>
+                            <select asp-for="WheelDrive" class="form-control">
+                                <option value="">Alla drivningar</option>
+                                <option value="FWD">Framhjulsdrift (FWD)</option>
+                                <option value="RWD">Bakhjulsdrift (RWD)</option>
+                                <option value="FOUR">Fyrhjulsdrift (4WD)</option>
+                                <option value="TWO">Tvåhjulsdrift</option>
+                            </select>
                         </label>
 
                         <label class="vehicle-editor-field">
@@ -102,67 +148,141 @@
                             <span class="vehicle-editor-error" asp-validation-for="PriceTo"></span>
                         </div>
 
+                        <div class="vehicle-editor-field">
+                            <span>Hästkrafter</span>
+                            <div class="vehicle-editor-range">
+                                <input asp-for="HorsepowerFrom" type="number" min="0" placeholder="Från" />
+                                <span class="vehicle-editor-range-sep">–</span>
+                                <input asp-for="HorsepowerTo" type="number" min="0" placeholder="Till" />
+                            </div>
+                            <span class="vehicle-editor-error" asp-validation-for="HorsepowerFrom"></span>
+                            <span class="vehicle-editor-error" asp-validation-for="HorsepowerTo"></span>
+                        </div>
+
                         <div class="vehicle-editor-field sync-submit-cell">
                             <button type="submit" class="btn btn-primary">
-                                Hämta Bilar
-                                <i class="fa-solid fa-arrow-right"></i>
+                                Förhandsgranska
+                                <i class="fa-solid fa-eye"></i>
                             </button>
                         </div>
                     </div>
                 </form>
             </section>
 
-            <section class="vehicle-editor-card vehicle-editor-card-muted">
-                <div class="vehicle-editor-section-title">
-                    <i class="fa-solid fa-list-check"></i>
-                    <h2>Senaste resultat</h2>
-                </div>
+            @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+            {
+                <p class="vehicle-editor-validation" style="margin-bottom: 1.5rem;">@Model.ErrorMessage</p>
+            }
 
-                @if (!string.IsNullOrWhiteSpace(Model.InfoMessage))
-                {
-                    <p class="admin-utility-copy">@Model.InfoMessage</p>
-                }
-                else if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
-                {
-                    <p class="vehicle-editor-validation">@Model.ErrorMessage</p>
-                }
-                else if (Model.HasResult)
-                {
+            @if (Model.ImportResult != null)
+            {
+                <section class="vehicle-editor-card vehicle-editor-card-muted" style="margin-bottom: 1.5rem;">
+                    <div class="vehicle-editor-section-title">
+                        <i class="fa-solid fa-list-check"></i>
+                        <h2>Importresultat</h2>
+                    </div>
                     <div class="admin-sync-stats">
                         <div class="admin-sync-stat">
                             <span>Tillagda</span>
-                            <strong>@Model.TotalAdded</strong>
+                            <strong>@Model.ImportResult.TotalAdded</strong>
                         </div>
                         <div class="admin-sync-stat">
                             <span>Uppdaterade</span>
-                            <strong>@Model.TotalUpdated</strong>
+                            <strong>@Model.ImportResult.TotalUpdated</strong>
                         </div>
                         <div class="admin-sync-stat">
-                            <span>Borttagna</span>
-                            <strong>@Model.TotalFlagged</strong>
+                            <span>Hoppade</span>
+                            <strong>@Model.ImportResult.TotalSkipped</strong>
                         </div>
-                        <div class="admin-sync-stat">
-                            <span>Överhoppade</span>
-                            <strong>@Model.TotalSkipped</strong>
-                        </div>
-                        <div class="admin-sync-stat">
-                            <span>Sidor</span>
-                            <strong>@Model.PagesFetched</strong>
+                    </div>
+                </section>
+            }
+
+            @if (Model.HasPreview)
+            {
+                <section class="vehicle-editor-card" id="preview-section">
+                    <div class="blocket-preview-header">
+                        <span>@Model.PreviewResults.Count bilar hittades</span>
+                        <div class="blocket-preview-actions">
+                            <button type="button" class="btn btn-ghost btn-sm" id="select-all-btn">Markera alla</button>
+                            <button type="button" class="btn btn-ghost btn-sm" id="deselect-all-btn">Avmarkera alla</button>
+                            <button type="button" class="btn btn-ghost btn-sm" id="discard-preview-btn">Kasta förhandsgranskning</button>
                         </div>
                     </div>
 
-                    <ul class="admin-sync-summary">
-                        <li><span>Begärd gräns</span><strong>@Model.RequestedLimit</strong></li>
-                        <li><span>Använd gräns</span><strong>@Model.AppliedLimit</strong></li>
-                        <li><span>Hämtade från API</span><strong>@Model.TotalFetched</strong></li>
-                        <li><span>Förberedda för import</span><strong>@Model.TotalPrepared</strong></li>
-                    </ul>
-                }
-                else
-                {
-                    <p class="admin-utility-copy">Ingen upphämtning har körts från den här sidan ännu.</p>
-                }
-            </section>
+                    <div class="vehicle-grid" style="margin-top: 1rem;">
+                        @foreach (var item in Model.PreviewResults)
+                        {
+                            var title = $"{item.Make} {item.Model}".Trim();
+                            if (string.IsNullOrWhiteSpace(title)) title = item.Title;
+                            <article class="vehicle-card blocket-preview-card @(item.IsAlreadyImported ? "is-imported" : null)" data-id="@item.ExternalListingId">
+                                <label class="vehicle-card-media blocket-preview-select">
+                                    <img src="@(item.ImageUrl ?? "/images/no-car.png")" alt="@title" loading="lazy">
+                                    @if (item.IsAlreadyImported)
+                                    {
+                                        <span class="blocket-imported-badge">Redan importerad</span>
+                                        <input type="checkbox" class="blocket-preview-checkbox" value="@item.ExternalListingId" disabled>
+                                    }
+                                    else
+                                    {
+                                        <input type="checkbox" class="blocket-preview-checkbox" value="@item.ExternalListingId">
+                                    }
+                                </label>
+                                <div class="vehicle-card-body">
+                                    <div class="vehicle-card-topline">
+                                        @if (item.Year.HasValue) { <span>@item.Year</span> }
+                                        @if (!string.IsNullOrWhiteSpace(item.Transmission)) { <span>@item.Transmission</span> }
+                                        @if (!string.IsNullOrWhiteSpace(item.Fuel)) { <span>@item.Fuel</span> }
+                                    </div>
+                                    <div class="vehicle-card-heading">
+                                        <h3>@title</h3>
+                                    </div>
+                                    <div class="vehicle-card-spec-row">
+                                        @if (item.MileageKm.HasValue)
+                                        {
+                                            <span><i class="fa-solid fa-road"></i> @item.MileageKm.Value.ToString("N0") km</span>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(item.Location))
+                                        {
+                                            <span><i class="fa-solid fa-location-dot"></i> @item.Location</span>
+                                        }
+                                    </div>
+                                    <div class="vehicle-card-footer">
+                                        <div>
+                                            @if (item.Price.HasValue)
+                                            {
+                                                <span class="vehicle-card-price">@item.Price.Value.ToString("N0") kr</span>
+                                            }
+                                            <small>@item.RegistrationNumber</small>
+                                        </div>
+                                        @if (!string.IsNullOrWhiteSpace(item.SourceUrl))
+                                        {
+                                            <a href="@item.SourceUrl" target="_blank" rel="noopener" class="vehicle-card-link" aria-label="Öppna annons på Blocket">
+                                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                            </a>
+                                        }
+                                    </div>
+                                </div>
+                            </article>
+                        }
+                    </div>
+
+                    <form asp-action="ImportSelected" asp-controller="Vehicles" method="post" id="import-form" style="margin-top: 1.5rem;">
+                        @Html.AntiForgeryToken()
+                        @foreach (var item in Model.PreviewResults)
+                        {
+                            if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                            {
+                                <input type="hidden" name="imageUrlsById[@item.ExternalListingId]" value="@item.ImageUrl" />
+                            }
+                        }
+                        <div id="selected-ids-container"></div>
+                        <button type="submit" class="btn btn-primary" id="import-btn" disabled>
+                            Importera valda (<span id="selected-count">0</span>)
+                        </button>
+                    </form>
+                </section>
+            }
         </main>
     </div>
 </section>
@@ -171,33 +291,104 @@
     <partial name="_ValidationScriptsPartial" />
     <script>
         (function () {
-            var form = document.querySelector('.admin-sync-form');
-            if (form) {
-                form.addEventListener('submit', function () {
-                    var btn = form.querySelector('button[type="submit"]');
+            var previewForm = document.getElementById('preview-form');
+            if (previewForm) {
+                previewForm.addEventListener('submit', function () {
+                    var btn = previewForm.querySelector('button[type="submit"]');
                     if (btn) {
                         btn.disabled = true;
-                        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Hämtar...';
+                        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Söker...';
                     }
-                    if (typeof toastr !== 'undefined') {
-                        toastr.info('Hämtar från Blocket, det kan ta 15–30 sekunder…', 'Hämtar bilar', {
-                            timeOut: 0,
-                            extendedTimeOut: 0,
-                            closeButton: false,
-                            tapToDismiss: false,
-                            progressBar: false
-                        });
+                });
+            }
+
+            var importBtn = document.getElementById('import-btn');
+            var selectedCount = document.getElementById('selected-count');
+            var container = document.getElementById('selected-ids-container');
+            var checkboxes = document.querySelectorAll('.blocket-preview-checkbox:not([disabled])');
+
+            function updateImportBtn() {
+                var checked = document.querySelectorAll('.blocket-preview-checkbox:not([disabled]):checked');
+                if (importBtn) {
+                    importBtn.disabled = checked.length === 0;
+                }
+                if (selectedCount) {
+                    selectedCount.textContent = checked.length;
+                }
+                if (container) {
+                    container.innerHTML = '';
+                    checked.forEach(function (cb) {
+                        var input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'ExternalListingIds';
+                        input.value = cb.value;
+                        container.appendChild(input);
+                    });
+                }
+            }
+
+            checkboxes.forEach(function (cb) {
+                cb.addEventListener('change', updateImportBtn);
+            });
+
+            document.querySelectorAll('.blocket-preview-card:not(.is-imported)').forEach(function (card) {
+                card.addEventListener('click', function (e) {
+                    if (e.target.tagName === 'A' || (e.target.closest && e.target.closest('a'))) return;
+                    if (e.target.tagName === 'INPUT') return;
+                    var cb = card.querySelector('.blocket-preview-checkbox');
+                    if (cb && !cb.disabled) {
+                        cb.checked = !cb.checked;
+                        updateImportBtn();
+                    }
+                });
+            });
+
+            var selectAllBtn = document.getElementById('select-all-btn');
+            if (selectAllBtn) {
+                selectAllBtn.addEventListener('click', function () {
+                    checkboxes.forEach(function (cb) { cb.checked = true; });
+                    updateImportBtn();
+                });
+            }
+
+            var deselectAllBtn = document.getElementById('deselect-all-btn');
+            if (deselectAllBtn) {
+                deselectAllBtn.addEventListener('click', function () {
+                    checkboxes.forEach(function (cb) { cb.checked = false; });
+                    updateImportBtn();
+                });
+            }
+
+            var discardBtn = document.getElementById('discard-preview-btn');
+            if (discardBtn) {
+                discardBtn.addEventListener('click', function () {
+                    var section = document.getElementById('preview-section');
+                    if (section) section.remove();
+                });
+            }
+
+            var importForm = document.getElementById('import-form');
+            if (importForm) {
+                importForm.addEventListener('submit', function () {
+                    if (importBtn) {
+                        importBtn.disabled = true;
+                        importBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Importerar...';
                     }
                 });
             }
 
             if (typeof toastr !== 'undefined') {
-                @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage)) {
+                @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+                {
                     @:toastr.error(@Json.Serialize(Model.ErrorMessage), 'Fel');
-                } else if (!string.IsNullOrWhiteSpace(Model.InfoMessage)) {
-                    @:toastr.info(@Json.Serialize(Model.InfoMessage), 'Info');
-                } else if (Model.HasResult) {
-                    @:toastr.success('Upphämtningen är klar. @Model.TotalAdded tillagda, @Model.TotalUpdated uppdaterade, @Model.TotalFlagged borttagna.', 'Klart');
+                }
+                else if (Model.ImportResult != null)
+                {
+                    @:toastr.success('Import klar. @Model.ImportResult.TotalAdded tillagda, @Model.ImportResult.TotalUpdated uppdaterade.', 'Klart');
+                }
+                else if (Model.HasPreview)
+                {
+                    @:toastr.info('@Model.PreviewResults.Count bilar hittades. Välj vilka du vill importera.', 'Förhandsgranskning');
                 }
             }
         }());

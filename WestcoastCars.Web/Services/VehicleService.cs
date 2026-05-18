@@ -191,7 +191,16 @@ public class VehicleService : IVehicleService
                 Price = vehicleToEdit.Price,
                 Description = vehicleToEdit.Description,
                 IsSold = vehicleToEdit.IsSold,
-                ImageUrl = vehicleToEdit.ImageUrl
+                ImageUrl = vehicleToEdit.ImageUrl,
+                Color = vehicleToEdit.Color,
+                WheelDrive = vehicleToEdit.WheelDrive,
+                Horsepower = vehicleToEdit.Horsepower,
+                BodyType = vehicleToEdit.BodyType,
+                Doors = vehicleToEdit.Doors,
+                EngineVolume = vehicleToEdit.EngineVolume,
+                City = vehicleToEdit.City,
+                Equipment = vehicleToEdit.Equipment.Count > 0 ? string.Join("\n", vehicleToEdit.Equipment) : null,
+                GalleryUrls = vehicleToEdit.ImageUrls.Count > 0 ? string.Join("\n", vehicleToEdit.ImageUrls) : null
             }
         };
 
@@ -214,7 +223,16 @@ public class VehicleService : IVehicleService
             ManufacturerId = vehicle.ManufacturerId,
             FuelTypeId = vehicle.FuelTypeId,
             TransmissionTypeId = vehicle.TransmissionTypeId,
-            RegistrationNumber = vehicle.RegistrationNumber
+            RegistrationNumber = vehicle.RegistrationNumber,
+            Color = vehicle.Color,
+            WheelDrive = vehicle.WheelDrive,
+            Horsepower = vehicle.Horsepower,
+            BodyType = vehicle.BodyType,
+            Doors = vehicle.Doors,
+            EngineVolume = vehicle.EngineVolume,
+            City = vehicle.City,
+            Equipment = vehicle.Equipment,
+            GalleryUrls = vehicle.GalleryUrls
         };
 
         return await ExecuteWithApiFallback(async () =>
@@ -259,7 +277,16 @@ public class VehicleService : IVehicleService
             Price = vehicleViewModel.Vehicle.Price,
             Description = vehicleViewModel.Vehicle.Description,
             IsSold = vehicleViewModel.Vehicle.IsSold,
-            ImageUrl = vehicleViewModel.Vehicle.ImageUrl
+            ImageUrl = vehicleViewModel.Vehicle.ImageUrl,
+            Color = vehicleViewModel.Vehicle.Color,
+            WheelDrive = vehicleViewModel.Vehicle.WheelDrive,
+            Horsepower = vehicleViewModel.Vehicle.Horsepower,
+            BodyType = vehicleViewModel.Vehicle.BodyType,
+            Doors = vehicleViewModel.Vehicle.Doors,
+            EngineVolume = vehicleViewModel.Vehicle.EngineVolume,
+            City = vehicleViewModel.Vehicle.City,
+            Equipment = vehicleViewModel.Vehicle.Equipment,
+            GalleryUrls = vehicleViewModel.Vehicle.GalleryUrls
         };
 
         return await ExecuteWithApiFallback(async () =>
@@ -418,6 +445,91 @@ public class VehicleService : IVehicleService
                 Manufacturers = model.Manufacturers,
                 InfoMessage = "Upphämtningen tar längre tid än väntat men API:t kan fortfarande arbeta i bakgrunden. Vänta en stund och kontrollera fordonslistan igen."
             };
+        }
+    }
+
+    public async Task<List<BlocketPreviewDto>> PreviewBlocketAsync(BlocketSyncViewModel model)
+    {
+        try
+        {
+            (int? minMileage, int? maxMileage) = model.MileageBand switch
+            {
+                "0-10000"     => (0,     (int?)10000),
+                "10000-20000" => (10000, (int?)20000),
+                "20000-30000" => (20000, (int?)30000),
+                "30000-40000" => (30000, (int?)40000),
+                "40000-"      => (40000, (int?)null),
+                _             => ((int?)null, (int?)null)
+            };
+
+            var response = await _longRunningHttpClient.PostAsJsonAsync($"{_baseUrl}/api/v1/vehicles/preview/blocket", new
+            {
+                limit = model.Limit,
+                query = string.IsNullOrWhiteSpace(model.Query) ? null : model.Query,
+                sortOrder = string.IsNullOrWhiteSpace(model.SortOrder) ? null : model.SortOrder,
+                orgId = model.OrgId,
+                locations = model.Locations,
+                manufacturers = model.Manufacturers,
+                priceFrom = model.PriceFrom,
+                priceTo = model.PriceTo,
+                yearFrom = model.YearFrom,
+                yearTo = model.YearTo,
+                minMileage,
+                maxMileage,
+                colors = string.IsNullOrWhiteSpace(model.Colors) ? null : model.Colors,
+                transmissionFilter = string.IsNullOrWhiteSpace(model.TransmissionFilter) ? null : model.TransmissionFilter,
+                wheelDrive = string.IsNullOrWhiteSpace(model.WheelDrive) ? null : model.WheelDrive,
+                horsepowerFrom = model.HorsepowerFrom,
+                horsepowerTo = model.HorsepowerTo,
+                fuelTypeFilter = string.IsNullOrWhiteSpace(model.FuelTypeFilter) ? null : model.FuelTypeFilter
+            });
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError("Blocket preview failed: {StatusCode}", response.StatusCode);
+                return [];
+            }
+
+            return await response.Content.ReadFromJsonAsync<List<BlocketPreviewDto>>(JsonOptions) ?? [];
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "API unavailable during Blocket preview");
+            return [];
+        }
+        catch (TaskCanceledException ex)
+        {
+            _logger.LogWarning(ex, "Blocket preview timed out");
+            return [];
+        }
+    }
+
+    public async Task<ImportSelectedResult> ImportSelectedAsync(List<string> externalIds, Dictionary<string, string> imageUrlsById)
+    {
+        try
+        {
+            var response = await _longRunningHttpClient.PostAsJsonAsync(
+                $"{_baseUrl}/api/v1/vehicles/import/blocket/selected",
+                new { externalListingIds = externalIds, imageUrlsById });
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError("Import selected failed: {StatusCode}", response.StatusCode);
+                return new ImportSelectedResult { TotalSelected = externalIds.Count, TotalSkipped = externalIds.Count };
+            }
+
+            return await response.Content.ReadFromJsonAsync<ImportSelectedResult>(JsonOptions)
+                ?? new ImportSelectedResult { TotalSelected = externalIds.Count };
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "API unavailable during import selected");
+            return new ImportSelectedResult { TotalSelected = externalIds.Count, TotalSkipped = externalIds.Count };
+        }
+        catch (TaskCanceledException ex)
+        {
+            _logger.LogWarning(ex, "Import selected timed out");
+            return new ImportSelectedResult { TotalSelected = externalIds.Count, TotalSkipped = externalIds.Count };
         }
     }
 

@@ -17,6 +17,8 @@ public interface IVehicleService
     Task<bool> MarkAsSoldAsync(int id);
     Task<(bool Seeded, string Message)> SeedVehiclesAsync();
     Task<BlocketSyncViewModel> SyncBlocketAsync(BlocketSyncViewModel model);
+    Task<List<BlocketPreviewDto>> PreviewBlocketAsync(BlocketSyncViewModel model);
+    Task<ImportSelectedResult> ImportSelectedAsync(List<string> externalIds, Dictionary<string, string> imageUrlsById);
     Task<HanteraDatabaseViewModel> GetHanteraDatabaseViewModelAsync();
     Task<int> BulkDeleteAsync(string? make, string? model, bool? isSold, int? minMileage, int? maxMileage);
     Task<int> DeleteAllVehiclesAsync();
