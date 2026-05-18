@@ -130,7 +130,7 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
     public async Task<IEnumerable<VehicleStatsByModelDto>> GetStatsByModelAsync()
     {
         var rows = await _context.Vehicles
-            .Where(v => v.RegistrationNumber != null && v.SourceStatus != "SourceRemoved")
+            .Where(v => v.SourceStatus != "SourceRemoved")
             .Join(_context.Manufacturers, v => v.ManufacturerId, m => m.Id, (v, m) => m.Name)
             .GroupBy(name => name)
             .Select(g => new { Name = g.Key, Count = g.Count() })
@@ -145,7 +145,7 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
         var result = new List<VehicleStatsByMileageDto>();
         foreach (var (label, min, max) in MileageBands)
         {
-            var query = _context.Vehicles.Where(v => v.RegistrationNumber != null && v.SourceStatus != "SourceRemoved" && v.Mileage >= min);
+            var query = _context.Vehicles.Where(v => v.SourceStatus != "SourceRemoved" && v.Mileage >= min);
             if (max.HasValue) query = query.Where(v => v.Mileage < max.Value);
             var count = await query.CountAsync();
             result.Add(new VehicleStatsByMileageDto(label, min, max, count));
@@ -155,7 +155,7 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
 
     public async Task<VehicleStatsSummaryDto> GetStatsSummaryAsync()
     {
-        var baseQuery = _context.Vehicles.Where(v => v.RegistrationNumber != null);
+        var baseQuery = _context.Vehicles.AsQueryable();
         var totalSold = await baseQuery.CountAsync(v => v.IsSold && v.SourceStatus != "SourceRemoved");
         var totalUnsold = await baseQuery.CountAsync(v => !v.IsSold && v.SourceStatus != "SourceRemoved");
         var totalSourceRemoved = await baseQuery.CountAsync(v => v.SourceStatus == "SourceRemoved");
@@ -164,7 +164,7 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
 
     public async Task<IReadOnlyList<Vehicle>> GetForBulkDeleteAsync(string? make, string? model, bool? isSold, int? minMileage, int? maxMileage)
     {
-        var query = _context.Vehicles.Where(v => v.RegistrationNumber != null).AsQueryable();
+        var query = _context.Vehicles.AsQueryable();
         if (make is not null) query = query.Where(v => v.Manufacturer.Name == make);
         if (model is not null) query = query.Where(v => v.Model == model);
         if (isSold.HasValue) query = query.Where(v => v.IsSold == isSold.Value);
@@ -182,7 +182,6 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
     {
         return await _context.Vehicles
             .AsNoTracking()
-            .Where(v => v.RegistrationNumber != null)
             .Include(v => v.Manufacturer)
             .Include(v => v.FuelType)
             .Include(v => v.TransmissionType)
@@ -193,7 +192,6 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
     {
         return await _context.Vehicles
             .AsNoTracking()
-            .Where(v => v.RegistrationNumber != null)
             .Include(v => v.Manufacturer)
             .Include(v => v.FuelType)
             .Include(v => v.TransmissionType)
@@ -202,8 +200,6 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
 
     private async Task<PagedResult<Vehicle>> ToPagedResultAsync(IQueryable<Vehicle> query, int page, int pageSize)
     {
-        query = query.Where(v => v.RegistrationNumber != null);
-
         var normalizedPage = page < 1 ? 1 : page;
         var normalizedPageSize = pageSize < 1
             ? DefaultPageSize

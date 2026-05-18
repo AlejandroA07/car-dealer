@@ -11,10 +11,9 @@
     var colorText = string.IsNullOrWhiteSpace(Model.Color) ? "Ej angivet" : Model.Color;
     var cityText = string.IsNullOrWhiteSpace(Model.City) ? "Göteborg" : Model.City;
 
-    var imageList = new List<string>();
-    if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
-        imageList.Add(Model.ImageUrl);
-    // When ImageUrls is added to the DTO, replace the above with: imageList = Model.ImageUrls;
+    var imageList = Model.ImageUrls.Count > 0
+        ? Model.ImageUrls
+        : (!string.IsNullOrWhiteSpace(Model.ImageUrl) ? new List<string> { Model.ImageUrl } : new List<string> { "/images/no-car.png" });
 
     var hasExtraImages = imageList.Count > 1;
     var hasMoreOverflow = imageList.Count > 4;
@@ -88,14 +87,39 @@
                 <section class="details-spec-section" aria-labelledby="details-spec-title">
                     <h2 id="details-spec-title">Tekniska specifikationer</h2>
                     <div class="details-spec-grid">
+                        @if (!string.IsNullOrWhiteSpace(Model.RegistrationNumber))
+                        {
+                            <article><span>Regnr</span><strong>@Model.RegistrationNumber</strong></article>
+                        }
                         <article><span>År</span><strong>@Model.ModelYear</strong></article>
                         <article><span>Miltal</span><strong>@Model.Mileage.ToString("N0") km</strong></article>
                         <article><span>Bränsle</span><strong>@Model.FuelType</strong></article>
                         <article><span>Växellåda</span><strong>@Model.TransmissionType</strong></article>
                         <article><span>Färg</span><strong>@colorText</strong></article>
-                        @if (!string.IsNullOrWhiteSpace(Model.RegistrationNumber))
+                        <article><span>Drivning</span><strong>@(string.IsNullOrWhiteSpace(Model.WheelDrive) ? "Ej angivet" : Model.WheelDrive)</strong></article>
+                        <article><span>Hästkrafter</span><strong>@(Model.Horsepower.HasValue ? $"{Model.Horsepower} hk" : "Ej angivet")</strong></article>
+                        <article><span>Karosseri</span><strong>@(string.IsNullOrWhiteSpace(Model.BodyType) ? "Ej angivet" : Model.BodyType)</strong></article>
+                        <article><span>Dörrar</span><strong>@(Model.Doors.HasValue ? Model.Doors.ToString() : "Ej angivet")</strong></article>
+                        <article><span>Motorvolym</span><strong>@(string.IsNullOrWhiteSpace(Model.EngineVolume) ? "Ej angivet" : Model.EngineVolume)</strong></article>
+                        @if (Model.Seats.HasValue)
                         {
-                            <article><span>Regnr</span><strong>@Model.RegistrationNumber</strong></article>
+                            <article><span>Säten</span><strong>@Model.Seats</strong></article>
+                        }
+                        @if (Model.OwnerCount.HasValue)
+                        {
+                            <article><span>Antal ägare</span><strong>@Model.OwnerCount</strong></article>
+                        }
+                        @if (Model.MaxTrailerWeight.HasValue)
+                        {
+                            <article><span>Max trailervikt</span><strong>@Model.MaxTrailerWeight kg</strong></article>
+                        }
+                        @if (Model.LastInspectionDate.HasValue)
+                        {
+                            <article><span>Senaste besiktning</span><strong>@Model.LastInspectionDate.Value.ToString("yyyy-MM-dd")</strong></article>
+                        }
+                        @if (Model.NextInspectionDate.HasValue)
+                        {
+                            <article><span>Nästa besiktning</span><strong>@Model.NextInspectionDate.Value.ToString("yyyy-MM-dd")</strong></article>
                         }
                     </div>
                 </section>
@@ -146,6 +170,10 @@
                         </div>
                     </a>
                     <p>@cityText</p>
+                    @if (!string.IsNullOrWhiteSpace(Model.Address))
+                    {
+                        <p class="details-location-address">@Model.Address</p>
+                    }
                 </section>
 
                 <section class="details-assurance-card" aria-labelledby="details-assurance-title">

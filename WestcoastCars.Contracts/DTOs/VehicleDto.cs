@@ -78,4 +78,18 @@ public class VehicleDto
     /// </summary>
     [MaxLength(500)]
     public string ImageUrl { get; set; } = string.Empty;
+
+    public string? Color { get; set; }
+    public string? WheelDrive { get; set; }
+    public int? Horsepower { get; set; }
+    public string? BodyType { get; set; }
+    public int? Doors { get; set; }
+    public string? EngineVolume { get; set; }
+    public string? City { get; set; }
+
+    /// <summary>One item per line.</summary>
+    public string? Equipment { get; set; }
+
+    /// <summary>One URL per line.</summary>
+    public string? GalleryUrls { get; set; }
 }

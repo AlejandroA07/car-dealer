@@ -109,6 +109,60 @@
 
                 <section class="vehicle-editor-card">
                     <div class="vehicle-editor-section-title">
+                        <i class="fa-solid fa-car-side"></i>
+                        <h2>Ytterligare detaljer</h2>
+                    </div>
+
+                    <div class="vehicle-editor-grid">
+                        <label class="vehicle-editor-field">
+                            <span>Färg</span>
+                            <input asp-for="Vehicle.Color" placeholder="t.ex. Svart" />
+                        </label>
+
+                        <label class="vehicle-editor-field">
+                            <span>Drivning</span>
+                            <input asp-for="Vehicle.WheelDrive" placeholder="t.ex. AWD, FWD, RWD" />
+                        </label>
+
+                        <label class="vehicle-editor-field">
+                            <span>Effekt (hk)</span>
+                            <input asp-for="Vehicle.Horsepower" type="number" min="0" placeholder="t.ex. 150" inputmode="numeric" />
+                        </label>
+
+                        <label class="vehicle-editor-field">
+                            <span>Karosseri</span>
+                            <input asp-for="Vehicle.BodyType" placeholder="t.ex. SUV, Sedan, Kombi" />
+                        </label>
+
+                        <label class="vehicle-editor-field">
+                            <span>Antal dörrar</span>
+                            <input asp-for="Vehicle.Doors" type="number" min="1" max="10" placeholder="t.ex. 5" inputmode="numeric" />
+                        </label>
+
+                        <label class="vehicle-editor-field">
+                            <span>Motorvolym</span>
+                            <input asp-for="Vehicle.EngineVolume" placeholder="t.ex. 2.0L" />
+                        </label>
+
+                        <label class="vehicle-editor-field">
+                            <span>Stad</span>
+                            <input asp-for="Vehicle.City" placeholder="t.ex. Göteborg" />
+                        </label>
+                    </div>
+
+                    <label class="vehicle-editor-field" style="margin-top:1rem">
+                        <span>Utrustning (en rad per artikel)</span>
+                        <textarea asp-for="Vehicle.Equipment" rows="4" placeholder="Bluetooth&#10;Backkamera&#10;Värmare"></textarea>
+                    </label>
+
+                    <label class="vehicle-editor-field" style="margin-top:1rem">
+                        <span>Galleri-URL:er (en URL per rad)</span>
+                        <textarea asp-for="Vehicle.GalleryUrls" rows="4" placeholder="https://example.com/bild1.jpg&#10;https://example.com/bild2.jpg"></textarea>
+                    </label>
+                </section>
+
+                <section class="vehicle-editor-card">
+                    <div class="vehicle-editor-section-title">
                         <i class="fa-solid fa-pen"></i>
                         <h2>Beskrivning</h2>
                     </div>

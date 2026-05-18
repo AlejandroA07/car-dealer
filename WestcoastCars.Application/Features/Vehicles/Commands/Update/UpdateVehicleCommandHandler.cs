@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MediatR;
 using WestcoastCars.Application.Exceptions;
 using WestcoastCars.Application.Interfaces;
@@ -56,9 +57,30 @@ public class UpdateVehicleCommandHandler : IRequestHandler<UpdateVehicleCommand,
             vehicle.ImageUrl = request.ImageUrl;
         }
 
+        vehicle.Color = request.Color;
+        vehicle.WheelDrive = request.WheelDrive;
+        vehicle.Horsepower = request.Horsepower;
+        vehicle.BodyType = request.BodyType;
+        vehicle.Doors = request.Doors;
+        vehicle.EngineVolume = request.EngineVolume;
+        vehicle.City = request.City;
+        vehicle.Address = request.Address;
+        vehicle.Equipment = ToJsonArray(request.Equipment);
+        vehicle.GalleryUrls = ToJsonArray(request.GalleryUrls);
+
         _unitOfWork.VehicleRepository.Update(vehicle);
 
         await _unitOfWork.CompleteOrThrowAsync("Failed to update vehicle");
         return Unit.Value;
+    }
+
+    private static string? ToJsonArray(string? newlineSeparated)
+    {
+        if (string.IsNullOrWhiteSpace(newlineSeparated)) return null;
+        var items = newlineSeparated
+            .Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .ToList();
+        return items.Count > 0 ? JsonSerializer.Serialize(items) : null;
     }
 }

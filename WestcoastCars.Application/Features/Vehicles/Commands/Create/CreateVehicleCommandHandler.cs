@@ -1,3 +1,4 @@
+using System.Text.Json;
 using AutoMapper;
 using MediatR;
 using WestcoastCars.Application.Exceptions;
@@ -42,7 +43,17 @@ public class CreateVehicleCommandHandler : IRequestHandler<CreateVehicleCommand,
             FuelType = fuelType,
             Price = request.Price,
             Description = request.Description,
-            ImageUrl = string.IsNullOrEmpty(request.ImageUrl) ? DefaultCarImageName : request.ImageUrl
+            ImageUrl = string.IsNullOrEmpty(request.ImageUrl) ? DefaultCarImageName : request.ImageUrl,
+            Color = request.Color,
+            WheelDrive = request.WheelDrive,
+            Horsepower = request.Horsepower,
+            BodyType = request.BodyType,
+            Doors = request.Doors,
+            EngineVolume = request.EngineVolume,
+            City = request.City,
+            Address = request.Address,
+            Equipment = ToJsonArray(request.Equipment),
+            GalleryUrls = ToJsonArray(request.GalleryUrls)
         };
 
         if (request.IsSold) vehicle.MarkAsSold();
@@ -51,5 +62,15 @@ public class CreateVehicleCommandHandler : IRequestHandler<CreateVehicleCommand,
 
         await _unitOfWork.CompleteOrThrowAsync("Failed to create vehicle");
         return _mapper.Map<VehicleDetailsDto>(vehicle);
+    }
+
+    private static string? ToJsonArray(string? newlineSeparated)
+    {
+        if (string.IsNullOrWhiteSpace(newlineSeparated)) return null;
+        var items = newlineSeparated
+            .Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .ToList();
+        return items.Count > 0 ? JsonSerializer.Serialize(items) : null;
     }
 }
