@@ -169,6 +169,12 @@ public class VehiclesController : ControllerBase
             Doors = dto.Doors,
             EngineVolume = dto.EngineVolume,
             City = dto.City,
+            Address = dto.Address,
+            Seats = dto.Seats,
+            MaxTrailerWeight = dto.MaxTrailerWeight,
+            OwnerCount = dto.OwnerCount,
+            LastInspectionDate = dto.LastInspectionDate,
+            NextInspectionDate = dto.NextInspectionDate,
             Equipment = dto.Equipment,
             GalleryUrls = dto.GalleryUrls
         };
@@ -406,6 +412,12 @@ public class VehiclesController : ControllerBase
             Doors = dto.Doors,
             EngineVolume = dto.EngineVolume,
             City = dto.City,
+            Address = dto.Address,
+            Seats = dto.Seats,
+            MaxTrailerWeight = dto.MaxTrailerWeight,
+            OwnerCount = dto.OwnerCount,
+            LastInspectionDate = dto.LastInspectionDate,
+            NextInspectionDate = dto.NextInspectionDate,
             Equipment = dto.Equipment,
             GalleryUrls = dto.GalleryUrls
         };

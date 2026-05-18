@@ -38,17 +38,9 @@
             <i class="fa-solid fa-plus"></i>
             <span>Lägg till bil</span>
         </a>
-        <a asp-action="Create" asp-controller="Manufacturer" class='@IsActive("Manufacturer", "Create")'>
-            <i class="fa-solid fa-building"></i>
-            <span>Tillverkare</span>
-        </a>
-        <a asp-action="Create" asp-controller="FuelTypes" class='@IsActive("FuelTypes", "Create")'>
-            <i class="fa-solid fa-gas-pump"></i>
-            <span>Bränsletyper</span>
-        </a>
-        <a asp-action="Create" asp-controller="Transmissions" class='@IsActive("Transmissions", "Create")'>
-            <i class="fa-solid fa-gears"></i>
-            <span>Växellådor</span>
+        <a asp-action="Index" asp-controller="CoreAttributes" class='@IsActive("CoreAttributes", "Index")'>
+            <i class="fa-solid fa-sliders"></i>
+            <span>Lägg till</span>
         </a>
     </nav>
 

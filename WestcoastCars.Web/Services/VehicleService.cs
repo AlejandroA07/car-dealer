@@ -199,6 +199,12 @@ public class VehicleService : IVehicleService
                 Doors = vehicleToEdit.Doors,
                 EngineVolume = vehicleToEdit.EngineVolume,
                 City = vehicleToEdit.City,
+                Address = vehicleToEdit.Address,
+                Seats = vehicleToEdit.Seats,
+                MaxTrailerWeight = vehicleToEdit.MaxTrailerWeight,
+                OwnerCount = vehicleToEdit.OwnerCount,
+                LastInspectionDate = vehicleToEdit.LastInspectionDate,
+                NextInspectionDate = vehicleToEdit.NextInspectionDate,
                 Equipment = vehicleToEdit.Equipment.Count > 0 ? string.Join("\n", vehicleToEdit.Equipment) : null,
                 GalleryUrls = vehicleToEdit.ImageUrls.Count > 0 ? string.Join("\n", vehicleToEdit.ImageUrls) : null
             }
@@ -231,6 +237,12 @@ public class VehicleService : IVehicleService
             Doors = vehicle.Doors,
             EngineVolume = vehicle.EngineVolume,
             City = vehicle.City,
+            Address = vehicle.Address,
+            Seats = vehicle.Seats,
+            MaxTrailerWeight = vehicle.MaxTrailerWeight,
+            OwnerCount = vehicle.OwnerCount,
+            LastInspectionDate = vehicle.LastInspectionDate,
+            NextInspectionDate = vehicle.NextInspectionDate,
             Equipment = vehicle.Equipment,
             GalleryUrls = vehicle.GalleryUrls
         };
@@ -285,6 +297,12 @@ public class VehicleService : IVehicleService
             Doors = vehicleViewModel.Vehicle.Doors,
             EngineVolume = vehicleViewModel.Vehicle.EngineVolume,
             City = vehicleViewModel.Vehicle.City,
+            Address = vehicleViewModel.Vehicle.Address,
+            Seats = vehicleViewModel.Vehicle.Seats,
+            MaxTrailerWeight = vehicleViewModel.Vehicle.MaxTrailerWeight,
+            OwnerCount = vehicleViewModel.Vehicle.OwnerCount,
+            LastInspectionDate = vehicleViewModel.Vehicle.LastInspectionDate,
+            NextInspectionDate = vehicleViewModel.Vehicle.NextInspectionDate,
             Equipment = vehicleViewModel.Vehicle.Equipment,
             GalleryUrls = vehicleViewModel.Vehicle.GalleryUrls
         };

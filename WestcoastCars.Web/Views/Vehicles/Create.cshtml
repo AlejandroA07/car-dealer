@@ -148,6 +148,36 @@
                             <span>Stad</span>
                             <input asp-for="Vehicle.City" placeholder="t.ex. Göteborg" />
                         </label>
+
+                        <label class="vehicle-editor-field">
+                            <span>Adress</span>
+                            <input asp-for="Vehicle.Address" placeholder="t.ex. Storgatan 1" />
+                        </label>
+
+                        <label class="vehicle-editor-field">
+                            <span>Antal säten</span>
+                            <input asp-for="Vehicle.Seats" type="number" min="1" max="20" placeholder="t.ex. 5" inputmode="numeric" />
+                        </label>
+
+                        <label class="vehicle-editor-field">
+                            <span>Max släpvagnsvikt (kg)</span>
+                            <input asp-for="Vehicle.MaxTrailerWeight" type="number" min="0" placeholder="t.ex. 1500" inputmode="numeric" />
+                        </label>
+
+                        <label class="vehicle-editor-field">
+                            <span>Antal ägare</span>
+                            <input asp-for="Vehicle.OwnerCount" type="number" min="1" placeholder="t.ex. 2" inputmode="numeric" />
+                        </label>
+
+                        <label class="vehicle-editor-field">
+                            <span>Senaste besiktning</span>
+                            <input asp-for="Vehicle.LastInspectionDate" type="date" />
+                        </label>
+
+                        <label class="vehicle-editor-field">
+                            <span>Nästa besiktning</span>
+                            <input asp-for="Vehicle.NextInspectionDate" type="date" />
+                        </label>
                     </div>
 
                     <label class="vehicle-editor-field" style="margin-top:1rem">

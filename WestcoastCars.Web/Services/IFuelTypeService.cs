@@ -1,7 +1,7 @@
-using WestcoastCars.Web.ViewModels.FuelType;
+using WestcoastCars.Web.ViewModels.CoreAttributes;
 
 namespace WestcoastCars.Web.Services;
 
-public interface IFuelTypeService : IGenericDataService<FuelTypeListViewModel, FuelTypePostViewModel>
+public interface IFuelTypeService : IGenericDataService<AttributeItemViewModel, AttributePostViewModel>
 {
 }

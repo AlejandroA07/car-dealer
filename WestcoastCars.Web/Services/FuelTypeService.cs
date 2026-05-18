@@ -1,8 +1,8 @@
-using WestcoastCars.Web.ViewModels.FuelType;
+using WestcoastCars.Web.ViewModels.CoreAttributes;
 
 namespace WestcoastCars.Web.Services;
 
-public class FuelTypeService : GenericDataService<FuelTypeListViewModel, FuelTypePostViewModel>, IFuelTypeService
+public class FuelTypeService : GenericDataService<AttributeItemViewModel, AttributePostViewModel>, IFuelTypeService
 {
     public FuelTypeService(IHttpClientFactory httpClientFactory, ILogger<FuelTypeService> logger)
         : base(httpClientFactory, logger, "fueltypes")

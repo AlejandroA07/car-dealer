@@ -65,6 +65,11 @@ public class UpdateVehicleCommandHandler : IRequestHandler<UpdateVehicleCommand,
         vehicle.EngineVolume = request.EngineVolume;
         vehicle.City = request.City;
         vehicle.Address = request.Address;
+        vehicle.Seats = request.Seats;
+        vehicle.MaxTrailerWeight = request.MaxTrailerWeight;
+        vehicle.OwnerCount = request.OwnerCount;
+        vehicle.LastInspectionDate = request.LastInspectionDate;
+        vehicle.NextInspectionDate = request.NextInspectionDate;
         vehicle.Equipment = ToJsonArray(request.Equipment);
         vehicle.GalleryUrls = ToJsonArray(request.GalleryUrls);
 

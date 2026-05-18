@@ -1,7 +1,7 @@
-using WestcoastCars.Web.ViewModels.Manufacturer;
+using WestcoastCars.Web.ViewModels.CoreAttributes;
 
 namespace WestcoastCars.Web.Services;
 
-public interface IManufacturerService : IGenericDataService<ManufacturerListViewModel, ManufacturerPostViewModel>
+public interface IManufacturerService : IGenericDataService<AttributeItemViewModel, AttributePostViewModel>
 {
 }

@@ -1,0 +1,67 @@
+@model IList<WestcoastCars.Web.ViewModels.CoreAttributes.AttributeSectionViewModel>
+
+@{
+    ViewData["Title"] = "Lagerdata";
+}
+
+<section class="admin-editor-page">
+    <div class="site-container admin-workspace-container">
+        @await Html.PartialAsync("_AdminSidebar")
+
+        <main class="admin-workspace-main vehicle-editor-main">
+            <header class="vehicle-editor-header">
+                <div>
+                    <span class="vehicle-editor-kicker">Administration</span>
+                    <h1>Lagerdata</h1>
+                    <p>Hantera tillverkare, bränsletyper och växellådor som används i fordonsregistret.</p>
+                </div>
+            </header>
+
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; align-items: start;">
+                @foreach (var attr in Model)
+                {
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        <section class="vehicle-editor-card">
+                            <div class="vehicle-editor-section-title">
+                                <i class="@attr.Icon"></i>
+                                <h2>@attr.AddLabel</h2>
+                            </div>
+
+                            <form action="/CoreAttributes/@attr.AttributeType" method="post" class="vehicle-editor-form admin-utility-form">
+                                @Html.AntiForgeryToken()
+                                <label class="vehicle-editor-field">
+                                    <span>Namn</span>
+                                    <input type="text" name="Name" placeholder="@attr.Placeholder" />
+                                </label>
+
+                                <div class="vehicle-editor-actions">
+                                    <button class="btn btn-primary" type="submit">Spara</button>
+                                </div>
+                            </form>
+                        </section>
+
+                        <section class="vehicle-editor-card vehicle-editor-card-muted">
+                            <div class="vehicle-editor-section-title">
+                                <i class="fa-solid fa-list"></i>
+                                <h2>@attr.ExistingLabel</h2>
+                            </div>
+
+                            <div class="admin-utility-list">
+                                @foreach (var item in attr.Items)
+                                {
+                                    <div class="admin-utility-row">
+                                        <div>
+                                            <strong>@item.Name</strong>
+                                            <small>ID @item.Id</small>
+                                        </div>
+                                        <a href="/CoreAttributes/@attr.AttributeType/Delete/@item.Id" class="btn btn-secondary">Ta bort</a>
+                                    </div>
+                                }
+                            </div>
+                        </section>
+                    </div>
+                }
+            </div>
+        </main>
+    </div>
+</section>

@@ -52,6 +52,11 @@ public class CreateVehicleCommandHandler : IRequestHandler<CreateVehicleCommand,
             EngineVolume = request.EngineVolume,
             City = request.City,
             Address = request.Address,
+            Seats = request.Seats,
+            MaxTrailerWeight = request.MaxTrailerWeight,
+            OwnerCount = request.OwnerCount,
+            LastInspectionDate = request.LastInspectionDate,
+            NextInspectionDate = request.NextInspectionDate,
             Equipment = ToJsonArray(request.Equipment),
             GalleryUrls = ToJsonArray(request.GalleryUrls)
         };

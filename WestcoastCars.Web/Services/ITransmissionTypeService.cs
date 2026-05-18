@@ -1,7 +1,7 @@
-using WestcoastCars.Web.ViewModels.TransmissionType;
+using WestcoastCars.Web.ViewModels.CoreAttributes;
 
 namespace WestcoastCars.Web.Services;
 
-public interface ITransmissionTypeService : IGenericDataService<TransmissionTypeListViewModel, TransmissionTypePostViewModel>
+public interface ITransmissionTypeService : IGenericDataService<AttributeItemViewModel, AttributePostViewModel>
 {
 }

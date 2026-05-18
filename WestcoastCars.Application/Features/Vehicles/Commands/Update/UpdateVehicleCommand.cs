@@ -24,6 +24,11 @@ public class UpdateVehicleCommand : IRequest<Unit>
     public string? EngineVolume { get; set; }
     public string? City { get; set; }
     public string? Address { get; set; }
+    public int? Seats { get; set; }
+    public int? MaxTrailerWeight { get; set; }
+    public int? OwnerCount { get; set; }
+    public DateOnly? LastInspectionDate { get; set; }
+    public DateOnly? NextInspectionDate { get; set; }
     public string? Equipment { get; set; }
     public string? GalleryUrls { get; set; }
 }
