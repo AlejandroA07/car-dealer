@@ -1,7 +1,26 @@
-@model WestcoastCars.Web.ViewModels.ServiceBooking.ServiceBookingViewModel
+@model WestcoastCars.Web.ViewModels.ServiceBooking.ServiceIndexViewModel
 
 @{
     ViewData["Title"] = "Boka service";
+
+    var today = DateOnly.FromDateTime(DateTime.Today);
+    var currentMonday = today.AddDays(-((int)today.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7);
+    var maxMonday = currentMonday.AddDays(42);
+
+    var prevWeek = Model.WeekStart.AddDays(-7);
+    var nextWeek = Model.WeekStart.AddDays(7);
+    var prevDisabled = prevWeek < currentMonday;
+    var nextDisabled = nextWeek > maxMonday;
+
+    var dayNames = new[] { "Mån", "Tis", "Ons", "Tor", "Fre" };
+    var slotLabels = new[] { "Morgon (08–10)", "Förmiddag (10–12)", "Eftermiddag (13–15)" };
+    int[] slotEndHours = { 10, 12, 15 };
+    var nowHour = DateTime.Now.Hour;
+
+    bool IsPast(DateOnly date, int slotIdx) =>
+        date < today || (date == today && nowHour >= slotEndHours[slotIdx]);
+
+    var slotMap = Model.WeekSlots.ToDictionary(s => (s.Date, s.TimeSlot));
 }
 
 <section class="service-appointment-page">
@@ -28,8 +47,8 @@
                     <div class="service-benefit">
                         <i class="fa-solid fa-car-side"></i>
                         <div>
-                            <strong>Serviceklar bil</strong>
-                            <span>Vi bekräftar tiden innan besök.</span>
+                            <strong>Bokningen bekräftas direkt</strong>
+                            <span>Du får en bekräftelse via e-post när bokningen lyckas.</span>
                         </div>
                     </div>
                 </div>
@@ -39,8 +58,12 @@
                 </div>
             </aside>
 
-            <form asp-action="Index" method="post" class="service-appointment-form">
+            <form asp-action="Index" method="post" class="service-appointment-form" id="bookingForm">
                 <div asp-validation-summary="ModelOnly" class="service-validation-summary"></div>
+
+                <input type="hidden" asp-for="WeekStart" />
+                <input type="hidden" asp-for="BookingForm.BookingDate" id="selectedDate" />
+                <input type="hidden" asp-for="BookingForm.TimeSlot" id="selectedSlot" value="-1" />
 
                 <section class="service-form-section">
                     <div class="service-section-title">
@@ -49,20 +72,10 @@
                     </div>
 
                     <div class="service-field-grid">
-                        <label class="service-field">
-                            <span>Bilmodell</span>
-                            <input type="text" name="VehicleModelPlaceholder" placeholder="t.ex. Volvo XC90 Recharge" />
-                        </label>
-
-                        <label class="service-field">
-                            <span>Registreringsnummer / VIN</span>
-                            <input asp-for="VehicleRegistrationNumber" placeholder="ABC 1234" autocomplete="off" />
-                            <span asp-validation-for="VehicleRegistrationNumber" class="service-field-error"></span>
-                        </label>
-
                         <label class="service-field service-field-wide">
-                            <span>Mätarställning ungefär</span>
-                            <input type="text" name="MileagePlaceholder" placeholder="45 000 km" inputmode="numeric" />
+                            <span>Registreringsnummer / VIN</span>
+                            <input asp-for="BookingForm.VehicleRegistrationNumber" placeholder="ABC 1234" autocomplete="off" />
+                            <span asp-validation-for="BookingForm.VehicleRegistrationNumber" class="service-field-error"></span>
                         </label>
                     </div>
                 </section>
@@ -75,7 +88,7 @@
 
                     <div class="service-choice-grid">
                         <label class="service-choice-card">
-                            <input asp-for="ServiceType" type="radio" value="Bas-service" />
+                            <input asp-for="BookingForm.ServiceType" type="radio" value="Bas-service" />
                             <span>
                                 <strong>Årlig service</strong>
                                 <small>Standardkontroll och oljebyte</small>
@@ -84,7 +97,7 @@
                         </label>
 
                         <label class="service-choice-card">
-                            <input asp-for="ServiceType" type="radio" value="Diagnostik" />
+                            <input asp-for="BookingForm.ServiceType" type="radio" value="Diagnostik" />
                             <span>
                                 <strong>Diagnostik</strong>
                                 <small>Motorlampa, ljud eller felkod</small>
@@ -93,7 +106,7 @@
                         </label>
 
                         <label class="service-choice-card">
-                            <input asp-for="ServiceType" type="radio" value="Bromsservice" />
+                            <input asp-for="BookingForm.ServiceType" type="radio" value="Bromsservice" />
                             <span>
                                 <strong>Däck & bromsar</strong>
                                 <small>Rotation, byte eller bromskontroll</small>
@@ -102,7 +115,7 @@
                         </label>
 
                         <label class="service-choice-card">
-                            <input asp-for="ServiceType" type="radio" value="Kaross" />
+                            <input asp-for="BookingForm.ServiceType" type="radio" value="Kaross" />
                             <span>
                                 <strong>Karossarbete</strong>
                                 <small>Lack, mindre skador eller restaurering</small>
@@ -110,12 +123,12 @@
                             <i class="fa-regular fa-circle"></i>
                         </label>
                     </div>
-                    <span asp-validation-for="ServiceType" class="service-field-error"></span>
+                    <span asp-validation-for="BookingForm.ServiceType" class="service-field-error"></span>
 
                     <label class="service-field service-notes-field">
                         <span>Extra information</span>
-                        <textarea asp-for="Description" rows="4" placeholder="Berätta kort vad bilen behöver..."></textarea>
-                        <span asp-validation-for="Description" class="service-field-error"></span>
+                        <textarea asp-for="BookingForm.Description" rows="4" placeholder="Berätta kort vad bilen behöver..."></textarea>
+                        <span asp-validation-for="BookingForm.Description" class="service-field-error"></span>
                     </label>
                 </section>
 
@@ -125,22 +138,90 @@
                         <h2>Önskad tid</h2>
                     </div>
 
-                    <div class="service-field-grid">
-                        <label class="service-field">
-                            <span>Välj datum</span>
-                            <input asp-for="BookingDate" type="date" />
-                            <span asp-validation-for="BookingDate" class="service-field-error"></span>
-                        </label>
+                    @if (Model.AvailabilityLoadFailed)
+                    {
+                        <p class="service-field-error">@Model.AvailabilityErrorMessage</p>
+                    }
 
-                        <label class="service-field">
-                            <span>Tidsfönster</span>
-                            <select name="TimeSlotPlaceholder">
-                                <option>Morgon (08:00 - 12:00)</option>
-                                <option>Eftermiddag (12:00 - 16:00)</option>
-                                <option>Flexibel tid</option>
-                            </select>
-                        </label>
+                    <div class="slot-week-nav">
+                        @if (prevDisabled)
+                        {
+                            <span class="slot-week-nav-btn is-disabled"><i class="fa-solid fa-chevron-left"></i> Föregående</span>
+                        }
+                        else
+                        {
+                            <a class="slot-week-nav-btn" href="@Url.Action("Index", new { weekStart = prevWeek.ToString("yyyy-MM-dd") })"><i class="fa-solid fa-chevron-left"></i> Föregående</a>
+                        }
+
+                        <span class="slot-week-label">
+                            @Model.WeekStart.ToString("d MMM") – @Model.WeekStart.AddDays(4).ToString("d MMM yyyy")
+                        </span>
+
+                        @if (nextDisabled)
+                        {
+                            <span class="slot-week-nav-btn is-disabled">Nästa <i class="fa-solid fa-chevron-right"></i></span>
+                        }
+                        else
+                        {
+                            <a class="slot-week-nav-btn" href="@Url.Action("Index", new { weekStart = nextWeek.ToString("yyyy-MM-dd") })">Nästa <i class="fa-solid fa-chevron-right"></i></a>
+                        }
                     </div>
+
+                    <div class="slot-grid-wrapper">
+                        <div class="slot-grid">
+                            <div></div>
+                            @for (int dayIndex = 0; dayIndex < 5; dayIndex++)
+                            {
+                                var day = Model.WeekStart.AddDays(dayIndex);
+                                <div class="slot-day-header @(day == today ? "is-today" : "")">
+                                    <strong>@dayNames[dayIndex]</strong>
+                                    <span>@day.Day/@day.Month</span>
+                                </div>
+                            }
+
+                            @for (int slotIndex = 0; slotIndex < 3; slotIndex++)
+                            {
+                                <div class="slot-row-label">@slotLabels[slotIndex]</div>
+                                @for (int dayIndex = 0; dayIndex < 5; dayIndex++)
+                                {
+                                    var day = Model.WeekStart.AddDays(dayIndex);
+                                    slotMap.TryGetValue((day, slotIndex), out var slot);
+                                    var isPast = IsPast(day, slotIndex);
+                                    var isBooked = slot?.IsBooked == true;
+                                    var stateClass = isPast
+                                        ? "is-past"
+                                        : (isBooked || Model.AvailabilityLoadFailed ? "is-booked" : "is-available");
+
+                                    <button type="button"
+                                            class="slot-cell @stateClass"
+                                            data-date="@day.ToString("yyyy-MM-dd")"
+                                            data-slot="@slotIndex"
+                                            @(isPast || isBooked || Model.AvailabilityLoadFailed ? "disabled" : "")>
+                                        @if (Model.AvailabilityLoadFailed)
+                                        {
+                                            <span>Okänd</span>
+                                        }
+                                        else if (isPast)
+                                        {
+                                            <span>Passerat</span>
+                                        }
+                                        else if (isBooked)
+                                        {
+                                            <span>Bokad</span>
+                                        }
+                                        else
+                                        {
+                                            <span>Ledig</span>
+                                        }
+                                    </button>
+                                }
+                            }
+                        </div>
+                    </div>
+
+                    <p id="slotError" class="service-field-error" style="display:none">Välj ett tillgängligt tidsfönster innan du skickar.</p>
+                    <span asp-validation-for="BookingForm.BookingDate" class="service-field-error"></span>
+                    <span asp-validation-for="BookingForm.TimeSlot" class="service-field-error"></span>
                 </section>
 
                 <section class="service-form-section">
@@ -152,29 +233,29 @@
                     <div class="service-field-grid">
                         <label class="service-field">
                             <span>Fullständigt namn</span>
-                            <input asp-for="CustomerName" placeholder="Erik Larsson" autocomplete="name" />
-                            <span asp-validation-for="CustomerName" class="service-field-error"></span>
+                            <input asp-for="BookingForm.CustomerName" placeholder="Erik Larsson" autocomplete="name" />
+                            <span asp-validation-for="BookingForm.CustomerName" class="service-field-error"></span>
                         </label>
 
                         <label class="service-field">
                             <span>Telefonnummer</span>
-                            <input asp-for="CustomerPhone" placeholder="+46 00 000 00 00" autocomplete="tel" />
-                            <span asp-validation-for="CustomerPhone" class="service-field-error"></span>
+                            <input asp-for="BookingForm.CustomerPhone" placeholder="+46 00 000 00 00" autocomplete="tel" />
+                            <span asp-validation-for="BookingForm.CustomerPhone" class="service-field-error"></span>
                         </label>
 
                         <label class="service-field service-field-wide">
                             <span>E-postadress</span>
-                            <input asp-for="CustomerEmail" type="email" placeholder="erik.larsson@example.com" autocomplete="email" />
-                            <span asp-validation-for="CustomerEmail" class="service-field-error"></span>
+                            <input asp-for="BookingForm.CustomerEmail" type="email" placeholder="erik.larsson@example.com" autocomplete="email" />
+                            <span asp-validation-for="BookingForm.CustomerEmail" class="service-field-error"></span>
                         </label>
                     </div>
                 </section>
 
                 <div class="service-submit-row">
-                    <button type="submit" class="btn btn-primary service-submit-button">
-                        Skicka bokningsförfrågan <i class="fa-solid fa-calendar-check"></i>
+                    <button type="submit" class="btn btn-primary service-submit-button" @(Model.AvailabilityLoadFailed ? "disabled" : "")>
+                        Bekräfta bokning <i class="fa-solid fa-calendar-check"></i>
                     </button>
-                    <p>Genom att skicka godkänner du att vi kontaktar dig för att bekräfta serviceförfrågan.</p>
+                    <p>Din tid bekräftas direkt när bokningen lyckas och bekräftelsen skickas till din e-post.</p>
                 </div>
             </form>
         </div>
@@ -183,4 +264,35 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            var dateInput = document.getElementById('selectedDate');
+            var slotInput = document.getElementById('selectedSlot');
+            var slotError = document.getElementById('slotError');
+            var bookingForm = document.getElementById('bookingForm');
+
+            if (!bookingForm) {
+                return;
+            }
+
+            document.querySelectorAll('.slot-cell.is-available').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    document.querySelectorAll('.slot-cell').forEach(function (cell) {
+                        cell.classList.remove('is-selected');
+                    });
+                    btn.classList.add('is-selected');
+                    dateInput.value = btn.dataset.date;
+                    slotInput.value = btn.dataset.slot;
+                    slotError.style.display = 'none';
+                });
+            });
+
+            bookingForm.addEventListener('submit', function (e) {
+                if (!dateInput.value || slotInput.value === '-1') {
+                    slotError.style.display = 'block';
+                    e.preventDefault();
+                }
+            });
+        })();
+    </script>
 }

@@ -91,6 +91,13 @@ builder.Services.AddRateLimiter(options =>
         o.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
         o.QueueLimit = 0;
     });
+    options.AddFixedWindowLimiter("booking-create", o =>
+    {
+        o.PermitLimit = 5;
+        o.Window = TimeSpan.FromMinutes(10);
+        o.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        o.QueueLimit = 0;
+    });
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
 

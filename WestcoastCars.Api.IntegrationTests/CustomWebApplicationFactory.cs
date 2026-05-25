@@ -4,8 +4,11 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Testcontainers.PostgreSql;
+using WestcoastCars.Application.Services;
+using WestcoastCars.Domain.Common.Enums;
 using WestcoastCars.Infrastructure.Data;
 
 namespace WestcoastCars.Api.IntegrationTests;
@@ -35,6 +38,11 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
         builder.UseSetting("JwtSettings:Audience", "WestcoastCars.Auth");
         builder.UseSetting("JwtSettings:ExpiryMinutes", "60");
         builder.UseSetting("AdminSettings:Password", AdminPassword);
+        builder.ConfigureServices(services =>
+        {
+            services.RemoveAll<IEmailService>();
+            services.AddScoped<IEmailService, TestEmailService>();
+        });
     }
 
     public async Task ResetDatabaseAsync()
@@ -74,6 +82,30 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
         if (_dbContainer is not null)
         {
             await _dbContainer.DisposeAsync();
+        }
+    }
+
+    private sealed class TestEmailService : IEmailService
+    {
+        public Task SendBookingConfirmationAsync(
+            string toEmail,
+            string customerName,
+            DateTime bookingDate,
+            TimeSlot timeSlot,
+            string serviceType,
+            string vehicleRegistrationNumber)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task SendCancellationNoticeAsync(
+            string toEmail,
+            string customerName,
+            DateTime bookingDate,
+            TimeSlot timeSlot,
+            string reason)
+        {
+            return Task.CompletedTask;
         }
     }
 }

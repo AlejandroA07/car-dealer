@@ -8,6 +8,7 @@ public class ServiceBookingSummaryDto
     public string VehicleRegistrationNumber { get; set; } = string.Empty;
     public string ServiceType { get; set; } = string.Empty;
     public DateTime BookingDate { get; set; }
+    public string TimeSlot { get; set; } = string.Empty;
     public string CustomerName { get; set; } = string.Empty;
     public string CustomerEmail { get; set; } = string.Empty;
     public string CustomerPhone { get; set; } = string.Empty;

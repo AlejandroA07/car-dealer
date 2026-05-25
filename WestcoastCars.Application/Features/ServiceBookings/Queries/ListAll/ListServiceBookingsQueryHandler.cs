@@ -22,7 +22,7 @@ public class ListServiceBookingsQueryHandler : IRequestHandler<ListServiceBookin
         {
             Page = request.Page,
             PageSize = request.PageSize
-        });
+        }, request.IsActive);
 
         return new PagedResult<ServiceBookingSummaryDto>
         {

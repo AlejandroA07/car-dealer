@@ -1,0 +1,201 @@
+@model WestcoastCars.Web.ViewModels.ServiceBooking.ServiceAdminListViewModel
+
+@{
+    ViewData["Title"] = Model.Title;
+
+    var today = DateTime.Today;
+
+    string SlotLabel(string slot) => slot switch
+    {
+        "Morning" => "Morgon (08–10)",
+        "MidMorning" => "Förmiddag (10–12)",
+        "Afternoon" => "Eftermiddag (13–15)",
+        _ => slot
+    };
+
+    string StatusClass(string status) => status switch
+    {
+        "Confirmed" => "booking-badge-confirmed",
+        "Cancelled" => "booking-badge-cancelled",
+        "Completed" => "booking-badge-completed",
+        _ => "booking-badge-pending"
+    };
+
+    string StatusLabel(string status) => status switch
+    {
+        "Confirmed" => "Bekräftad",
+        "Cancelled" => "Avbokad",
+        "Completed" => "Klar",
+        _ => "Väntande"
+    };
+}
+
+@section Scripts {
+    <script>
+        (function () {
+            var dialog = document.getElementById('confirm-dialog');
+            var msgEl = document.getElementById('confirm-dialog-message');
+            var pendingForm = null;
+
+            if (!dialog || !msgEl) {
+                return;
+            }
+
+            document.querySelectorAll('form[data-confirm]').forEach(function (form) {
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    msgEl.textContent = form.dataset.confirm;
+                    pendingForm = form;
+                    dialog.showModal();
+                });
+            });
+
+            document.getElementById('confirm-dialog-cancel').addEventListener('click', function () {
+                pendingForm = null;
+                dialog.close();
+            });
+
+            document.getElementById('confirm-dialog-ok').addEventListener('click', function () {
+                dialog.close();
+                if (pendingForm) {
+                    var form = pendingForm;
+                    pendingForm = null;
+                    form.submit();
+                }
+            });
+
+            dialog.addEventListener('cancel', function () {
+                pendingForm = null;
+            });
+        }());
+    </script>
+}
+
+@if (Model.IsHistoryView && User.IsInRole("Admin"))
+{
+    <dialog id="confirm-dialog" class="admin-confirm-dialog">
+        <p class="admin-confirm-dialog-title">Bekräfta åtgärd</p>
+        <p id="confirm-dialog-message" class="admin-confirm-dialog-message"></p>
+        <div class="admin-confirm-dialog-actions">
+            <button type="button" id="confirm-dialog-cancel" class="btn btn-secondary">Avbryt</button>
+            <button type="button" id="confirm-dialog-ok" class="btn btn-danger">Radera</button>
+        </div>
+    </dialog>
+}
+
+<section class="admin-dashboard-page">
+    <div class="site-container admin-workspace-container">
+        @await Html.PartialAsync("_AdminSidebar")
+
+        <div class="admin-workspace-main">
+            <header class="admin-dashboard-header">
+                <div>
+                    <span class="eyebrow">@Model.Eyebrow</span>
+                    <h1>@Model.Title</h1>
+                </div>
+
+                <div class="booking-actions">
+                    @if (Model.IsHistoryView)
+                    {
+                        <a asp-action="AdminList" asp-controller="Service" class="btn btn-secondary booking-action-btn">
+                            <i class="fa-solid fa-arrow-left"></i> Aktiva bokningar
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-action="AdminHistory" asp-controller="Service" class="btn btn-secondary booking-action-btn">
+                            <i class="fa-solid fa-clock-rotate-left"></i> Visa historik
+                        </a>
+                    }
+                </div>
+            </header>
+
+            @if (!Model.Bookings.Any())
+            {
+                <p class="admin-empty-copy">@Model.EmptyMessage</p>
+            }
+            else
+            {
+                <div class="admin-bookings-wrapper">
+                    <table class="admin-data-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Kund</th>
+                                <th>Fordon</th>
+                                <th>Servicetyp</th>
+                                <th>Datum & tid</th>
+                                <th>Status</th>
+                                <th>Åtgärder</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var booking in Model.Bookings.OrderByDescending(x => x.BookingDate))
+                            {
+                                var canComplete = !Model.IsHistoryView && booking.Status == "Confirmed" && booking.BookingDate.Date <= today;
+                                var canCancel = !Model.IsHistoryView && (booking.Status == "Confirmed" || booking.Status == "Pending");
+                                var canDelete = Model.IsHistoryView && User.IsInRole("Admin");
+
+                                <tr>
+                                    <td><small class="booking-id-cell">#@booking.Id</small></td>
+                                    <td>
+                                        <strong>@booking.CustomerName</strong>
+                                        <br /><small>@booking.CustomerEmail</small>
+                                        <br /><small>@booking.CustomerPhone</small>
+                                    </td>
+                                    <td>@booking.VehicleRegistrationNumber</td>
+                                    <td>@booking.ServiceType</td>
+                                    <td>
+                                        <span>@booking.BookingDate.ToString("yyyy-MM-dd")</span>
+                                        <br /><small>@SlotLabel(booking.TimeSlot)</small>
+                                    </td>
+                                    <td>
+                                        <span class="booking-status-badge @StatusClass(booking.Status)">@StatusLabel(booking.Status)</span>
+                                    </td>
+                                    <td>
+                                        <div class="booking-actions">
+                                            @if (canComplete)
+                                            {
+                                                <form asp-action="CompleteBooking" asp-controller="Service" asp-route-id="@booking.Id" method="post" class="inline-form">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-secondary booking-action-btn">
+                                                        <i class="fa-solid fa-circle-check"></i> Markera klar
+                                                    </button>
+                                                </form>
+                                            }
+
+                                            @if (canCancel)
+                                            {
+                                                <details class="booking-cancel-details">
+                                                    <summary class="btn btn-danger booking-action-btn">
+                                                        <i class="fa-solid fa-ban"></i> Avboka
+                                                    </summary>
+                                                    <form asp-action="CancelBooking" asp-controller="Service" asp-route-id="@booking.Id" method="post" class="booking-cancel-form">
+                                                        @Html.AntiForgeryToken()
+                                                        <textarea name="cancellationReason" rows="3" placeholder="Ange anledning till avbokning..." required class="booking-cancel-textarea"></textarea>
+                                                        <button type="submit" class="btn btn-danger">Bekräfta avbokning</button>
+                                                    </form>
+                                                </details>
+                                            }
+
+                                            @if (canDelete)
+                                            {
+                                                <form asp-action="DeleteBooking" asp-controller="Service" asp-route-id="@booking.Id" method="post" class="inline-form"
+                                                      data-confirm="Är du säker på att du vill radera bokning #@booking.Id? Åtgärden kan inte ångras.">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-danger booking-action-btn">
+                                                        <i class="fa-solid fa-trash"></i> Radera
+                                                    </button>
+                                                </form>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</section>

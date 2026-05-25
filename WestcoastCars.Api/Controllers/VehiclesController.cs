@@ -340,7 +340,7 @@ public class VehiclesController : ControllerBase
     [ProducesResponseType(400)]
     [ProducesResponseType(401)]
     [ProducesResponseType(403)]
-    public async Task<IActionResult> BulkDelete([FromQuery] string? make, [FromQuery] string? model, [FromQuery] bool? isSold, [FromQuery] int? minMileage, [FromQuery] int? maxMileage)
+    public async Task<IActionResult> BulkDelete([FromQuery] string make, [FromQuery] string model, [FromQuery] bool? isSold, [FromQuery] int? minMileage, [FromQuery] int? maxMileage)
     {
         if (make is null && model is null && isSold is null && minMileage is null && maxMileage is null)
             return BadRequest("At least one filter must be specified.");

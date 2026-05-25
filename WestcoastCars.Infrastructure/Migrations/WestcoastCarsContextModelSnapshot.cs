@@ -329,6 +329,9 @@ namespace WestcoastCars.Infrastructure.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TimeSlot")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("UpdatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
@@ -340,11 +343,20 @@ namespace WestcoastCars.Infrastructure.Migrations
                     b.Property<string>("VehicleRegistrationNumber")
                         .IsRequired()
                         .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
-
+                        .HasColumnType("citext");
                     b.HasKey("Id");
 
+                    b.HasIndex("BookingDate", "TimeSlot")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ServiceBookings_ActiveSlot")
+                        .HasFilter("\"Status\" NOT IN (2, 3)");
+
                     b.HasIndex("VehicleId");
+
+                    b.HasIndex("VehicleRegistrationNumber")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ServiceBookings_ActiveRegistrationNumber")
+                        .HasFilter("\"Status\" NOT IN (2, 3)");
 
                     b.ToTable("ServiceBookings");
                 });

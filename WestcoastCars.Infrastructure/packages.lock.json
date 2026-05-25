@@ -2,6 +2,15 @@
   "version": 2,
   "dependencies": {
     "net10.0": {
+      "MailKit": {
+        "type": "Direct",
+        "requested": "[4.16.0, )",
+        "resolved": "4.16.0",
+        "contentHash": "trJ82DOpAmo8i1jO1vNE+dGn4mPRyeYfy4swRcAGgMJhPoI1Kohf4OFJJf0+YIj4iUxgxPn8W+ht7e7KiYzSjg==",
+        "dependencies": {
+          "MimeKit": "4.16.0"
+        }
+      },
       "Microsoft.AspNetCore.Identity.EntityFrameworkCore": {
         "type": "Direct",
         "requested": "[10.0.7, )",
@@ -53,6 +62,11 @@
           "Microsoft.IdentityModel.JsonWebTokens": "8.17.0",
           "Microsoft.IdentityModel.Tokens": "8.17.0"
         }
+      },
+      "BouncyCastle.Cryptography": {
+        "type": "Transitive",
+        "resolved": "2.6.2",
+        "contentHash": "7oWOcvnntmMKNzDLsdxAYqApt+AjpRpP2CShjMfIa3umZ42UQMvH0tl1qAliYPNYO6vTdcGMqnRrCPmsfzTI1w=="
       },
       "FluentValidation": {
         "type": "Transitive",
@@ -159,6 +173,11 @@
           "SQLitePCLRaw.core": "2.1.11"
         }
       },
+      "System.Security.Cryptography.Pkcs": {
+        "type": "Transitive",
+        "resolved": "10.0.0",
+        "contentHash": "UPWqLSygJlFerRi9XNIuM0a1VC8gHUIufyP24xQ0sc+XimqUAEcjpOz9DhKpyDjH+5B/wO3RpC0KpkEeDj/ddg=="
+      },
       "westcoastcars.application": {
         "type": "Project",
         "dependencies": {
@@ -209,6 +228,16 @@
         "contentHash": "teaW35URIV2x78Tzk+dVJiC4M62/9mQoSEoDjDGoEZmcQa3H2rE+XQpm9Tmdo9KK1Lcrnve4zoyLavl69kCFGg==",
         "dependencies": {
           "Microsoft.IdentityModel.Logging": "8.17.0"
+        }
+      },
+      "MimeKit": {
+        "type": "CentralTransitive",
+        "requested": "[4.16.0, )",
+        "resolved": "4.16.0",
+        "contentHash": "X0LFxeM4gPRIhODyY/HYS9b+zRZ7y//v59rFzgS6wLxcPuZThnMtNZHtrr0fjLyRRkg3gqJBtvW36XfUzZ7Djw==",
+        "dependencies": {
+          "BouncyCastle.Cryptography": "2.6.2",
+          "System.Security.Cryptography.Pkcs": "10.0.0"
         }
       }
     }

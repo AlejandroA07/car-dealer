@@ -3893,3 +3893,207 @@ textarea:focus,
   outline: 2px solid var(--wc-primary, #546253);
   outline-offset: 2px;
 }
+
+/* ── Slot grid ──────────────────────────────────────────── */
+
+.slot-grid-wrapper {
+  overflow-x: auto;
+}
+
+.slot-grid {
+  display: grid;
+  grid-template-columns: 9.5rem repeat(5, 1fr);
+  gap: 0.45rem 0.35rem;
+  min-width: 480px;
+}
+
+.slot-day-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.4rem 0;
+  text-align: center;
+}
+
+.slot-day-header strong {
+  font-size: 0.8rem;
+  font-family: 'Manrope', system-ui, sans-serif;
+  color: var(--wc-text);
+}
+
+.slot-day-header span {
+  font-size: 0.7rem;
+  color: var(--wc-text-muted);
+}
+
+.slot-day-header.is-today strong {
+  color: var(--wc-primary);
+}
+
+.slot-row-label {
+  display: flex;
+  align-items: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--wc-text-muted);
+  letter-spacing: 0.02em;
+  padding-right: 0.5rem;
+}
+
+.slot-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  border-radius: var(--wc-radius-sm);
+  border: 1px solid rgba(173, 179, 176, 0.18);
+  background: var(--wc-surface-container-low);
+  font-size: 0.72rem;
+  color: var(--wc-text-muted);
+  cursor: not-allowed;
+  transition: background 140ms, border-color 140ms, color 140ms;
+}
+
+.slot-cell.is-available {
+  cursor: pointer;
+  background: #fff;
+  color: var(--wc-text);
+  border-color: rgba(173, 179, 176, 0.28);
+}
+
+.slot-cell.is-available:hover {
+  border-color: var(--wc-primary);
+  background: rgba(84, 98, 83, 0.04);
+}
+
+.slot-cell.is-selected {
+  border-color: var(--wc-primary) !important;
+  background: rgba(84, 98, 83, 0.1) !important;
+  color: var(--wc-primary) !important;
+  font-weight: 700;
+}
+
+.slot-cell.is-booked {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
+.slot-cell.is-past {
+  opacity: 0.35;
+}
+
+.slot-week-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.slot-week-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  color: var(--wc-primary);
+  padding: 0.3rem 0.6rem;
+  border-radius: var(--wc-radius-sm);
+  transition: background 140ms;
+  white-space: nowrap;
+}
+
+.slot-week-nav-btn:hover {
+  background: var(--wc-surface-container);
+}
+
+.slot-week-nav-btn.is-disabled {
+  opacity: 0.3;
+  pointer-events: none;
+  color: var(--wc-text-muted);
+}
+
+.slot-week-label {
+  flex: 1;
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--wc-text);
+  font-family: 'Manrope', system-ui, sans-serif;
+}
+
+/* ── Admin bookings table ───────────────────────────────── */
+
+.admin-bookings-wrapper {
+  overflow-x: auto;
+}
+
+.booking-id-cell {
+  color: var(--wc-text-muted);
+  font-size: 0.75rem;
+}
+
+.booking-status-badge {
+  display: inline-block;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.booking-badge-confirmed  { background: rgba(84, 98, 83, 0.12); color: var(--wc-primary); }
+.booking-badge-completed  { background: rgba(173, 179, 176, 0.2); color: var(--wc-text-muted); }
+.booking-badge-cancelled  { background: rgba(159, 47, 47, 0.1); color: var(--wc-danger); }
+.booking-badge-pending    { background: rgba(238, 149, 4, 0.12); color: #b87000; }
+
+.booking-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: flex-start;
+}
+
+.booking-action-btn {
+  min-height: 2rem;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.78rem;
+}
+
+.booking-cancel-details {
+  position: relative;
+}
+
+.booking-cancel-details summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.booking-cancel-details summary::-webkit-details-marker { display: none; }
+
+.booking-cancel-form {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background: var(--wc-surface-container-low);
+  border-radius: var(--wc-radius-sm);
+  border: 1px solid rgba(173, 179, 176, 0.2);
+  min-width: 220px;
+}
+
+.booking-cancel-textarea {
+  width: 100%;
+  min-height: 72px;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid rgba(173, 179, 176, 0.18);
+  border-radius: var(--wc-radius-sm);
+  background: #fff;
+  font: inherit;
+  font-size: 0.82rem;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.booking-cancel-textarea:focus {
+  outline: none;
+  border-color: var(--wc-primary);
+}

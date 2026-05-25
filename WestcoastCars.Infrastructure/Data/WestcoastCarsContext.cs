@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using WestcoastCars.Domain.Common.Enums;
 using WestcoastCars.Domain.Entities;
 
 namespace WestcoastCars.Infrastructure.Data;
@@ -144,7 +145,20 @@ public class WestcoastCarsContext : IdentityDbContext<IdentityUser>
 
         modelBuilder.Entity<ServiceBooking>()
             .Property(sb => sb.VehicleRegistrationNumber)
-            .HasMaxLength(10);
+            .HasMaxLength(10)
+            .HasColumnType("citext");
+
+        modelBuilder.Entity<ServiceBooking>()
+            .HasIndex(sb => new { sb.BookingDate, sb.TimeSlot })
+            .HasDatabaseName("IX_ServiceBookings_ActiveSlot")
+            .IsUnique()
+            .HasFilter($@"""Status"" NOT IN ({(int)BookingStatus.Cancelled}, {(int)BookingStatus.Completed})");
+
+        modelBuilder.Entity<ServiceBooking>()
+            .HasIndex(sb => sb.VehicleRegistrationNumber)
+            .HasDatabaseName("IX_ServiceBookings_ActiveRegistrationNumber")
+            .IsUnique()
+            .HasFilter($@"""Status"" NOT IN ({(int)BookingStatus.Cancelled}, {(int)BookingStatus.Completed})");
 
         modelBuilder.Entity<ServiceBooking>()
             .Property(sb => sb.ServiceType)

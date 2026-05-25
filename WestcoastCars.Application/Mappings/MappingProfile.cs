@@ -28,7 +28,8 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.ImageUrls, opt => opt.MapFrom(src => BuildImageUrls(src.ImageUrl, src.GalleryUrls)));
 
         CreateMap<ServiceBooking, ServiceBookingSummaryDto>()
-            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+            .ForMember(dest => dest.TimeSlot, opt => opt.MapFrom(src => src.TimeSlot.ToString()));
     }
 
     private static List<string> DeserializeEquipment(string? json)

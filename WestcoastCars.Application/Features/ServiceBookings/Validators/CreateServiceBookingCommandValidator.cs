@@ -1,11 +1,13 @@
 using FluentValidation;
+using WestcoastCars.Application.Common.Interfaces.Services;
+using WestcoastCars.Application.Features.ServiceBookings;
 using WestcoastCars.Application.Features.ServiceBookings.Commands.Create;
 
 namespace WestcoastCars.Application.Features.ServiceBookings.Validators;
 
 public class CreateServiceBookingCommandValidator : AbstractValidator<CreateServiceBookingCommand>
 {
-    public CreateServiceBookingCommandValidator()
+    public CreateServiceBookingCommandValidator(IDateTimeProvider dateTimeProvider)
     {
         RuleFor(command => command.VehicleRegistrationNumber)
             .NotEmpty()
@@ -31,8 +33,12 @@ public class CreateServiceBookingCommandValidator : AbstractValidator<CreateServ
         RuleFor(command => command.Description)
             .MaximumLength(2000);
 
-        RuleFor(command => command.BookingDate)
-            .GreaterThan(_ => DateTime.UtcNow)
-            .WithMessage("Booking date must be in the future.");
+        RuleFor(command => command.TimeSlot)
+            .IsInEnum()
+            .WithMessage("Ogiltigt tidsfönster.");
+
+        RuleFor(command => command)
+            .Must(command => !ServiceBookingSchedule.HasSlotPassed(dateTimeProvider.LocalNow, command.BookingDate, command.TimeSlot))
+            .WithMessage("Det valda tidsfönstret har redan passerat.");
     }
 }

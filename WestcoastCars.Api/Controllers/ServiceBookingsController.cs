@@ -1,12 +1,16 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using WestcoastCars.Contracts.DTOs;
+using WestcoastCars.Application.Exceptions;
 using WestcoastCars.Application.Features.ServiceBookings.Commands.Cancel;
 using WestcoastCars.Application.Features.ServiceBookings.Commands.Complete;
-using WestcoastCars.Application.Features.ServiceBookings.Commands.Confirm;
 using WestcoastCars.Application.Features.ServiceBookings.Commands.Create;
+using WestcoastCars.Application.Features.ServiceBookings.Commands.Delete;
 using WestcoastCars.Application.Features.ServiceBookings.Queries.ListAll;
+using WestcoastCars.Application.Features.ServiceBookings.Queries.GetWeekSlots;
+using WestcoastCars.Domain.Common.Enums;
 using WestcoastCars.Api.Observability;
 using System.Diagnostics;
 
@@ -39,30 +43,27 @@ public class ServiceBookingsController : ControllerBase
     [HttpGet]
     [Authorize(Roles = "Admin,Salesperson")]
     [ProducesResponseType(typeof(PagedResult<ServiceBookingSummaryDto>), 200)]
+    [ProducesResponseType(400)]
     [ProducesResponseType(401)]
     [ProducesResponseType(403)]
-    public async Task<IActionResult> ListAll([FromQuery] PagedQueryDto pagination)
+    public async Task<IActionResult> ListAll([FromQuery] PagedQueryDto pagination, [FromQuery] string? state = null)
     {
         _logger.LogInformation("Retrieving all service bookings");
-        var result = await _mediator.Send(new ListServiceBookingsQuery { Page = pagination.Page, PageSize = pagination.PageSize });
-        return Ok(result);
-    }
+        var activeFilter = state?.Trim().ToLowerInvariant() switch
+        {
+            null or "" or "all" => null,
+            "active" => true,
+            "inactive" or "history" => false,
+            _ => throw new ValidationException(nameof(state), ["State must be one of: all, active, inactive."])
+        };
 
-    /// <summary>
-    /// Confirms a pending service booking. Requires Admin or Salesperson role.
-    /// </summary>
-    [HttpPatch("{id}/confirm")]
-    [Authorize(Roles = "Admin,Salesperson")]
-    [ProducesResponseType(204)]
-    [ProducesResponseType(401)]
-    [ProducesResponseType(403)]
-    [ProducesResponseType(404)]
-    [ProducesResponseType(409)]
-    public async Task<IActionResult> Confirm(int id)
-    {
-        _logger.LogInformation("Confirming service booking {Id}", id);
-        await _mediator.Send(new ConfirmServiceBookingCommand { Id = id });
-        return NoContent();
+        var result = await _mediator.Send(new ListServiceBookingsQuery
+        {
+            Page = pagination.Page,
+            PageSize = pagination.PageSize,
+            IsActive = activeFilter
+        });
+        return Ok(result);
     }
 
     /// <summary>
@@ -71,15 +72,32 @@ public class ServiceBookingsController : ControllerBase
     [HttpPatch("{id}/cancel")]
     [Authorize(Roles = "Admin,Salesperson")]
     [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
     [ProducesResponseType(401)]
     [ProducesResponseType(403)]
     [ProducesResponseType(404)]
     [ProducesResponseType(409)]
-    public async Task<IActionResult> Cancel(int id)
+    public async Task<IActionResult> Cancel(int id, [FromBody] CancelServiceBookingDto dto)
     {
         _logger.LogInformation("Cancelling service booking {Id}", id);
-        await _mediator.Send(new CancelServiceBookingCommand { Id = id });
+        await _mediator.Send(new CancelServiceBookingCommand { Id = id, CancellationReason = dto.CancellationReason });
         return NoContent();
+    }
+
+    /// <summary>
+    /// Returns slot availability for a given week (Mon–Fri, 3 slots/day).
+    /// </summary>
+    /// <param name="weekStart">Monday of the target week (YYYY-MM-DD).</param>
+    /// <returns>15 slots with booked/free status.</returns>
+    /// <response code="200">Slot availability returned.</response>
+    [HttpGet("availability")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(IEnumerable<SlotAvailabilityDto>), 200)]
+    [ProducesResponseType(400)]
+    public async Task<IActionResult> GetAvailability([FromQuery] DateOnly weekStart)
+    {
+        var slots = await _mediator.Send(new GetWeekSlotsQuery { WeekStart = weekStart });
+        return Ok(slots);
     }
 
     /// <summary>
@@ -100,6 +118,23 @@ public class ServiceBookingsController : ControllerBase
     }
 
     /// <summary>
+    /// Permanently deletes a service booking. Requires Admin role.
+    /// </summary>
+    [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(403)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(409)]
+    public async Task<IActionResult> Delete(int id)
+    {
+        _logger.LogInformation("Deleting service booking {Id}", id);
+        await _mediator.Send(new DeleteServiceBookingCommand { Id = id });
+        return NoContent();
+    }
+
+    /// <summary>
     /// Creates a new service booking.
     /// </summary>
     /// <param name="dto">Booking details.</param>
@@ -107,6 +142,7 @@ public class ServiceBookingsController : ControllerBase
     /// <response code="200">Service booking created successfully.</response>
     [HttpPost]
     [AllowAnonymous]
+    [EnableRateLimiting("booking-create")]
     [ProducesResponseType(typeof(CreateServiceBookingResponseDto), 200)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> Create(ServiceBookingPostDto dto)
@@ -116,6 +152,7 @@ public class ServiceBookingsController : ControllerBase
             VehicleRegistrationNumber = dto.VehicleRegistrationNumber,
             ServiceType = dto.ServiceType,
             BookingDate = dto.BookingDate,
+            TimeSlot = (TimeSlot)dto.TimeSlot,
             CustomerName = dto.CustomerName,
             CustomerEmail = dto.CustomerEmail,
             CustomerPhone = dto.CustomerPhone,

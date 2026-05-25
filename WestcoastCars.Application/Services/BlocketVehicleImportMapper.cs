@@ -24,26 +24,26 @@ public class BlocketVehicleImportMapper : IBlocketVehicleImportMapper
 
     internal static readonly Dictionary<string, string> FuelMappings = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["Bensin"] = "Bensin",
+        ["Bensin"] = "Petrol",
         ["Diesel"] = "Diesel",
-        ["El"] = "El",
-        ["Elektrisk"] = "El",
-        ["Bensin/El"] = "Bensin/El",
-        ["Diesel/El"] = "Diesel/El",
+        ["El"] = "Electric",
+        ["Elektrisk"] = "Electric",
+        ["Bensin/El"] = "Petrol/Electric",
+        ["Diesel/El"] = "Diesel/Electric",
         ["Hybrid"] = "Hybrid",
-        ["Laddhybrid"] = "Laddhybrid",
-        ["Etanol"] = "Etanol",
+        ["Laddhybrid"] = "Plug-in Electric Hybrid",
+        ["Etanol"] = "Ethanol",
         ["Gas"] = "Gas",
-        ["Biogas"] = "Biogas",
-        ["Vätgas"] = "Vätgas"
+        ["Biogas"] = "Bio Gas",
+        ["Vätgas"] = "Hydrogen"
     };
 
     internal static readonly Dictionary<string, string> TransmissionMappings = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["Automatisk"] = "Automat",
-        ["Automat"] = "Automat",
-        ["Manuell"] = "Manuell",
-        ["Manuel"] = "Manuell"
+        ["Automatisk"] = "Automatic",
+        ["Automat"] = "Automatic",
+        ["Manuell"] = "Manual",
+        ["Manuel"] = "Manual"
     };
 
     public BlocketVehicleImportData Map(BlocketCarSearchItem searchItem, BlocketCarAdDetails? adDetails, DateTime importedAtUtc)

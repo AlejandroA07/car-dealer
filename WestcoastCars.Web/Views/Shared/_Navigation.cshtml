@@ -4,7 +4,8 @@
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
     var isVehicles = string.Equals(currentController, "Vehicles", StringComparison.OrdinalIgnoreCase)
         && string.Equals(currentAction, "Index", StringComparison.OrdinalIgnoreCase);
-    var isService = string.Equals(currentController, "Service", StringComparison.OrdinalIgnoreCase);
+    var isService = string.Equals(currentController, "Service", StringComparison.OrdinalIgnoreCase)
+        && string.Equals(currentAction, "Index", StringComparison.OrdinalIgnoreCase);
     var portalController = User.IsInRole("Admin") || User.IsInRole("Salesperson") ? "Admin" : "Home";
     var userName = User.Identity?.Name?.Split('@')[0];
 }

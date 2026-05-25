@@ -24,7 +24,7 @@ public class ErrorController : ControllerBase
             NotFoundException => (StatusCodes.Status404NotFound, "Not Found", exception.Message),
             ConflictException => (StatusCodes.Status409Conflict, "Conflict", exception.Message),
             ValidationException => (StatusCodes.Status400BadRequest, "One or more validation errors occurred.", exception.Message),
-            PersistenceException => (StatusCodes.Status500InternalServerError, "An unexpected error occurred.", "A persistence error occurred."),
+            PersistenceException => (StatusCodes.Status500InternalServerError, "An unexpected error occurred.", exception.Message),
             _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred.", "An unexpected error occurred.")
         };
 

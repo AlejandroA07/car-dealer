@@ -43,6 +43,27 @@ public class UnitOfWork : IUnitOfWork
         }
     }
 
+    public async Task ExecuteInTransactionAsync(Func<Task> action, CancellationToken cancellationToken = default)
+    {
+        var executionStrategy = _context.Database.CreateExecutionStrategy();
+
+        await executionStrategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                await action();
+                await transaction.CommitAsync(cancellationToken);
+            }
+            catch
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                throw;
+            }
+        });
+    }
+
     public void Dispose()
     {
         _context.Dispose();
@@ -59,6 +80,8 @@ public class UnitOfWork : IUnitOfWork
                 "IX_Manufacturers_Name" => "Manufacturer with the same name already exists.",
                 "IX_FuelTypes_Name" => "FuelType with the same name already exists.",
                 "IX_TransmissionTypes_Name" => "TransmissionType with the same name already exists.",
+                "IX_ServiceBookings_ActiveSlot" => "Det valda tidsfönstret är redan bokat. Välj ett annat.",
+                "IX_ServiceBookings_ActiveRegistrationNumber" => "Det finns redan en aktiv bokning för detta registreringsnummer.",
                 _ => "A record with the same unique value already exists."
             };
 

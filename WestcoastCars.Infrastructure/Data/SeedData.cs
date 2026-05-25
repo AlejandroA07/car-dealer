@@ -80,9 +80,9 @@ public static class SeedData
         var vehicles = new List<Vehicle>();
         foreach (var dto in vehicleDtos)
         {
-            var manufacturer    = ResolveSeedLookup(existingManufacturers,  dto.Manufacturer,     dto.RegistrationNumber, "manufacturer");
-            var fuelType        = ResolveSeedLookup(existingFuelTypes,       dto.FuelType,         dto.RegistrationNumber, "fuel type");
-            var transmissionType = ResolveSeedLookup(existingTransmissions,  dto.TransmissionType, dto.RegistrationNumber, "transmission type");
+            var manufacturer    = ResolveSeedLookup(existingManufacturers,  dto.Manufacturer,     dto.RegistrationNumber ?? string.Empty, "manufacturer");
+            var fuelType        = ResolveSeedLookup(existingFuelTypes,       dto.FuelType,         dto.RegistrationNumber ?? string.Empty, "fuel type");
+            var transmissionType = ResolveSeedLookup(existingTransmissions,  dto.TransmissionType, dto.RegistrationNumber ?? string.Empty, "transmission type");
 
             var vehicle = new Vehicle
             {

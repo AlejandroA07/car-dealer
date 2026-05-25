@@ -16,6 +16,9 @@ public class ServiceBookingPostDto
     [Required(ErrorMessage = "Datum för bokning måste anges")]
     public DateTime BookingDate { get; set; }
 
+    [Range(0, 2, ErrorMessage = "Ogiltigt tidsfönster")]
+    public int TimeSlot { get; set; }
+
     [Required(ErrorMessage = "Namn måste anges")]
     [MaxLength(100)]
     public string CustomerName { get; set; } = string.Empty;

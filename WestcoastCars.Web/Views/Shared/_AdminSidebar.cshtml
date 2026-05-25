@@ -42,6 +42,14 @@
             <i class="fa-solid fa-sliders"></i>
             <span>Lägg till</span>
         </a>
+        <a asp-action="AdminList" asp-controller="Service" class='@IsActive("Service", "AdminList")'>
+            <i class="fa-solid fa-calendar-days"></i>
+            <span>Aktiva bokningar</span>
+        </a>
+        <a asp-action="AdminHistory" asp-controller="Service" class='@IsActive("Service", "AdminHistory")'>
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            <span>Bokningshistorik</span>
+        </a>
     </nav>
 
     <div class="admin-sidebar-footer">

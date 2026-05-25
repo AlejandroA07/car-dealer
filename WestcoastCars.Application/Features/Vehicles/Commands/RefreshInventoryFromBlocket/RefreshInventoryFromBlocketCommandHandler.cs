@@ -96,7 +96,8 @@ public class RefreshInventoryFromBlocketCommandHandler : IRequestHandler<Refresh
                     mappedVehicle.WheelDrive = request.WheelDrive;
 
                 // Skip only after details fetch if critical fields are still missing.
-                if (!mappedVehicle.ModelYear.HasValue)
+                if (string.IsNullOrWhiteSpace(mappedVehicle.RegistrationNumber) ||
+                    !IsValidModelYear(mappedVehicle.ModelYear))
                 {
                     totalSkipped++;
                     continue;
@@ -253,7 +254,7 @@ public class RefreshInventoryFromBlocketCommandHandler : IRequestHandler<Refresh
             {
                 RegistrationNumber = preparedVehicle.RegistrationNumber,
                 Model = preparedVehicle.Model,
-                ModelYear = preparedVehicle.ModelYear.Value,
+                ModelYear = preparedVehicle.ModelYear!.Value,
                 Mileage = preparedVehicle.Mileage,
                 ImageUrl = preparedVehicle.ImageUrl,
                 Price = preparedVehicle.Price,
