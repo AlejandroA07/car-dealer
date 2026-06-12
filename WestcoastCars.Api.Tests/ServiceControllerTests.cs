@@ -25,7 +25,7 @@ public class ServiceControllerTests
 
         var controller = CreateController();
 
-        var result = await controller.Index(null);
+        var result = await controller.Index((DateOnly?)null);
 
         var view = Assert.IsType<ViewResult>(result);
         var model = Assert.IsType<ServiceIndexViewModel>(view.Model);
