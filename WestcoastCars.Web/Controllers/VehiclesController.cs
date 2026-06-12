@@ -8,18 +8,11 @@ using WestcoastCars.Contracts.DTOs;
 namespace WestcoastCars.Web.Controllers;
 
 [Route("Vehicles")]
-public class VehiclesController : Controller
+public class VehiclesController(IVehicleService vehicleService, IManufacturerService manufacturerService, ILogger<VehiclesController> logger) : Controller
 {
-    private readonly IVehicleService _vehicleService;
-    private readonly IManufacturerService _manufacturerService;
-    private readonly ILogger<VehiclesController> _logger;
-
-    public VehiclesController(IVehicleService vehicleService, IManufacturerService manufacturerService, ILogger<VehiclesController> logger)
-    {
-        _vehicleService = vehicleService;
-        _manufacturerService = manufacturerService;
-        _logger = logger;
-    }
+    private readonly IVehicleService _vehicleService = vehicleService;
+    private readonly IManufacturerService _manufacturerService = manufacturerService;
+    private readonly ILogger<VehiclesController> _logger = logger;
 
     [HttpGet("list", Name = "VehicleCatalog")]
     public async Task<IActionResult> Index([FromQuery] VehicleSearchDto search, [FromQuery] int page = 1)
@@ -32,7 +25,7 @@ public class VehiclesController : Controller
             PagedResult<VehicleSummaryDto> result;
 
             // Check if any filter is applied (ignoring nulls)
-            bool isFiltered = !string.IsNullOrEmpty(search.Make) ||
+            var isFiltered = !string.IsNullOrEmpty(search.Make) ||
                               !string.IsNullOrEmpty(search.Model) ||
                               search.MinYear.HasValue ||
                               search.MaxYear.HasValue ||
@@ -90,7 +83,7 @@ public class VehiclesController : Controller
             const int pageSize = 15;
             search.PageSize = pageSize;
 
-            bool isFiltered = !string.IsNullOrEmpty(search.Make) ||
+            var isFiltered = !string.IsNullOrEmpty(search.Make) ||
                               !string.IsNullOrEmpty(search.Model) ||
                               search.MinYear.HasValue ||
                               search.MaxYear.HasValue ||
@@ -109,12 +102,12 @@ public class VehiclesController : Controller
             {
                 Vehicles = result.Items,
                 Search = search,
-                Manufacturers = manufacturers.Select(m => new SelectListItem
+                Manufacturers = [.. manufacturers.Select(m => new SelectListItem
                 {
                     Value = m.Name,
                     Text = m.Name,
                     Selected = m.Name == search.Make
-                }).ToList(),
+                })],
                 CurrentPage = result.Page,
                 PageSize = result.PageSize,
                 TotalVehicles = result.TotalCount

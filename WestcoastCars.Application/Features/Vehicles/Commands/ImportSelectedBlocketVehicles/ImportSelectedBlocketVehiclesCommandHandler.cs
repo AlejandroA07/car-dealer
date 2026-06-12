@@ -101,7 +101,7 @@ public class ImportSelectedBlocketVehiclesCommandHandler(IBlocketApiClient block
     private async Task<List<Vehicle>> BuildVehicleEntitiesAsync(IEnumerable<BlocketVehicleImportData> preparedVehicles)
     {
         var vehicles = new List<Vehicle>();
-        var list = preparedVehicles as IReadOnlyCollection<BlocketVehicleImportData> ?? preparedVehicles.ToList();
+        var list = preparedVehicles as IReadOnlyCollection<BlocketVehicleImportData> ?? [.. preparedVehicles];
 
         if (list.Count == 0) return vehicles;
 

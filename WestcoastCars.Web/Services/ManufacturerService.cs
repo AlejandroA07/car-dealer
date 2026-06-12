@@ -2,10 +2,6 @@ using WestcoastCars.Web.ViewModels.CoreAttributes;
 
 namespace WestcoastCars.Web.Services;
 
-public class ManufacturerService : GenericDataService<AttributeItemViewModel, AttributePostViewModel>, IManufacturerService
+public class ManufacturerService(IHttpClientFactory httpClientFactory, ILogger<ManufacturerService> logger) : GenericDataService<AttributeItemViewModel, AttributePostViewModel>(httpClientFactory, logger, "manufacturers"), IManufacturerService
 {
-    public ManufacturerService(IHttpClientFactory httpClientFactory, ILogger<ManufacturerService> logger)
-        : base(httpClientFactory, logger, "manufacturers")
-    {
-    }
 }

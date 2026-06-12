@@ -28,21 +28,21 @@ public class GenericDataService<TList, TPost> : IGenericDataService<TList, TPost
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogError("Error fetching {endpoint}: {StatusCode}", _endpoint, response.StatusCode);
-                return new List<TList>();
+                return [];
             }
 
             var json = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<List<TList>>(json, _options) ?? new List<TList>();
+            return JsonSerializer.Deserialize<List<TList>>(json, _options) ?? [];
         }
         catch (HttpRequestException ex)
         {
             _logger.LogError(ex, "API is unavailable while fetching {endpoint}", _endpoint);
-            return new List<TList>();
+            return [];
         }
         catch (TaskCanceledException ex)
         {
             _logger.LogError(ex, "API request timed out while fetching {endpoint}", _endpoint);
-            return new List<TList>();
+            return [];
         }
     }
 

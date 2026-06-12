@@ -24,5 +24,5 @@ public class AttributePostViewModel : BaseViewModel
     public string ExistingLabel { get; set; } = string.Empty;
 
     [JsonIgnore]
-    public IList<AttributeItemViewModel> Items { get; set; } = new List<AttributeItemViewModel>();
+    public IList<AttributeItemViewModel> Items { get; set; } = [];
 }

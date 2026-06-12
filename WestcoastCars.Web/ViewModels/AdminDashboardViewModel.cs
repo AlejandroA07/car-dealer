@@ -1,6 +1,6 @@
 using WestcoastCars.Contracts.DTOs;
 
-namespace WestcoastCars.Web.ViewModels.Admin;
+namespace WestcoastCars.Web.ViewModels;
 
 public class AdminDashboardViewModel
 {
@@ -8,8 +8,8 @@ public class AdminDashboardViewModel
     public int SoldVehicles { get; set; }
     public int AvailableVehicles { get; set; }
     public decimal TotalInventoryValue { get; set; }
-    public List<VehicleSummaryDto> RecentVehicles { get; set; } = new();
-    public List<ManufacturerStockSummary> StockByManufacturer { get; set; } = new();
+    public List<VehicleSummaryDto> RecentVehicles { get; set; } = [];
+    public List<ManufacturerStockSummary> StockByManufacturer { get; set; } = [];
 }
 
 public class ManufacturerStockSummary

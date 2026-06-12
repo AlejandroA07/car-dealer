@@ -17,16 +17,10 @@ using System.Text;
 namespace WestcoastCars.Web.Controllers;
 
 [Route("auth")]
-public class AuthController : Controller
+public class AuthController(IAuthService authService, IOptions<JwtSettings> jwtOptions) : Controller
 {
-    private readonly IAuthService _authService;
-    private readonly JwtSettings _jwtSettings;
-
-    public AuthController(IAuthService authService, IOptions<JwtSettings> jwtOptions)
-    {
-        _authService = authService;
-        _jwtSettings = jwtOptions.Value;
-    }
+    private readonly IAuthService _authService = authService;
+    private readonly JwtSettings _jwtSettings = jwtOptions.Value;
 
     [HttpGet("login")]
     public IActionResult Login(string returnUrl = "/")
@@ -61,8 +55,8 @@ public class AuthController : Controller
 
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, model.Email),
-                new Claim(ClaimTypes.NameIdentifier, model.Email)
+                new(ClaimTypes.Name, model.Email),
+                new(ClaimTypes.NameIdentifier, model.Email)
             };
 
             var handler = new JwtSecurityTokenHandler();
@@ -105,14 +99,14 @@ public class AuthController : Controller
             };
 
             // Store the access token properly so GetTokenAsync can retrieve it
-            authProperties.StoreTokens(new List<AuthenticationToken>
-            {
+            authProperties.StoreTokens(
+            [
                 new AuthenticationToken
                 {
                     Name = "access_token",
                     Value = result.Token
                 }
-            });
+            ]);
 
             await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,

@@ -5,14 +5,9 @@ using WestcoastCars.Web.ViewModels.ServiceBooking;
 
 namespace WestcoastCars.Web.Controllers;
 
-public class ServiceController : Controller
+public class ServiceController(IServiceBookingService bookingService) : Controller
 {
-    private readonly IServiceBookingService _bookingService;
-
-    public ServiceController(IServiceBookingService bookingService)
-    {
-        _bookingService = bookingService;
-    }
+    private readonly IServiceBookingService _bookingService = bookingService;
 
     [HttpGet]
     public async Task<IActionResult> Index([FromQuery] DateOnly? weekStart)
@@ -25,7 +20,7 @@ public class ServiceController : Controller
         {
             BookingForm = new ServiceBookingViewModel { ServiceType = "Bas-service", IdempotencyKey = Guid.NewGuid().ToString() },
             WeekStart = monday,
-            WeekSlots = slotsResult.Data.ToList(),
+            WeekSlots = [.. slotsResult.Data],
             AvailabilityLoadFailed = !slotsResult.Succeeded,
             AvailabilityErrorMessage = slotsResult.ErrorMessage ?? string.Empty
         });
@@ -74,7 +69,7 @@ public class ServiceController : Controller
             Title = "Aktiva bokningar",
             EmptyMessage = "Inga aktiva bokningar just nu.",
             IsHistoryView = false,
-            Bookings = result.Data.ToList()
+            Bookings = [.. result.Data]
         });
     }
 
@@ -92,7 +87,7 @@ public class ServiceController : Controller
             Title = "Alla bokningar",
             EmptyMessage = "Ingen bokningshistorik ännu.",
             IsHistoryView = true,
-            Bookings = result.Data.ToList()
+            Bookings = [.. result.Data]
         });
     }
 
@@ -155,7 +150,7 @@ public class ServiceController : Controller
         var currentMonday = GetMonday(DateOnly.FromDateTime(DateTime.Today));
         model.WeekStart = ClampWeekStart(GetMonday(model.WeekStart), currentMonday, currentMonday.AddDays(42));
         var slotsResult = await _bookingService.GetWeekSlotsAsync(model.WeekStart);
-        model.WeekSlots = slotsResult.Data.ToList();
+        model.WeekSlots = [.. slotsResult.Data];
         model.AvailabilityLoadFailed = !slotsResult.Succeeded;
         model.AvailabilityErrorMessage = slotsResult.ErrorMessage ?? string.Empty;
     }

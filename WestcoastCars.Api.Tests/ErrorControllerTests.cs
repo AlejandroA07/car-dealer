@@ -54,7 +54,7 @@ public class ErrorControllerTests
         Assert.Equal("Manufacturer no longer exists.", problemDetails.Detail);
     }
 
-    private static readonly string[] expected = new[] { "Password is too weak" };
+    private static readonly string[] expected = ["Password is too weak"];
 
     [Fact]
     public void HandleError_ShouldIncludeValidationErrors()

@@ -13,6 +13,6 @@ public class LoginResult
         Error = error;
     }
 
-    public static LoginResult Success(string token) => new LoginResult(true, token: token);
-    public static LoginResult Failure(string error) => new LoginResult(false, error: error);
+    public static LoginResult Success(string token) => new(true, token: token);
+    public static LoginResult Failure(string error) => new(false, error: error);
 }

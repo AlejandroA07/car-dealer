@@ -208,7 +208,7 @@ public class RefreshInventoryFromBlocketCommandHandler(IBlocketApiClient blocket
     private async Task<List<Vehicle>> BuildVehicleEntitiesAsync(IEnumerable<BlocketVehicleImportData> preparedVehicles)
     {
         var vehicles = new List<Vehicle>();
-        var preparedVehicleList = preparedVehicles as IReadOnlyCollection<BlocketVehicleImportData> ?? preparedVehicles.ToList();
+        var preparedVehicleList = preparedVehicles as IReadOnlyCollection<BlocketVehicleImportData> ?? [.. preparedVehicles];
 
         if (preparedVehicleList.Count == 0)
         {

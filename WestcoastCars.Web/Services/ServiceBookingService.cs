@@ -6,18 +6,12 @@ using WestcoastCars.Contracts.DTOs;
 
 namespace WestcoastCars.Web.Services;
 
-public class ServiceBookingService : IServiceBookingService
+public class ServiceBookingService(IHttpClientFactory httpClientFactory, ILogger<ServiceBookingService> logger) : IServiceBookingService
 {
     private const int AdminListPageSize = 200;
 
-    private readonly HttpClient _httpClient;
-    private readonly ILogger<ServiceBookingService> _logger;
-
-    public ServiceBookingService(IHttpClientFactory httpClientFactory, ILogger<ServiceBookingService> logger)
-    {
-        _httpClient = httpClientFactory.CreateClient("ApiClient");
-        _logger = logger;
-    }
+    private readonly HttpClient _httpClient = httpClientFactory.CreateClient("ApiClient");
+    private readonly ILogger<ServiceBookingService> _logger = logger;
 
     public async Task<ServiceBookingActionResult> CreateBookingAsync(ServiceBookingViewModel model)
     {
@@ -60,7 +54,7 @@ public class ServiceBookingService : IServiceBookingService
         {
             var result = await _httpClient.GetFromJsonAsync<IEnumerable<SlotAvailabilityDto>>(
                 $"api/v1/service-bookings/availability?weekStart={weekStart:yyyy-MM-dd}");
-            return ServiceBookingDataResult<IReadOnlyList<SlotAvailabilityDto>>.Success((result ?? []).ToList());
+            return ServiceBookingDataResult<IReadOnlyList<SlotAvailabilityDto>>.Success([.. (result ?? [])]);
         }
         catch (Exception ex)
         {

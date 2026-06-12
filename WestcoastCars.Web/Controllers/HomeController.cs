@@ -5,18 +5,11 @@ using WestcoastCars.Web.ViewModels.Vehicles;
 
 namespace WestcoastCars.Web.Controllers;
 
-public class HomeController : Controller
+public class HomeController(IVehicleService vehicleService, IManufacturerService manufacturerService, ILogger<HomeController> logger) : Controller
 {
-    private readonly IVehicleService _vehicleService;
-    private readonly IManufacturerService _manufacturerService;
-    private readonly ILogger<HomeController> _logger;
-
-    public HomeController(IVehicleService vehicleService, IManufacturerService manufacturerService, ILogger<HomeController> logger)
-    {
-        _vehicleService = vehicleService;
-        _manufacturerService = manufacturerService;
-        _logger = logger;
-    }
+    private readonly IVehicleService _vehicleService = vehicleService;
+    private readonly IManufacturerService _manufacturerService = manufacturerService;
+    private readonly ILogger<HomeController> _logger = logger;
 
     public async Task<IActionResult> Index()
     {
@@ -30,9 +23,7 @@ public class HomeController : Controller
 
             await Task.WhenAll(manufacturersTask, vehiclesTask);
 
-            manufacturerList = manufacturersTask.Result
-                .Select(m => new SelectListItem { Value = m.Name, Text = m.Name })
-                .ToList();
+            manufacturerList = [.. manufacturersTask.Result.Select(m => new SelectListItem { Value = m.Name, Text = m.Name })];
 
             topVehicles = vehiclesTask.Result.Items;
         }
