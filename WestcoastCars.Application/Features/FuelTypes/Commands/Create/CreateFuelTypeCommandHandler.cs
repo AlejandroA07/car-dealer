@@ -6,22 +6,14 @@ using WestcoastCars.Domain.Entities;
 
 namespace WestcoastCars.Application.Features.FuelTypes.Commands.Create;
 
-public class CreateFuelTypeCommandHandler : IRequestHandler<CreateFuelTypeCommand, NamedObjectDto>
+public class CreateFuelTypeCommandHandler(IUnitOfWork unitOfWork, IMapper mapper) : IRequestHandler<CreateFuelTypeCommand, NamedObjectDto>
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
-
-    public CreateFuelTypeCommandHandler(IUnitOfWork unitOfWork, IMapper mapper)
-    {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-    }
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IMapper _mapper = mapper;
 
     public async Task<NamedObjectDto> Handle(CreateFuelTypeCommand request, CancellationToken cancellationToken)
     {
-        var repository = _unitOfWork.FuelTypeRepository;
-        if (repository is null) throw new InvalidOperationException("Repository for FuelType is not available.");
-
+        var repository = _unitOfWork.FuelTypeRepository ?? throw new InvalidOperationException("Repository for FuelType is not available.");
         var fuelTypeToAdd = new FuelType { Name = request.Name };
         await repository.AddAsync(fuelTypeToAdd);
 

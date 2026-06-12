@@ -6,14 +6,9 @@ using WestcoastCars.Infrastructure.Data;
 
 namespace WestcoastCars.Infrastructure.Repositories;
 
-public class Repository<T> : IRepository<T> where T : class
+public class Repository<T>(WestcoastCarsContext context) : IRepository<T> where T : class
 {
-    protected readonly WestcoastCarsContext _context;
-
-    public Repository(WestcoastCarsContext context)
-    {
-        _context = context;
-    }
+    protected readonly WestcoastCarsContext _context = context;
 
     public virtual async Task<T?> GetByIdAsync(int id)
     {

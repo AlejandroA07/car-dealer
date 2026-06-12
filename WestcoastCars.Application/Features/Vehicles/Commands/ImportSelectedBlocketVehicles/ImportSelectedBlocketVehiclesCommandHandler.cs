@@ -7,18 +7,11 @@ using WestcoastCars.Domain.Entities;
 
 namespace WestcoastCars.Application.Features.Vehicles.Commands.ImportSelectedBlocketVehicles;
 
-public class ImportSelectedBlocketVehiclesCommandHandler : IRequestHandler<ImportSelectedBlocketVehiclesCommand, ImportSelectedResult>
+public class ImportSelectedBlocketVehiclesCommandHandler(IBlocketApiClient blocketApiClient, IBlocketVehicleImportMapper mapper, IUnitOfWork unitOfWork) : IRequestHandler<ImportSelectedBlocketVehiclesCommand, ImportSelectedResult>
 {
-    private readonly IBlocketApiClient _blocketApiClient;
-    private readonly IBlocketVehicleImportMapper _mapper;
-    private readonly IUnitOfWork _unitOfWork;
-
-    public ImportSelectedBlocketVehiclesCommandHandler(IBlocketApiClient blocketApiClient, IBlocketVehicleImportMapper mapper, IUnitOfWork unitOfWork)
-    {
-        _blocketApiClient = blocketApiClient;
-        _mapper = mapper;
-        _unitOfWork = unitOfWork;
-    }
+    private readonly IBlocketApiClient _blocketApiClient = blocketApiClient;
+    private readonly IBlocketVehicleImportMapper _mapper = mapper;
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
     public async Task<ImportSelectedResult> Handle(ImportSelectedBlocketVehiclesCommand request, CancellationToken cancellationToken)
     {
@@ -196,7 +189,7 @@ public class ImportSelectedBlocketVehiclesCommandHandler : IRequestHandler<Impor
         foreach (var item in lookups)
         {
             var name = NormalizeLookupName(nameSelector(item));
-            if (!dict.ContainsKey(name)) dict.Add(name, item);
+            dict.TryAdd(name, item);
         }
         return dict;
     }

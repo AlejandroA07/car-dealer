@@ -43,10 +43,10 @@ public class VehiclesControllerTests
         // Arrange
         var vehicles = new PagedResult<VehicleSummaryDto>
         {
-            Items = new List<VehicleSummaryDto>
-            {
+            Items =
+            [
                 new VehicleSummaryDto { Id = 1, Name = "Volvo V60" }
-            },
+            ],
             TotalCount = 1,
             Page = 1,
             PageSize = 20

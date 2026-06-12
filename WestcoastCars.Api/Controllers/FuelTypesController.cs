@@ -19,17 +19,11 @@ namespace WestcoastCars.Api.Controllers;
 [ApiController]
 [Route("api/v1/fueltypes")]
 [Tags("Fuel Types")]
-public class FuelTypesController : ControllerBase
+public class FuelTypesController(IMediator mediator, IMemoryCache cache) : ControllerBase
 {
-    private readonly IMediator _mediator;
-    private readonly IMemoryCache _cache;
+    private readonly IMediator _mediator = mediator;
+    private readonly IMemoryCache _cache = cache;
     private const string CacheKey = "lookup:fueltypes";
-
-    public FuelTypesController(IMediator mediator, IMemoryCache cache)
-    {
-        _mediator = mediator;
-        _cache = cache;
-    }
 
     /// <summary>
     /// Lists all fuel types.

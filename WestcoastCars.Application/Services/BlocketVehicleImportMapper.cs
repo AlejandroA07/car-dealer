@@ -6,15 +6,10 @@ using WestcoastCars.Application.Models.Blocket;
 
 namespace WestcoastCars.Application.Services;
 
-public class BlocketVehicleImportMapper : IBlocketVehicleImportMapper
+public partial class BlocketVehicleImportMapper(ILogger<BlocketVehicleImportMapper> logger) : IBlocketVehicleImportMapper
 {
     private const string DefaultImageUrl = "/images/no-car.png";
-    private readonly ILogger<BlocketVehicleImportMapper> _logger;
-
-    public BlocketVehicleImportMapper(ILogger<BlocketVehicleImportMapper> logger)
-    {
-        _logger = logger;
-    }
+    private readonly ILogger<BlocketVehicleImportMapper> _logger = logger;
 
     // Blocket uses these Swedish placeholders when data is missing — treat all as unknown
     private static readonly HashSet<string> BlocketUnknownValues = new(StringComparer.OrdinalIgnoreCase)
@@ -224,7 +219,7 @@ public class BlocketVehicleImportMapper : IBlocketVehicleImportMapper
     {
         if (string.IsNullOrWhiteSpace(value)) return null;
 
-        var hkMatch = System.Text.RegularExpressions.Regex.Match(value, @"(\d+)\s*hk", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        var hkMatch = MyRegex().Match(value);
         if (hkMatch.Success && int.TryParse(hkMatch.Groups[1].Value, out var hk))
             return hk;
 
@@ -263,7 +258,7 @@ public class BlocketVehicleImportMapper : IBlocketVehicleImportMapper
             return null;
         }
 
-        var digits = new string(value.Where(char.IsDigit).ToArray());
+        var digits = new string([.. value.Where(char.IsDigit)]);
         return int.TryParse(digits, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedValue)
             ? parsedValue
             : null;
@@ -318,4 +313,7 @@ public class BlocketVehicleImportMapper : IBlocketVehicleImportMapper
 
         return urls;
     }
+
+    [GeneratedRegex(@"(\d+)\s*hk", System.Text.RegularExpressions.RegexOptions.IgnoreCase, "en-US")]
+    private static partial Regex MyRegex();
 }

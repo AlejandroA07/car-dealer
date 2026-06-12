@@ -21,7 +21,7 @@ public partial class AddActiveServiceBookingIndexes : Migration
         migrationBuilder.CreateIndex(
             name: "IX_ServiceBookings_ActiveSlot",
             table: "ServiceBookings",
-            columns: new[] { "BookingDate", "TimeSlot" },
+            columns: ["BookingDate", "TimeSlot"],
             unique: true,
             filter: "\"Status\" NOT IN (2, 3)");
 

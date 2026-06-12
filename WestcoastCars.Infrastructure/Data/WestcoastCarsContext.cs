@@ -6,14 +6,13 @@ using WestcoastCars.Domain.Entities;
 
 namespace WestcoastCars.Infrastructure.Data;
 
-public class WestcoastCarsContext : IdentityDbContext<IdentityUser>
+public class WestcoastCarsContext(DbContextOptions<WestcoastCarsContext> options) : IdentityDbContext<IdentityUser>(options)
 {
     public DbSet<Vehicle> Vehicles { get; set; }
     public DbSet<Manufacturer> Manufacturers { get; set; }
     public DbSet<FuelType> FuelTypes { get; set; }
     public DbSet<TransmissionType> TransmissionTypes { get; set; }
     public DbSet<ServiceBooking> ServiceBookings { get; set; }
-    public WestcoastCarsContext(DbContextOptions<WestcoastCarsContext> options) : base(options) { }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

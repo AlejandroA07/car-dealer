@@ -8,22 +8,14 @@ using WestcoastCars.Domain.Entities;
 
 namespace WestcoastCars.Application.Features.Transmissions.Queries.GetById;
 
-public class GetTransmissionByIdQueryHandler : IRequestHandler<GetTransmissionByIdQuery, NamedObjectDto?>
+public class GetTransmissionByIdQueryHandler(IUnitOfWork unitOfWork, IMapper mapper) : IRequestHandler<GetTransmissionByIdQuery, NamedObjectDto?>
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
-
-    public GetTransmissionByIdQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
-    {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-    }
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IMapper _mapper = mapper;
 
     public async Task<NamedObjectDto?> Handle(GetTransmissionByIdQuery request, CancellationToken cancellationToken)
     {
-        var repository = _unitOfWork.TransmissionTypeRepository;
-        if (repository is null) throw new InvalidOperationException("Repository for TransmissionType is not available.");
-
+        var repository = _unitOfWork.TransmissionTypeRepository ?? throw new InvalidOperationException("Repository for TransmissionType is not available.");
         var transmissionType = await repository.GetByIdAsync(request.Id);
         if (transmissionType is null) return null;
 

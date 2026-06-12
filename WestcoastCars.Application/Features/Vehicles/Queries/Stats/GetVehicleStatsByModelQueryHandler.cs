@@ -4,14 +4,9 @@ using WestcoastCars.Contracts.DTOs;
 
 namespace WestcoastCars.Application.Features.Vehicles.Queries.Stats;
 
-public class GetVehicleStatsByModelQueryHandler : IRequestHandler<GetVehicleStatsByModelQuery, IEnumerable<VehicleStatsByModelDto>>
+public class GetVehicleStatsByModelQueryHandler(IUnitOfWork unitOfWork) : IRequestHandler<GetVehicleStatsByModelQuery, IEnumerable<VehicleStatsByModelDto>>
 {
-    private readonly IUnitOfWork _unitOfWork;
-
-    public GetVehicleStatsByModelQueryHandler(IUnitOfWork unitOfWork)
-    {
-        _unitOfWork = unitOfWork;
-    }
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
     public async Task<IEnumerable<VehicleStatsByModelDto>> Handle(GetVehicleStatsByModelQuery request, CancellationToken cancellationToken)
     {

@@ -10,16 +10,10 @@ namespace WestcoastCars.Api.Controllers;
 [ApiController]
 [Route("api/v1/seed")]
 [Tags("Seed")]
-public class SeedController : ControllerBase
+public class SeedController(WestcoastCarsContext context, ILogger<SeedController> logger) : ControllerBase
 {
-    private readonly WestcoastCarsContext _context;
-    private readonly ILogger<SeedController> _logger;
-
-    public SeedController(WestcoastCarsContext context, ILogger<SeedController> logger)
-    {
-        _context = context;
-        _logger = logger;
-    }
+    private readonly WestcoastCarsContext _context = context;
+    private readonly ILogger<SeedController> _logger = logger;
 
     /// <summary>
     /// Seeds manufacturers, fuel types, transmissions, and vehicles from the bundled JSON file.

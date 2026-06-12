@@ -7,13 +7,9 @@ using WestcoastCars.Infrastructure.Data;
 
 namespace WestcoastCars.Infrastructure.Repositories;
 
-public class ServiceBookingRepository : Repository<ServiceBooking>, IServiceBookingRepository
+public class ServiceBookingRepository(WestcoastCarsContext context) : Repository<ServiceBooking>(context), IServiceBookingRepository
 {
     private const int MaxPageSize = 100;
-
-    public ServiceBookingRepository(WestcoastCarsContext context) : base(context)
-    {
-    }
 
     public async Task<PagedResult<ServiceBooking>> GetPagedAsync(PagedQueryDto pagination, bool? isActive = null)
     {

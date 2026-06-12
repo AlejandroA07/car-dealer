@@ -10,22 +10,14 @@ using WestcoastCars.Domain.Entities;
 
 namespace WestcoastCars.Application.Features.Transmissions.Queries.ListAll;
 
-public class ListAllTransmissionsQueryHandler : IRequestHandler<ListAllTransmissionsQuery, IEnumerable<NamedObjectDto>>
+public class ListAllTransmissionsQueryHandler(IUnitOfWork unitOfWork, IMapper mapper) : IRequestHandler<ListAllTransmissionsQuery, IEnumerable<NamedObjectDto>>
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
-
-    public ListAllTransmissionsQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
-    {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-    }
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IMapper _mapper = mapper;
 
     public async Task<IEnumerable<NamedObjectDto>> Handle(ListAllTransmissionsQuery request, CancellationToken cancellationToken)
     {
-        var repository = _unitOfWork.TransmissionTypeRepository;
-        if (repository is null) throw new InvalidOperationException("Repository for TransmissionType is not available.");
-
+        var repository = _unitOfWork.TransmissionTypeRepository ?? throw new InvalidOperationException("Repository for TransmissionType is not available.");
         var transmissionTypes = await repository.GetAllAsync();
         return _mapper.Map<IEnumerable<NamedObjectDto>>(transmissionTypes);
     }

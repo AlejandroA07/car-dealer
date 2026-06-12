@@ -5,12 +5,8 @@ using WestcoastCars.Infrastructure.Data;
 
 namespace WestcoastCars.Infrastructure.Repositories;
 
-public class TransmissionTypeRepository : Repository<TransmissionType>, ITransmissionTypeRepository
+public class TransmissionTypeRepository(WestcoastCarsContext context) : Repository<TransmissionType>(context), ITransmissionTypeRepository
 {
-    public TransmissionTypeRepository(WestcoastCarsContext context) : base(context)
-    {
-    }
-
     public async Task<TransmissionType?> FindByIdWithVehiclesAsync(int id)
     {
         return await _context.TransmissionTypes

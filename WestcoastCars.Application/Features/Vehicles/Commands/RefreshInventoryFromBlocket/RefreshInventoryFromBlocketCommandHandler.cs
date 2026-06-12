@@ -7,20 +7,13 @@ using WestcoastCars.Domain.Entities;
 
 namespace WestcoastCars.Application.Features.Vehicles.Commands.RefreshInventoryFromBlocket;
 
-public class RefreshInventoryFromBlocketCommandHandler : IRequestHandler<RefreshInventoryFromBlocketCommand, RefreshInventoryFromBlocketResult>
+public class RefreshInventoryFromBlocketCommandHandler(IBlocketApiClient blocketApiClient, IBlocketVehicleImportMapper mapper, IUnitOfWork unitOfWork) : IRequestHandler<RefreshInventoryFromBlocketCommand, RefreshInventoryFromBlocketResult>
 {
     private const int MaxImportLimit = 50;
 
-    private readonly IBlocketApiClient _blocketApiClient;
-    private readonly IBlocketVehicleImportMapper _mapper;
-    private readonly IUnitOfWork _unitOfWork;
-
-    public RefreshInventoryFromBlocketCommandHandler(IBlocketApiClient blocketApiClient, IBlocketVehicleImportMapper mapper, IUnitOfWork unitOfWork)
-    {
-        _blocketApiClient = blocketApiClient;
-        _mapper = mapper;
-        _unitOfWork = unitOfWork;
-    }
+    private readonly IBlocketApiClient _blocketApiClient = blocketApiClient;
+    private readonly IBlocketVehicleImportMapper _mapper = mapper;
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
     public async Task<RefreshInventoryFromBlocketResult> Handle(RefreshInventoryFromBlocketCommand request, CancellationToken cancellationToken)
     {
@@ -348,10 +341,7 @@ public class RefreshInventoryFromBlocketCommandHandler : IRequestHandler<Refresh
         {
             var name = NormalizeLookupName(nameSelector(lookup), "Unknown");
 
-            if (!dictionary.ContainsKey(name))
-            {
-                dictionary.Add(name, lookup);
-            }
+            dictionary.TryAdd(name, lookup);
         }
 
         return dictionary;

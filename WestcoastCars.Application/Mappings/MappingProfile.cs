@@ -47,7 +47,7 @@ public class MappingProfile : Profile
             {
                 var gallery = JsonSerializer.Deserialize<List<string>>(galleryJson);
                 if (gallery is { Count: > 0 })
-                    return gallery.Select(NormalizeImageUrl).ToList();
+                    return [.. gallery.Select(NormalizeImageUrl)];
             }
             catch { }
         }

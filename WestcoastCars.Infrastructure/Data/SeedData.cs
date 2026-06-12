@@ -80,40 +80,40 @@ public static class SeedData
         var vehicles = new List<Vehicle>();
         foreach (var dto in vehicleDtos)
         {
-            var manufacturer    = ResolveSeedLookup(existingManufacturers,  dto.Manufacturer,     dto.RegistrationNumber ?? string.Empty, "manufacturer");
-            var fuelType        = ResolveSeedLookup(existingFuelTypes,       dto.FuelType,         dto.RegistrationNumber ?? string.Empty, "fuel type");
-            var transmissionType = ResolveSeedLookup(existingTransmissions,  dto.TransmissionType, dto.RegistrationNumber ?? string.Empty, "transmission type");
+            var manufacturer = ResolveSeedLookup(existingManufacturers, dto.Manufacturer, dto.RegistrationNumber ?? string.Empty, "manufacturer");
+            var fuelType = ResolveSeedLookup(existingFuelTypes, dto.FuelType, dto.RegistrationNumber ?? string.Empty, "fuel type");
+            var transmissionType = ResolveSeedLookup(existingTransmissions, dto.TransmissionType, dto.RegistrationNumber ?? string.Empty, "transmission type");
 
             var vehicle = new Vehicle
             {
-                RegistrationNumber   = string.IsNullOrWhiteSpace(dto.RegistrationNumber) ? null : dto.RegistrationNumber,
-                Model                = dto.Model,
-                ModelYear            = dto.ModelYear,
-                Mileage              = dto.Mileage,
-                ImageUrl             = dto.ImageUrl,
-                Price                = dto.Price,
-                Description          = dto.Description,
-                Color                = dto.Color,
-                WheelDrive           = dto.WheelDrive,
-                Horsepower           = dto.Horsepower,
-                BodyType             = dto.BodyType,
-                Doors                = dto.Doors,
-                EngineVolume         = dto.EngineVolume,
-                City                 = dto.City,
-                Address              = dto.Address,
-                Seats                = dto.Seats,
-                MaxTrailerWeight     = dto.MaxTrailerWeight,
-                OwnerCount           = dto.OwnerCount,
-                LastInspectionDate   = dto.LastInspectionDate,
-                NextInspectionDate   = dto.NextInspectionDate,
-                Equipment            = dto.Equipment is { Count: > 0 } ? JsonSerializer.Serialize(dto.Equipment) : null,
-                GalleryUrls          = dto.GalleryUrls is { Count: > 0 } ? JsonSerializer.Serialize(dto.GalleryUrls) : null,
-                ManufacturerId       = manufacturer.Id,
-                FuelTypeId           = fuelType.Id,
-                TransmissionTypeId   = transmissionType.Id,
-                Manufacturer         = manufacturer,
-                FuelType             = fuelType,
-                TransmissionType     = transmissionType
+                RegistrationNumber = string.IsNullOrWhiteSpace(dto.RegistrationNumber) ? null : dto.RegistrationNumber,
+                Model = dto.Model,
+                ModelYear = dto.ModelYear,
+                Mileage = dto.Mileage,
+                ImageUrl = dto.ImageUrl,
+                Price = dto.Price,
+                Description = dto.Description,
+                Color = dto.Color,
+                WheelDrive = dto.WheelDrive,
+                Horsepower = dto.Horsepower,
+                BodyType = dto.BodyType,
+                Doors = dto.Doors,
+                EngineVolume = dto.EngineVolume,
+                City = dto.City,
+                Address = dto.Address,
+                Seats = dto.Seats,
+                MaxTrailerWeight = dto.MaxTrailerWeight,
+                OwnerCount = dto.OwnerCount,
+                LastInspectionDate = dto.LastInspectionDate,
+                NextInspectionDate = dto.NextInspectionDate,
+                Equipment = dto.Equipment is { Count: > 0 } ? JsonSerializer.Serialize(dto.Equipment) : null,
+                GalleryUrls = dto.GalleryUrls is { Count: > 0 } ? JsonSerializer.Serialize(dto.GalleryUrls) : null,
+                ManufacturerId = manufacturer.Id,
+                FuelTypeId = fuelType.Id,
+                TransmissionTypeId = transmissionType.Id,
+                Manufacturer = manufacturer,
+                FuelType = fuelType,
+                TransmissionType = transmissionType
             };
             if (dto.IsSold) vehicle.MarkAsSold();
             vehicles.Add(vehicle);
@@ -139,31 +139,31 @@ public static class SeedData
 
     private class VehicleSeedDto
     {
-        public string?      RegistrationNumber { get; set; }
-        public string       Manufacturer       { get; set; } = string.Empty;
-        public string       Model              { get; set; } = string.Empty;
-        public int          ModelYear          { get; set; }
-        public string       FuelType           { get; set; } = string.Empty;
-        public string       TransmissionType   { get; set; } = string.Empty;
-        public string       ImageUrl           { get; set; } = string.Empty;
-        public int          Mileage            { get; set; }
-        public bool         IsSold             { get; set; }
-        public int          Price              { get; set; }
-        public string       Description        { get; set; } = string.Empty;
-        public string?      Color              { get; set; }
-        public string?      WheelDrive         { get; set; }
-        public int?         Horsepower         { get; set; }
-        public string?      BodyType           { get; set; }
-        public int?         Doors              { get; set; }
-        public string?      EngineVolume       { get; set; }
-        public string?      City               { get; set; }
-        public string?      Address            { get; set; }
-        public int?         Seats              { get; set; }
-        public int?         MaxTrailerWeight   { get; set; }
-        public int?         OwnerCount         { get; set; }
-        public DateOnly?    LastInspectionDate { get; set; }
-        public DateOnly?    NextInspectionDate { get; set; }
-        public List<string>? Equipment         { get; set; }
-        public List<string>? GalleryUrls       { get; set; }
+        public string? RegistrationNumber { get; set; }
+        public string Manufacturer { get; set; } = string.Empty;
+        public string Model { get; set; } = string.Empty;
+        public int ModelYear { get; set; }
+        public string FuelType { get; set; } = string.Empty;
+        public string TransmissionType { get; set; } = string.Empty;
+        public string ImageUrl { get; set; } = string.Empty;
+        public int Mileage { get; set; }
+        public bool IsSold { get; set; }
+        public int Price { get; set; }
+        public string Description { get; set; } = string.Empty;
+        public string? Color { get; set; }
+        public string? WheelDrive { get; set; }
+        public int? Horsepower { get; set; }
+        public string? BodyType { get; set; }
+        public int? Doors { get; set; }
+        public string? EngineVolume { get; set; }
+        public string? City { get; set; }
+        public string? Address { get; set; }
+        public int? Seats { get; set; }
+        public int? MaxTrailerWeight { get; set; }
+        public int? OwnerCount { get; set; }
+        public DateOnly? LastInspectionDate { get; set; }
+        public DateOnly? NextInspectionDate { get; set; }
+        public List<string>? Equipment { get; set; }
+        public List<string>? GalleryUrls { get; set; }
     }
 }

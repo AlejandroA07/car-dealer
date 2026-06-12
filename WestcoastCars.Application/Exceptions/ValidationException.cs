@@ -28,7 +28,7 @@ public class ValidationException : Exception
     }
 
     public ValidationException(string propertyName, IEnumerable<string> errors)
-        : this(new Dictionary<string, string[]> { [propertyName] = errors.ToArray() })
+        : this(new Dictionary<string, string[]> { [propertyName] = [.. errors] })
     {
     }
 

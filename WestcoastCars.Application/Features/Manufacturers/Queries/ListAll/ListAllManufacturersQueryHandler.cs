@@ -10,22 +10,14 @@ using WestcoastCars.Domain.Entities;
 
 namespace WestcoastCars.Application.Features.Manufacturers.Queries.ListAll;
 
-public class ListAllManufacturersQueryHandler : IRequestHandler<ListAllManufacturersQuery, IEnumerable<NamedObjectDto>>
+public class ListAllManufacturersQueryHandler(IUnitOfWork unitOfWork, IMapper mapper) : IRequestHandler<ListAllManufacturersQuery, IEnumerable<NamedObjectDto>>
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
-
-    public ListAllManufacturersQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
-    {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-    }
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IMapper _mapper = mapper;
 
     public async Task<IEnumerable<NamedObjectDto>> Handle(ListAllManufacturersQuery request, CancellationToken cancellationToken)
     {
-        var repository = _unitOfWork.ManufacturerRepository;
-        if (repository is null) throw new InvalidOperationException("Repository for Manufacturer is not available.");
-
+        var repository = _unitOfWork.ManufacturerRepository ?? throw new InvalidOperationException("Repository for Manufacturer is not available.");
         var manufacturers = await repository.GetAllAsync();
         var result = _mapper.Map<IEnumerable<NamedObjectDto>>(manufacturers);
         return result;

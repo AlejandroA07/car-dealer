@@ -6,18 +6,11 @@ using WestcoastCars.Application.Services;
 
 namespace WestcoastCars.Application.Features.ServiceBookings.Commands.Cancel;
 
-public class CancelServiceBookingCommandHandler : IRequestHandler<CancelServiceBookingCommand, Unit>
+public class CancelServiceBookingCommandHandler(IUnitOfWork unitOfWork, IEmailService emailService, ILogger<CancelServiceBookingCommandHandler> logger) : IRequestHandler<CancelServiceBookingCommand, Unit>
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IEmailService _emailService;
-    private readonly ILogger<CancelServiceBookingCommandHandler> _logger;
-
-    public CancelServiceBookingCommandHandler(IUnitOfWork unitOfWork, IEmailService emailService, ILogger<CancelServiceBookingCommandHandler> logger)
-    {
-        _unitOfWork = unitOfWork;
-        _emailService = emailService;
-        _logger = logger;
-    }
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IEmailService _emailService = emailService;
+    private readonly ILogger<CancelServiceBookingCommandHandler> _logger = logger;
 
     public async Task<Unit> Handle(CancelServiceBookingCommand request, CancellationToken cancellationToken)
     {

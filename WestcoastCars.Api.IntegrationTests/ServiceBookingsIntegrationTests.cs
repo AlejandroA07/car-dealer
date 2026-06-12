@@ -7,12 +7,8 @@ using WestcoastCars.Domain.Common.Enums;
 
 namespace WestcoastCars.Api.IntegrationTests;
 
-public class ServiceBookingsIntegrationTests : IntegrationTestBase
+public class ServiceBookingsIntegrationTests(CustomWebApplicationFactory<Program> factory) : IntegrationTestBase(factory)
 {
-    public ServiceBookingsIntegrationTests(CustomWebApplicationFactory<Program> factory) : base(factory)
-    {
-    }
-
     [Fact]
     public async Task CreateAndList_ShouldPersistServiceBookingForExistingVehicle()
     {

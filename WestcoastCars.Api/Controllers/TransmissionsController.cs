@@ -19,17 +19,11 @@ namespace WestcoastCars.Api.Controllers;
 [ApiController]
 [Route("api/v1/transmissions")]
 [Tags("Transmissions")]
-public class TransmissionsController : ControllerBase
+public class TransmissionsController(IMediator mediator, IMemoryCache cache) : ControllerBase
 {
-    private readonly IMediator _mediator;
-    private readonly IMemoryCache _cache;
+    private readonly IMediator _mediator = mediator;
+    private readonly IMemoryCache _cache = cache;
     private const string CacheKey = "lookup:transmissions";
-
-    public TransmissionsController(IMediator mediator, IMemoryCache cache)
-    {
-        _mediator = mediator;
-        _cache = cache;
-    }
 
     /// <summary>
     /// Lists all transmission types.

@@ -5,27 +5,14 @@ using WestcoastCars.Application.Exceptions;
 
 namespace WestcoastCars.Application.Features.FuelTypes.Commands.Update;
 
-public class UpdateFuelTypeCommandHandler : IRequestHandler<UpdateFuelTypeCommand>
+public class UpdateFuelTypeCommandHandler(IUnitOfWork unitOfWork) : IRequestHandler<UpdateFuelTypeCommand>
 {
-    private readonly IUnitOfWork _unitOfWork;
-
-    public UpdateFuelTypeCommandHandler(IUnitOfWork unitOfWork)
-    {
-        _unitOfWork = unitOfWork;
-    }
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
     public async Task Handle(UpdateFuelTypeCommand request, CancellationToken cancellationToken)
     {
-        var repository = _unitOfWork.FuelTypeRepository;
-        if (repository is null) throw new InvalidOperationException("Repository for FuelType is not available.");
-
-        var fuelTypeToUpdate = await repository.GetByIdAsync(request.Id);
-
-        if (fuelTypeToUpdate is null)
-        {
-            throw new NotFoundException($"FuelType with id '{request.Id}' not found.");
-        }
-
+        var repository = _unitOfWork.FuelTypeRepository ?? throw new InvalidOperationException("Repository for FuelType is not available.");
+        var fuelTypeToUpdate = await repository.GetByIdAsync(request.Id) ?? throw new NotFoundException($"FuelType with id '{request.Id}' not found.");
         fuelTypeToUpdate!.Name = request.Name;
         repository.Update(fuelTypeToUpdate!);
 

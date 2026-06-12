@@ -8,22 +8,14 @@ using WestcoastCars.Domain.Entities;
 
 namespace WestcoastCars.Application.Features.FuelTypes.Queries.GetById;
 
-public class GetFuelTypeByIdQueryHandler : IRequestHandler<GetFuelTypeByIdQuery, NamedObjectDto?>
+public class GetFuelTypeByIdQueryHandler(IUnitOfWork unitOfWork, IMapper mapper) : IRequestHandler<GetFuelTypeByIdQuery, NamedObjectDto?>
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
-
-    public GetFuelTypeByIdQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
-    {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-    }
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IMapper _mapper = mapper;
 
     public async Task<NamedObjectDto?> Handle(GetFuelTypeByIdQuery request, CancellationToken cancellationToken)
     {
-        var repository = _unitOfWork.FuelTypeRepository;
-        if (repository is null) throw new InvalidOperationException("Repository for FuelType is not available.");
-
+        var repository = _unitOfWork.FuelTypeRepository ?? throw new InvalidOperationException("Repository for FuelType is not available.");
         var fuelType = await repository.GetByIdAsync(request.Id);
         if (fuelType is null) return null;
 

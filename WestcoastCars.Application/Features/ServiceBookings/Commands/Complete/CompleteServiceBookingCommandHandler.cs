@@ -5,16 +5,10 @@ using WestcoastCars.Application.Interfaces;
 
 namespace WestcoastCars.Application.Features.ServiceBookings.Commands.Complete;
 
-public class CompleteServiceBookingCommandHandler : IRequestHandler<CompleteServiceBookingCommand, Unit>
+public class CompleteServiceBookingCommandHandler(IUnitOfWork unitOfWork, IDateTimeProvider dateTimeProvider) : IRequestHandler<CompleteServiceBookingCommand, Unit>
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IDateTimeProvider _dateTimeProvider;
-
-    public CompleteServiceBookingCommandHandler(IUnitOfWork unitOfWork, IDateTimeProvider dateTimeProvider)
-    {
-        _unitOfWork = unitOfWork;
-        _dateTimeProvider = dateTimeProvider;
-    }
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IDateTimeProvider _dateTimeProvider = dateTimeProvider;
 
     public async Task<Unit> Handle(CompleteServiceBookingCommand request, CancellationToken cancellationToken)
     {

@@ -12,12 +12,8 @@ using Xunit;
 namespace WestcoastCars.Api.IntegrationTests;
 
 [Trait("Category", "ExternalE2E")]
-public class BlocketSyncE2ETests : IntegrationTestBase
+public class BlocketSyncE2ETests(CustomWebApplicationFactory<Program> factory) : IntegrationTestBase(factory)
 {
-    public BlocketSyncE2ETests(CustomWebApplicationFactory<Program> factory) : base(factory)
-    {
-    }
-
     [OptionalBlocketE2EFact]
     public async Task SyncBlocket_ShouldReplaceVehicles_AndCapTo50()
     {

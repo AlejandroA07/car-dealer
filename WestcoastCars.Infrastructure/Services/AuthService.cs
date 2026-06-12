@@ -8,24 +8,16 @@ using WestcoastCars.Application.Services;
 
 namespace WestcoastCars.Infrastructure.Services;
 
-public class AuthService : IAuthService
+public class AuthService(
+    IJwtTokenGenerator jwtTokenGenerator,
+    UserManager<IdentityUser> userManager,
+    SignInManager<IdentityUser> signInManager,
+    ILogger<AuthService> logger) : IAuthService
 {
-    private readonly IJwtTokenGenerator _jwtTokenGenerator;
-    private readonly UserManager<IdentityUser> _userManager;
-    private readonly SignInManager<IdentityUser> _signInManager;
-    private readonly ILogger<AuthService> _logger;
-
-    public AuthService(
-        IJwtTokenGenerator jwtTokenGenerator,
-        UserManager<IdentityUser> userManager,
-        SignInManager<IdentityUser> signInManager,
-        ILogger<AuthService> logger)
-    {
-        _jwtTokenGenerator = jwtTokenGenerator;
-        _userManager = userManager;
-        _signInManager = signInManager;
-        _logger = logger;
-    }
+    private readonly IJwtTokenGenerator _jwtTokenGenerator = jwtTokenGenerator;
+    private readonly UserManager<IdentityUser> _userManager = userManager;
+    private readonly SignInManager<IdentityUser> _signInManager = signInManager;
+    private readonly ILogger<AuthService> _logger = logger;
 
     public async Task<AuthenticationResult?> LoginAsync(string email, string password)
     {
@@ -83,7 +75,7 @@ public class AuthService : IAuthService
             _logger.LogWarning("User creation failed for {Email}: {Errors}",
                 email, string.Join(", ", result.Errors.Select(e => e.Code)));
             throw new ValidationException("Registration",
-                new[] { "Registration failed. Ensure the email is valid and the password meets requirements." });
+                ["Registration failed. Ensure the email is valid and the password meets requirements."]);
         }
 
         await _userManager.AddClaimAsync(user, new Claim("firstName", firstName));

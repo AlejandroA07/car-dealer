@@ -7,18 +7,11 @@ using WestcoastCars.Domain.Entities;
 
 namespace WestcoastCars.Application.Features.ServiceBookings.Commands.Create;
 
-public class CreateServiceBookingCommandHandler : IRequestHandler<CreateServiceBookingCommand, int>
+public class CreateServiceBookingCommandHandler(IUnitOfWork unitOfWork, IEmailService emailService, ILogger<CreateServiceBookingCommandHandler> logger) : IRequestHandler<CreateServiceBookingCommand, int>
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IEmailService _emailService;
-    private readonly ILogger<CreateServiceBookingCommandHandler> _logger;
-
-    public CreateServiceBookingCommandHandler(IUnitOfWork unitOfWork, IEmailService emailService, ILogger<CreateServiceBookingCommandHandler> logger)
-    {
-        _unitOfWork = unitOfWork;
-        _emailService = emailService;
-        _logger = logger;
-    }
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IEmailService _emailService = emailService;
+    private readonly ILogger<CreateServiceBookingCommandHandler> _logger = logger;
 
     public async Task<int> Handle(CreateServiceBookingCommand request, CancellationToken cancellationToken)
     {

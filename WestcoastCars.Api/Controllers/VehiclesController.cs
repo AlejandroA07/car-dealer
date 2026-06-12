@@ -31,20 +31,12 @@ namespace WestcoastCars.Api.Controllers;
 [ApiController]
 [Route("api/v1/vehicles")]
 [Tags("Vehicles")]
-public class VehiclesController : ControllerBase
+public class VehiclesController(IMediator mediator, ILogger<VehiclesController> logger, AppTelemetry telemetry, IMemoryCache cache) : ControllerBase
 {
-    private readonly IMediator _mediator;
-    private readonly ILogger<VehiclesController> _logger;
-    private readonly AppTelemetry _telemetry;
-    private readonly IMemoryCache _cache;
-
-    public VehiclesController(IMediator mediator, ILogger<VehiclesController> logger, AppTelemetry telemetry, IMemoryCache cache)
-    {
-        _mediator = mediator;
-        _logger = logger;
-        _telemetry = telemetry;
-        _cache = cache;
-    }
+    private readonly IMediator _mediator = mediator;
+    private readonly ILogger<VehiclesController> _logger = logger;
+    private readonly AppTelemetry _telemetry = telemetry;
+    private readonly IMemoryCache _cache = cache;
 
     /// <summary>
     /// Searches vehicles by various criteria.

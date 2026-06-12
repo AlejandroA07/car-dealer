@@ -8,16 +8,10 @@ using WestcoastCars.Domain.Common.Enums;
 
 namespace WestcoastCars.Application.Features.ServiceBookings.Queries.GetWeekSlots;
 
-public class GetWeekSlotsQueryHandler : IRequestHandler<GetWeekSlotsQuery, IEnumerable<SlotAvailabilityDto>>
+public class GetWeekSlotsQueryHandler(IUnitOfWork unitOfWork, IDateTimeProvider dateTimeProvider) : IRequestHandler<GetWeekSlotsQuery, IEnumerable<SlotAvailabilityDto>>
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IDateTimeProvider _dateTimeProvider;
-
-    public GetWeekSlotsQueryHandler(IUnitOfWork unitOfWork, IDateTimeProvider dateTimeProvider)
-    {
-        _unitOfWork = unitOfWork;
-        _dateTimeProvider = dateTimeProvider;
-    }
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IDateTimeProvider _dateTimeProvider = dateTimeProvider;
 
     public async Task<IEnumerable<SlotAvailabilityDto>> Handle(GetWeekSlotsQuery request, CancellationToken cancellationToken)
     {

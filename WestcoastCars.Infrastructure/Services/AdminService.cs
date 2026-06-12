@@ -8,24 +8,16 @@ using WestcoastCars.Application.Services;
 
 namespace WestcoastCars.Infrastructure.Services;
 
-public class AdminService : IAdminService
+public class AdminService(
+    IJwtTokenGenerator jwtTokenGenerator,
+    UserManager<IdentityUser> userManager,
+    RoleManager<IdentityRole> roleManager,
+    ILogger<AdminService> logger) : IAdminService
 {
-    private readonly IJwtTokenGenerator _jwtTokenGenerator;
-    private readonly UserManager<IdentityUser> _userManager;
-    private readonly RoleManager<IdentityRole> _roleManager;
-    private readonly ILogger<AdminService> _logger;
-
-    public AdminService(
-        IJwtTokenGenerator jwtTokenGenerator,
-        UserManager<IdentityUser> userManager,
-        RoleManager<IdentityRole> roleManager,
-        ILogger<AdminService> logger)
-    {
-        _jwtTokenGenerator = jwtTokenGenerator;
-        _userManager = userManager;
-        _roleManager = roleManager;
-        _logger = logger;
-    }
+    private readonly IJwtTokenGenerator _jwtTokenGenerator = jwtTokenGenerator;
+    private readonly UserManager<IdentityUser> _userManager = userManager;
+    private readonly RoleManager<IdentityRole> _roleManager = roleManager;
+    private readonly ILogger<AdminService> _logger = logger;
 
     public async Task<AuthenticationResult> CreateUserAsync(string firstName, string lastName, string email, string password, string role)
     {
@@ -36,7 +28,7 @@ public class AdminService : IAdminService
 
         if (!await _roleManager.RoleExistsAsync(role))
         {
-            throw new ValidationException("Role", new[] { $"Role {role} does not exist" });
+            throw new ValidationException("Role", [$"Role {role} does not exist"]);
         }
 
         var user = new IdentityUser

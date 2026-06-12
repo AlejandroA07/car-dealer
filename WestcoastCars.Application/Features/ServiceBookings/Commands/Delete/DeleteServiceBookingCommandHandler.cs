@@ -5,14 +5,9 @@ using WestcoastCars.Domain.Common.Enums;
 
 namespace WestcoastCars.Application.Features.ServiceBookings.Commands.Delete;
 
-public class DeleteServiceBookingCommandHandler : IRequestHandler<DeleteServiceBookingCommand, Unit>
+public class DeleteServiceBookingCommandHandler(IUnitOfWork unitOfWork) : IRequestHandler<DeleteServiceBookingCommand, Unit>
 {
-    private readonly IUnitOfWork _unitOfWork;
-
-    public DeleteServiceBookingCommandHandler(IUnitOfWork unitOfWork)
-    {
-        _unitOfWork = unitOfWork;
-    }
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
     public async Task<Unit> Handle(DeleteServiceBookingCommand request, CancellationToken cancellationToken)
     {

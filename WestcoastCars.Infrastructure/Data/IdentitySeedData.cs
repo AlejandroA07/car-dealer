@@ -54,11 +54,11 @@ public static class IdentitySeedData
             if (result.Succeeded)
             {
                 await userManager.AddToRoleAsync(identityUser, u.Role);
-                await userManager.AddClaimsAsync(identityUser, new[]
-                {
+                await userManager.AddClaimsAsync(identityUser,
+                [
                     new Claim("firstName", u.FirstName),
                     new Claim("lastName",  u.LastName)
-                });
+                ]);
                 logger.LogInformation("Created user {Email} with role {Role}.", u.Email, u.Role);
             }
             else

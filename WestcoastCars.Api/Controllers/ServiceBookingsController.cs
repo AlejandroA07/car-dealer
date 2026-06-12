@@ -22,18 +22,11 @@ namespace WestcoastCars.Api.Controllers;
 [ApiController]
 [Route("api/v1/service-bookings")]
 [Tags("Service Bookings")]
-public class ServiceBookingsController : ControllerBase
+public class ServiceBookingsController(IMediator mediator, ILogger<ServiceBookingsController> logger, AppTelemetry telemetry) : ControllerBase
 {
-    private readonly IMediator _mediator;
-    private readonly ILogger<ServiceBookingsController> _logger;
-    private readonly AppTelemetry _telemetry;
-
-    public ServiceBookingsController(IMediator mediator, ILogger<ServiceBookingsController> logger, AppTelemetry telemetry)
-    {
-        _mediator = mediator;
-        _logger = logger;
-        _telemetry = telemetry;
-    }
+    private readonly IMediator _mediator = mediator;
+    private readonly ILogger<ServiceBookingsController> _logger = logger;
+    private readonly AppTelemetry _telemetry = telemetry;
 
     /// <summary>
     /// Lists all service bookings. Requires Admin or Salesperson role.

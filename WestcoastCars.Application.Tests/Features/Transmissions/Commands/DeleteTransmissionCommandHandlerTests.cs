@@ -47,9 +47,13 @@ public class DeleteTransmissionCommandHandlerTests
         var transmissionType = new TransmissionType { Id = id, Name = "Automatic" };
         var vehicle = new Vehicle
         {
-            RegistrationNumber = "ABC123", Model = "XC60", ModelYear = 2022,
-            ImageUrl = "img.png", Description = "test",
-            Manufacturer = new Manufacturer { Name = "Volvo" }, FuelType = new FuelType { Name = "Petrol" },
+            RegistrationNumber = "ABC123",
+            Model = "XC60",
+            ModelYear = 2022,
+            ImageUrl = "img.png",
+            Description = "test",
+            Manufacturer = new Manufacturer { Name = "Volvo" },
+            FuelType = new FuelType { Name = "Petrol" },
             TransmissionType = transmissionType
         };
 

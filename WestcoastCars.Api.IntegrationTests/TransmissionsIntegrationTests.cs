@@ -5,12 +5,8 @@ using WestcoastCars.Contracts.DTOs;
 
 namespace WestcoastCars.Api.IntegrationTests;
 
-public class TransmissionsIntegrationTests : IntegrationTestBase
+public class TransmissionsIntegrationTests(CustomWebApplicationFactory<Program> factory) : IntegrationTestBase(factory)
 {
-    public TransmissionsIntegrationTests(CustomWebApplicationFactory<Program> factory) : base(factory)
-    {
-    }
-
     [Fact]
     public async Task TransmissionCrudFlow_ShouldCreateGetUpdateAndDeleteTransmission()
     {

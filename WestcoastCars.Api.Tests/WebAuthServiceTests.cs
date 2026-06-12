@@ -63,14 +63,9 @@ public class WebAuthServiceTests
         return new AuthService(httpClient, NullLogger<AuthService>.Instance);
     }
 
-    private sealed class StubHttpMessageHandler : HttpMessageHandler
+    private sealed class StubHttpMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> handler) : HttpMessageHandler
     {
-        private readonly Func<HttpRequestMessage, HttpResponseMessage> _handler;
-
-        public StubHttpMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> handler)
-        {
-            _handler = handler;
-        }
+        private readonly Func<HttpRequestMessage, HttpResponseMessage> _handler = handler;
 
         public Uri? RequestedUri { get; private set; }
 

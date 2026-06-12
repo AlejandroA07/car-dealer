@@ -7,12 +7,8 @@ using WestcoastCars.Contracts.DTOs;
 
 namespace WestcoastCars.Api.IntegrationTests;
 
-public class ManufacturersIntegrationTests : IntegrationTestBase
+public class ManufacturersIntegrationTests(CustomWebApplicationFactory<Program> factory) : IntegrationTestBase(factory)
 {
-    public ManufacturersIntegrationTests(CustomWebApplicationFactory<Program> factory) : base(factory)
-    {
-    }
-
     [Fact]
     public async Task AddManufacturer_ShouldReturnCreated_WhenUserIsAdmin()
     {

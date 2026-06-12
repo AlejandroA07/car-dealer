@@ -54,10 +54,12 @@ public class ErrorControllerTests
         Assert.Equal("Manufacturer no longer exists.", problemDetails.Detail);
     }
 
+    private static readonly string[] expected = new[] { "Password is too weak" };
+
     [Fact]
     public void HandleError_ShouldIncludeValidationErrors()
     {
-        var exception = new ValidationException("Password", new[] { "Password is too weak" });
+        var exception = new ValidationException("Password", ["Password is too weak"]);
         var controller = CreateController(exception);
 
         var result = controller.HandleError(new TestHostEnvironment(Environments.Production));
@@ -65,8 +67,8 @@ public class ErrorControllerTests
         var objectResult = Assert.IsType<ObjectResult>(result);
         var problemDetails = Assert.IsType<ProblemDetails>(objectResult.Value);
         Assert.Equal(StatusCodes.Status400BadRequest, objectResult.StatusCode);
-        var errors = Assert.IsAssignableFrom<IDictionary<string, string[]>>(problemDetails.Extensions["errors"]);
-        Assert.Equal(new[] { "Password is too weak" }, errors["Password"]);
+        var errors = Assert.IsType<IDictionary<string, string[]>>(problemDetails.Extensions["errors"], exactMatch: false);
+        Assert.Equal(expected, errors["Password"]);
     }
 
     [Fact]
@@ -157,27 +159,17 @@ public class ErrorControllerTests
         };
     }
 
-    private sealed class TestExceptionHandlerFeature : IExceptionHandlerFeature
+    private sealed class TestExceptionHandlerFeature(Exception error) : IExceptionHandlerFeature
     {
-        public TestExceptionHandlerFeature(Exception error)
-        {
-            Error = error;
-        }
-
-        public Exception Error { get; }
+        public Exception Error { get; } = error;
         public string Path { get; } = "/error-source";
         public Endpoint? Endpoint { get; }
-        public RouteValueDictionary? RouteValues { get; } = new();
+        public RouteValueDictionary? RouteValues { get; } = [];
     }
 
-    private sealed class TestHostEnvironment : IHostEnvironment
+    private sealed class TestHostEnvironment(string environmentName) : IHostEnvironment
     {
-        public TestHostEnvironment(string environmentName)
-        {
-            EnvironmentName = environmentName;
-        }
-
-        public string EnvironmentName { get; set; }
+        public string EnvironmentName { get; set; } = environmentName;
         public string ApplicationName { get; set; } = "WestcoastCars.Api.Tests";
         public string ContentRootPath { get; set; } = AppContext.BaseDirectory;
         public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();

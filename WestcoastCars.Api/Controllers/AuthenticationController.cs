@@ -14,14 +14,9 @@ namespace WestcoastCars.Api.Controllers;
 [Route("api/auth")]
 [Tags("Authentication")]
 [EnableRateLimiting("auth")]
-public class AuthenticationController : ControllerBase
+public class AuthenticationController(IAuthService authService) : ControllerBase
 {
-    private readonly IAuthService _authService;
-
-    public AuthenticationController(IAuthService authService)
-    {
-        _authService = authService;
-    }
+    private readonly IAuthService _authService = authService;
 
     /// <summary>
     /// Registers a new user account.
