@@ -28,7 +28,7 @@ public class ServiceBookingsIntegrationTests(CustomWebApplicationFactory<Program
             Description = "Booking flow integration test"
         });
 
-        createResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
         var createdBooking = await createResponse.Content.ReadFromJsonAsync<CreateServiceBookingResponseDto>();
         createdBooking.Should().NotBeNull();
         createdBooking!.Id.Should().BePositive();
@@ -60,7 +60,7 @@ public class ServiceBookingsIntegrationTests(CustomWebApplicationFactory<Program
             Description = "Invalid registration"
         });
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
         var createdBooking = await response.Content.ReadFromJsonAsync<CreateServiceBookingResponseDto>();
         createdBooking.Should().NotBeNull();
         createdBooking!.Id.Should().BePositive();
@@ -112,7 +112,7 @@ public class ServiceBookingsIntegrationTests(CustomWebApplicationFactory<Program
             CustomerPhone = "0700000002"
         });
 
-        firstResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        firstResponse.StatusCode.Should().Be(HttpStatusCode.Created);
 
         var secondResponse = await _client.PostAsJsonAsync("/api/v1/service-bookings", new ServiceBookingPostDto
         {
@@ -131,13 +131,21 @@ public class ServiceBookingsIntegrationTests(CustomWebApplicationFactory<Program
     [Fact]
     public async Task GetAvailability_ShouldReturnSlotsForNormalizedWeek()
     {
-        var response = await _client.GetAsync("/api/v1/service-bookings/availability?weekStart=2026-05-27");
+        // Use a Wednesday 2 weeks from today — handler normalizes to Monday
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var dayOfWeek = (int)today.DayOfWeek;
+        var daysToMonday = dayOfWeek == 0 ? -6 : 1 - dayOfWeek;
+        var currentMonday = today.AddDays(daysToMonday);
+        var targetMonday = currentMonday.AddDays(7);
+        var weekMidpoint = targetMonday.AddDays(2); // Wednesday of that week, triggers normalization
+
+        var response = await _client.GetAsync($"/api/v1/service-bookings/availability?weekStart={weekMidpoint:yyyy-MM-dd}");
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var slots = await response.Content.ReadFromJsonAsync<List<SlotAvailabilityDto>>();
         slots.Should().NotBeNull();
         slots!.Count.Should().Be(15);
-        slots.Min(x => x.Date).Should().Be(new DateOnly(2026, 05, 25));
+        slots.Min(x => x.Date).Should().Be(targetMonday);
     }
 
     [Fact]
@@ -172,7 +180,7 @@ public class ServiceBookingsIntegrationTests(CustomWebApplicationFactory<Program
 
         var responses = await Task.WhenAll(firstTask, secondTask);
 
-        responses.Count(response => response.StatusCode == HttpStatusCode.OK).Should().Be(1);
+        responses.Count(response => response.StatusCode == HttpStatusCode.Created).Should().Be(1);
         responses.Count(response => response.StatusCode == HttpStatusCode.Conflict).Should().Be(1);
     }
 }

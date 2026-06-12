@@ -33,6 +33,7 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseSetting("ConnectionStrings:DefaultConnection", _connectionString);
+        builder.UseSetting("RateLimiting:BookingCreatePermitLimit", "100");
         builder.UseSetting("JwtSettings:Secret", "super-secret-key-for-testing-purposes-only-123");
         builder.UseSetting("JwtSettings:Issuer", "WestcoastCars.Auth");
         builder.UseSetting("JwtSettings:Audience", "WestcoastCars.Auth");

@@ -1,9 +1,13 @@
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+using WestcoastCars.Infrastructure.Data;
 
 #nullable disable
 
 namespace WestcoastCars.Infrastructure.Migrations;
 
+[DbContext(typeof(WestcoastCarsContext))]
+[Migration("20260526000000_AddIdempotencyKeyToServiceBookings")]
 public partial class AddIdempotencyKeyToServiceBookings : Migration
 {
     protected override void Up(MigrationBuilder migrationBuilder)

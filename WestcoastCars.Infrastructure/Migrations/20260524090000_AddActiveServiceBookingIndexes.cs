@@ -1,9 +1,13 @@
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+using WestcoastCars.Infrastructure.Data;
 
 #nullable disable
 
 namespace WestcoastCars.Infrastructure.Migrations;
 
+[DbContext(typeof(WestcoastCarsContext))]
+[Migration("20260524090000_AddActiveServiceBookingIndexes")]
 public partial class AddActiveServiceBookingIndexes : Migration
 {
     protected override void Up(MigrationBuilder migrationBuilder)

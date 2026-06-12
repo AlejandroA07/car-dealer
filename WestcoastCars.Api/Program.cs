@@ -93,7 +93,7 @@ builder.Services.AddRateLimiter(options =>
     });
     options.AddFixedWindowLimiter("booking-create", o =>
     {
-        o.PermitLimit = 5;
+        o.PermitLimit = builder.Configuration.GetValue<int>("RateLimiting:BookingCreatePermitLimit", 5);
         o.Window = TimeSpan.FromMinutes(10);
         o.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
         o.QueueLimit = 0;

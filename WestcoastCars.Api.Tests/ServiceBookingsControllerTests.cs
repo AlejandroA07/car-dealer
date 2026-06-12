@@ -81,8 +81,8 @@ public class ServiceBookingsControllerTests
         var result = await _controller.Create(dto);
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = Assert.IsType<CreateServiceBookingResponseDto>(okResult.Value);
+        var createdResult = Assert.IsType<CreatedResult>(result);
+        var response = Assert.IsType<CreateServiceBookingResponseDto>(createdResult.Value);
         Assert.Equal(10, response.Id);
         _loggerMock.VerifyLog(LogLevel.Information, "Creating new service booking for vehicle", Times.Once());
     }

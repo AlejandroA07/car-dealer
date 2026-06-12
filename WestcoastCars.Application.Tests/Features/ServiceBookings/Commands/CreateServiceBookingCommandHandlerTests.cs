@@ -117,8 +117,11 @@ public class CreateServiceBookingCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ShouldThrow_WhenEmailSendingFails()
+    public async Task Handle_ShouldSaveBookingAndNotThrow_WhenEmailSendingFails()
     {
+        _serviceBookingRepositoryMock
+            .Setup(repository => repository.AddAsync(It.IsAny<ServiceBooking>()))
+            .Returns(Task.CompletedTask);
         _emailServiceMock
             .Setup(e => e.SendBookingConfirmationAsync(
                 It.IsAny<string>(),
@@ -131,7 +134,12 @@ public class CreateServiceBookingCommandHandlerTests
 
         var handler = new CreateServiceBookingCommandHandler(_unitOfWorkMock.Object, _emailServiceMock.Object, NullLogger<CreateServiceBookingCommandHandler>.Instance);
 
-        await Assert.ThrowsAsync<PersistenceException>(() => handler.Handle(CreateCommand("ABC123"), CancellationToken.None));
+        await handler.Handle(CreateCommand("ABC123"), CancellationToken.None);
+
+        _serviceBookingRepositoryMock.Verify(r => r.AddAsync(It.IsAny<ServiceBooking>()), Times.Once);
+        _emailServiceMock.Verify(e => e.SendBookingConfirmationAsync(
+            It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTime>(),
+            It.IsAny<TimeSlot>(), It.IsAny<string>(), It.IsAny<string>()), Times.Once);
     }
 
     private static CreateServiceBookingCommand CreateCommand(string registrationNumber) =>

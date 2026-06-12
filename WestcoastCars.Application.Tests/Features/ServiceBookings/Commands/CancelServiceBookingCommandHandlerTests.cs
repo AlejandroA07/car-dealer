@@ -83,7 +83,7 @@ public class CancelServiceBookingCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ShouldThrow_WhenEmailSendingFails()
+    public async Task Handle_ShouldCancelBookingAndNotThrow_WhenEmailSendingFails()
     {
         var booking = CreatePendingBooking(1);
         _repositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(booking);
@@ -98,8 +98,12 @@ public class CancelServiceBookingCommandHandlerTests
 
         var handler = new CancelServiceBookingCommandHandler(_unitOfWorkMock.Object, _emailServiceMock.Object, NullLogger<CancelServiceBookingCommandHandler>.Instance);
 
-        await Assert.ThrowsAsync<PersistenceException>(() =>
-            handler.Handle(new CancelServiceBookingCommand { Id = 1, CancellationReason = "Tekniskt fel" }, CancellationToken.None));
+        await handler.Handle(new CancelServiceBookingCommand { Id = 1, CancellationReason = "Tekniskt fel" }, CancellationToken.None);
+
+        Assert.Equal(BookingStatus.Cancelled, booking.Status);
+        _emailServiceMock.Verify(e => e.SendCancellationNoticeAsync(
+            It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTime>(),
+            It.IsAny<TimeSlot>(), It.IsAny<string>()), Times.Once);
     }
 
     private static ServiceBooking CreatePendingBooking(int id) => new()
