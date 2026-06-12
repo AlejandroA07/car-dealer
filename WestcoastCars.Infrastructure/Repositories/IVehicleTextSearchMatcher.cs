@@ -20,14 +20,12 @@ public class CaseInsensitiveVehicleTextSearchMatcher : IVehicleTextSearchMatcher
 
     public IQueryable<Vehicle> ApplyManufacturerFilter(IQueryable<Vehicle> query, string make)
     {
-        var normalizedMake = make.ToLowerInvariant();
-        return query.Where(vehicle => vehicle.Manufacturer.Name.ToLower().Contains(normalizedMake));
+        return query.Where(vehicle => vehicle.Manufacturer.Name.Contains(make, StringComparison.OrdinalIgnoreCase));
     }
 
     public IQueryable<Vehicle> ApplyModelFilter(IQueryable<Vehicle> query, string model)
     {
-        var normalizedModel = model.ToLowerInvariant();
-        return query.Where(vehicle => vehicle.Model.ToLower().Contains(normalizedModel));
+        return query.Where(vehicle => vehicle.Model.Contains(model, StringComparison.OrdinalIgnoreCase));
     }
 }
 

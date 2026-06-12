@@ -6,6 +6,7 @@ namespace WestcoastCars.Infrastructure.Data;
 
 public static class SeedData
 {
+    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
     public static async Task<bool> HasVehiclesAsync(WestcoastCarsContext context)
     {
         if (!context.Database.IsRelational())
@@ -31,10 +32,9 @@ public static class SeedData
     {
         if (await context.Vehicles.AnyAsync()) return;
 
-        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         var path = Path.Combine(AppContext.BaseDirectory, "Data", "json", "vehicles.json");
         var json = await File.ReadAllTextAsync(path);
-        var vehicleDtos = JsonSerializer.Deserialize<List<VehicleSeedDto>>(json, options);
+        var vehicleDtos = JsonSerializer.Deserialize<List<VehicleSeedDto>>(json, JsonOptions);
         if (vehicleDtos is null || vehicleDtos.Count == 0) return;
 
         // Upsert manufacturers derived from vehicle data

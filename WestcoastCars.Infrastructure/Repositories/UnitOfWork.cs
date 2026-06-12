@@ -57,6 +57,7 @@ public class UnitOfWork(WestcoastCarsContext context, IVehicleTextSearchMatcher 
     public void Dispose()
     {
         _context.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     private static bool TryMapUniqueConstraint(DbUpdateException exception, out string conflictMessage)
