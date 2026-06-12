@@ -10,4 +10,5 @@ public interface IServiceBookingRepository : IRepository<ServiceBooking>
     Task<bool> IsSlotTakenAsync(DateOnly date, TimeSlot slot);
     Task<bool> HasActiveBookingForRegistrationAsync(string registrationNumber);
     Task<IReadOnlySet<(DateOnly Date, TimeSlot Slot)>> GetBookedSlotsForRangeAsync(DateOnly from, DateOnly to);
+    Task<int?> FindByIdempotencyKeyAsync(string key, CancellationToken cancellationToken = default);
 }

@@ -51,7 +51,7 @@ public class ServiceBookingsController : ControllerBase
         _logger.LogInformation("Retrieving all service bookings");
         var activeFilter = state?.Trim().ToLowerInvariant() switch
         {
-            null or "" or "all" => null,
+            null or "" or "all" => (bool?)null,
             "active" => true,
             "inactive" or "history" => false,
             _ => throw new ValidationException(nameof(state), ["State must be one of: all, active, inactive."])
@@ -139,11 +139,11 @@ public class ServiceBookingsController : ControllerBase
     /// </summary>
     /// <param name="dto">Booking details.</param>
     /// <returns>The ID of the created booking.</returns>
-    /// <response code="200">Service booking created successfully.</response>
+    /// <response code="201">Service booking created successfully.</response>
     [HttpPost]
     [AllowAnonymous]
     [EnableRateLimiting("booking-create")]
-    [ProducesResponseType(typeof(CreateServiceBookingResponseDto), 200)]
+    [ProducesResponseType(typeof(CreateServiceBookingResponseDto), 201)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> Create(ServiceBookingPostDto dto)
     {
@@ -156,7 +156,8 @@ public class ServiceBookingsController : ControllerBase
             CustomerName = dto.CustomerName,
             CustomerEmail = dto.CustomerEmail,
             CustomerPhone = dto.CustomerPhone,
-            Description = dto.Description
+            Description = dto.Description,
+            IdempotencyKey = dto.IdempotencyKey
         };
 
         _logger.LogInformation("Creating new service booking for vehicle: {RegNo}", command.VehicleRegistrationNumber);
@@ -170,7 +171,7 @@ public class ServiceBookingsController : ControllerBase
             startedAt.Stop();
             _telemetry.RecordServiceBookingOperation("success", startedAt.Elapsed);
             activity?.SetTag("service_booking.id", id);
-            return Ok(new CreateServiceBookingResponseDto { Id = id });
+            return Created($"/api/v1/service-bookings/{id}", new CreateServiceBookingResponseDto { Id = id });
         }
         catch
         {

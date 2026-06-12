@@ -47,7 +47,7 @@ public class ServiceBookingRepository : Repository<ServiceBooking>, IServiceBook
 
     public async Task<bool> IsSlotTakenAsync(DateOnly date, TimeSlot slot)
     {
-        var dayStart = date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Local);
+        var dayStart = date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
         var dayEnd = dayStart.AddDays(1);
 
         return await ApplyActiveFilter(_context.ServiceBookings.AsNoTracking())
@@ -65,8 +65,8 @@ public class ServiceBookingRepository : Repository<ServiceBooking>, IServiceBook
 
     public async Task<IReadOnlySet<(DateOnly Date, TimeSlot Slot)>> GetBookedSlotsForRangeAsync(DateOnly from, DateOnly to)
     {
-        var rangeStart = from.ToDateTime(TimeOnly.MinValue, DateTimeKind.Local);
-        var rangeEnd = to.ToDateTime(TimeOnly.MinValue, DateTimeKind.Local).AddDays(1);
+        var rangeStart = from.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+        var rangeEnd = to.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc).AddDays(1);
 
         var booked = await ApplyActiveFilter(_context.ServiceBookings.AsNoTracking())
             .Where(b =>
@@ -78,6 +78,15 @@ public class ServiceBookingRepository : Repository<ServiceBooking>, IServiceBook
         return booked
             .Select(b => (DateOnly.FromDateTime(b.BookingDate), b.TimeSlot))
             .ToHashSet();
+    }
+
+    public async Task<int?> FindByIdempotencyKeyAsync(string key, CancellationToken cancellationToken = default)
+    {
+        return await _context.ServiceBookings
+            .AsNoTracking()
+            .Where(b => b.IdempotencyKey == key)
+            .Select(b => (int?)b.Id)
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     private static IQueryable<ServiceBooking> ApplyActiveFilter(IQueryable<ServiceBooking> query)

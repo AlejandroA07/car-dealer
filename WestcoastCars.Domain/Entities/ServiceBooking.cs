@@ -15,6 +15,7 @@ public class ServiceBooking : BaseEntity
     public string CustomerPhone { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public BookingStatus Status { get; private set; } = BookingStatus.Pending;
+    public string? IdempotencyKey { get; set; }
 
     public void Confirm()
     {

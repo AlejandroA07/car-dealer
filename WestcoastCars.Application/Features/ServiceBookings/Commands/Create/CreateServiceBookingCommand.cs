@@ -13,4 +13,5 @@ public class CreateServiceBookingCommand : IRequest<int>
     public string CustomerEmail { get; set; } = string.Empty;
     public string CustomerPhone { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+    public string? IdempotencyKey { get; set; }
 }

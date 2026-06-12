@@ -62,6 +62,7 @@
                 <div asp-validation-summary="ModelOnly" class="service-validation-summary"></div>
 
                 <input type="hidden" asp-for="WeekStart" />
+                <input type="hidden" asp-for="BookingForm.IdempotencyKey" />
                 <input type="hidden" asp-for="BookingForm.BookingDate" id="selectedDate" />
                 <input type="hidden" asp-for="BookingForm.TimeSlot" id="selectedSlot" value="-1" />
 

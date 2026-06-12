@@ -49,6 +49,11 @@ public class ServiceBookingService : IServiceBookingService
         return await ListBookingsAsync("inactive");
     }
 
+    public async Task<ServiceBookingDataResult<IReadOnlyList<ServiceBookingSummaryDto>>> ListAllBookingsAsync()
+    {
+        return await ListBookingsAsync("all");
+    }
+
     public async Task<ServiceBookingDataResult<IReadOnlyList<SlotAvailabilityDto>>> GetWeekSlotsAsync(DateOnly weekStart)
     {
         try

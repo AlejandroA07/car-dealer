@@ -34,4 +34,7 @@ public class ServiceBookingPostDto
 
     [MaxLength(2000)]
     public string Description { get; set; } = string.Empty;
+
+    [MaxLength(36)]
+    public string? IdempotencyKey { get; set; }
 }

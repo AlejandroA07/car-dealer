@@ -134,7 +134,9 @@
                             {
                                 var canComplete = !Model.IsHistoryView && booking.Status == "Confirmed" && booking.BookingDate.Date <= today;
                                 var canCancel = !Model.IsHistoryView && (booking.Status == "Confirmed" || booking.Status == "Pending");
-                                var canDelete = Model.IsHistoryView && User.IsInRole("Admin");
+                                var isInactive = booking.Status == "Cancelled" || booking.Status == "Completed";
+                                var canDelete = Model.IsHistoryView && User.IsInRole("Admin") && isInactive;
+                                var showDeleteDisabled = Model.IsHistoryView && User.IsInRole("Admin") && !isInactive;
 
                                 <tr>
                                     <td><small class="booking-id-cell">#@booking.Id</small></td>
@@ -187,6 +189,12 @@
                                                         <i class="fa-solid fa-trash"></i> Radera
                                                     </button>
                                                 </form>
+                                            }
+                                            @if (showDeleteDisabled)
+                                            {
+                                                <button type="button" class="btn btn-secondary booking-action-btn" disabled title="Avboka bokningen innan den kan raderas.">
+                                                    <i class="fa-solid fa-trash"></i> Radera
+                                                </button>
                                             }
                                         </div>
                                     </td>

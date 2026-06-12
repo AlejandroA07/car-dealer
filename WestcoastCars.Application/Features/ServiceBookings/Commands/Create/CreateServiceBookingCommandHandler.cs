@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using WestcoastCars.Application.Exceptions;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Application.Services;
@@ -10,11 +11,13 @@ public class CreateServiceBookingCommandHandler : IRequestHandler<CreateServiceB
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IEmailService _emailService;
+    private readonly ILogger<CreateServiceBookingCommandHandler> _logger;
 
-    public CreateServiceBookingCommandHandler(IUnitOfWork unitOfWork, IEmailService emailService)
+    public CreateServiceBookingCommandHandler(IUnitOfWork unitOfWork, IEmailService emailService, ILogger<CreateServiceBookingCommandHandler> logger)
     {
         _unitOfWork = unitOfWork;
         _emailService = emailService;
+        _logger = logger;
     }
 
     public async Task<int> Handle(CreateServiceBookingCommand request, CancellationToken cancellationToken)
@@ -22,6 +25,13 @@ public class CreateServiceBookingCommandHandler : IRequestHandler<CreateServiceB
         var normalizedRegistrationNumber = request.VehicleRegistrationNumber.Trim().ToUpperInvariant();
         var date = DateOnly.FromDateTime(request.BookingDate);
         ServiceBooking? booking = null;
+
+        if (!string.IsNullOrWhiteSpace(request.IdempotencyKey))
+        {
+            var existingId = await _unitOfWork.ServiceBookingRepository.FindByIdempotencyKeyAsync(request.IdempotencyKey, cancellationToken);
+            if (existingId.HasValue)
+                return existingId.Value;
+        }
 
         await _unitOfWork.ExecuteInTransactionAsync(async () =>
         {
@@ -39,26 +49,34 @@ public class CreateServiceBookingCommandHandler : IRequestHandler<CreateServiceB
                 VehicleId = vehicle?.Id,
                 VehicleRegistrationNumber = normalizedRegistrationNumber,
                 ServiceType = request.ServiceType.Trim(),
-                BookingDate = request.BookingDate.Date,
+                BookingDate = DateTime.SpecifyKind(request.BookingDate.Date, DateTimeKind.Utc),
                 TimeSlot = request.TimeSlot,
                 CustomerName = request.CustomerName.Trim(),
                 CustomerEmail = request.CustomerEmail.Trim(),
                 CustomerPhone = request.CustomerPhone.Trim(),
-                Description = request.Description.Trim()
+                Description = request.Description.Trim(),
+                IdempotencyKey = string.IsNullOrWhiteSpace(request.IdempotencyKey) ? null : request.IdempotencyKey
             };
             booking.Confirm();
 
             await _unitOfWork.ServiceBookingRepository.AddAsync(booking);
             await _unitOfWork.CompleteOrThrowAsync("Failed to create service booking");
+        }, cancellationToken);
 
+        try
+        {
             await _emailService.SendBookingConfirmationAsync(
-                booking.CustomerEmail,
+                booking!.CustomerEmail,
                 booking.CustomerName,
                 booking.BookingDate,
                 booking.TimeSlot,
                 booking.ServiceType,
                 booking.VehicleRegistrationNumber);
-        }, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Booking {Id} saved but confirmation email failed", booking!.Id);
+        }
 
         return booking!.Id;
     }

@@ -40,4 +40,6 @@ public class ServiceBookingViewModel
     [MaxLength(2000)]
     [Display(Name = "Meddelande (valfritt)")]
     public string Description { get; set; } = string.Empty;
+
+    public string? IdempotencyKey { get; set; }
 }

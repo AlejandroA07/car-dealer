@@ -321,6 +321,10 @@ namespace WestcoastCars.Infrastructure.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 
+                    b.Property<string>("IdempotencyKey")
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)");
+
                     b.Property<string>("ServiceType")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -357,6 +361,11 @@ namespace WestcoastCars.Infrastructure.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_ServiceBookings_ActiveRegistrationNumber")
                         .HasFilter("\"Status\" NOT IN (2, 3)");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ServiceBookings_IdempotencyKey")
+                        .HasFilter("\"IdempotencyKey\" IS NOT NULL");
 
                     b.ToTable("ServiceBookings");
                 });

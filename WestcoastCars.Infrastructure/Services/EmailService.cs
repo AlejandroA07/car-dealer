@@ -83,7 +83,7 @@ public class EmailService : IEmailService
     {
         if (string.IsNullOrWhiteSpace(_options.SmtpHost) || string.IsNullOrWhiteSpace(_options.FromAddress))
         {
-            _logger.LogError("Email not configured for message to {Email}.", toEmail);
+            _logger.LogError("Email not configured. Subject: {Subject}", subject);
             throw new PersistenceException("E-post för servicebokningar är inte konfigurerad.");
         }
 
@@ -104,11 +104,11 @@ public class EmailService : IEmailService
             await client.SendAsync(message);
             await client.DisconnectAsync(true);
 
-            _logger.LogInformation("Email sent: \"{Subject}\" → {Email}", subject, toEmail);
+            _logger.LogInformation("Email sent: \"{Subject}\"", subject);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to send email to {Email}", toEmail);
+            _logger.LogError(ex, "Failed to send email. Subject: \"{Subject}\"", subject);
             throw new PersistenceException("Det gick inte att skicka e-post för servicebokningen.");
         }
     }

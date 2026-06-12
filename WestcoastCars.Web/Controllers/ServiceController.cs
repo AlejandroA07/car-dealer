@@ -23,7 +23,7 @@ public class ServiceController : Controller
         var slotsResult = await _bookingService.GetWeekSlotsAsync(monday);
         return View(new ServiceIndexViewModel
         {
-            BookingForm = new ServiceBookingViewModel { ServiceType = "Bas-service" },
+            BookingForm = new ServiceBookingViewModel { ServiceType = "Bas-service", IdempotencyKey = Guid.NewGuid().ToString() },
             WeekStart = monday,
             WeekSlots = slotsResult.Data.ToList(),
             AvailabilityLoadFailed = !slotsResult.Succeeded,
@@ -82,14 +82,14 @@ public class ServiceController : Controller
     [Authorize(Roles = "Admin,Salesperson")]
     public async Task<IActionResult> AdminHistory()
     {
-        var result = await _bookingService.ListInactiveBookingsAsync();
+        var result = await _bookingService.ListAllBookingsAsync();
         if (!result.Succeeded)
             TempData["error"] = result.ErrorMessage ?? "Det gick inte att hämta bokningshistoriken.";
 
         return View("AdminList", new ServiceAdminListViewModel
         {
             Eyebrow = "Servicehistorik",
-            Title = "Inaktiva bokningar",
+            Title = "Alla bokningar",
             EmptyMessage = "Ingen bokningshistorik ännu.",
             IsHistoryView = true,
             Bookings = result.Data.ToList()

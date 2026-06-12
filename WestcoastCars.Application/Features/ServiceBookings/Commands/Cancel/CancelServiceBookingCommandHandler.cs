@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using WestcoastCars.Application.Exceptions;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Application.Services;
@@ -9,11 +10,13 @@ public class CancelServiceBookingCommandHandler : IRequestHandler<CancelServiceB
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IEmailService _emailService;
+    private readonly ILogger<CancelServiceBookingCommandHandler> _logger;
 
-    public CancelServiceBookingCommandHandler(IUnitOfWork unitOfWork, IEmailService emailService)
+    public CancelServiceBookingCommandHandler(IUnitOfWork unitOfWork, IEmailService emailService, ILogger<CancelServiceBookingCommandHandler> logger)
     {
         _unitOfWork = unitOfWork;
         _emailService = emailService;
+        _logger = logger;
     }
 
     public async Task<Unit> Handle(CancelServiceBookingCommand request, CancellationToken cancellationToken)
@@ -33,14 +36,21 @@ public class CancelServiceBookingCommandHandler : IRequestHandler<CancelServiceB
         await _unitOfWork.ExecuteInTransactionAsync(async () =>
         {
             await _unitOfWork.CompleteOrThrowAsync("Failed to cancel service booking");
+        }, cancellationToken);
 
+        try
+        {
             await _emailService.SendCancellationNoticeAsync(
                 booking.CustomerEmail,
                 booking.CustomerName,
                 booking.BookingDate,
                 booking.TimeSlot,
                 request.CancellationReason.Trim());
-        }, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Booking {Id} cancelled but cancellation email failed", booking.Id);
+        }
 
         return Unit.Value;
     }

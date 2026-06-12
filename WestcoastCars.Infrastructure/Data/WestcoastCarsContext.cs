@@ -161,6 +161,16 @@ public class WestcoastCarsContext : IdentityDbContext<IdentityUser>
             .HasFilter($@"""Status"" NOT IN ({(int)BookingStatus.Cancelled}, {(int)BookingStatus.Completed})");
 
         modelBuilder.Entity<ServiceBooking>()
+            .Property(sb => sb.IdempotencyKey)
+            .HasMaxLength(36);
+
+        modelBuilder.Entity<ServiceBooking>()
+            .HasIndex(sb => sb.IdempotencyKey)
+            .HasDatabaseName("IX_ServiceBookings_IdempotencyKey")
+            .IsUnique()
+            .HasFilter(@"""IdempotencyKey"" IS NOT NULL");
+
+        modelBuilder.Entity<ServiceBooking>()
             .Property(sb => sb.ServiceType)
             .HasMaxLength(50);
 
