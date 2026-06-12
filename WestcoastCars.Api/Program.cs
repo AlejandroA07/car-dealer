@@ -315,4 +315,3 @@ static string SanitizeConnectionString(string connectionString)
     }
 }
 
-public partial class Program { }

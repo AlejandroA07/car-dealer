@@ -58,7 +58,7 @@ public class MappingProfile : Profile
     private static string NormalizeImageUrl(string? imageUrl) =>
         string.IsNullOrEmpty(imageUrl) || imageUrl == "no-car.png"
             ? "/images/no-car.png"
-            : imageUrl.StartsWith("/") || imageUrl.StartsWith("http")
+            : imageUrl.StartsWith('/') || imageUrl.StartsWith("http")
                 ? imageUrl
                 : "/images/" + imageUrl;
 }

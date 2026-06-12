@@ -14,3 +14,9 @@ csharp_style_namespace_declarations = file_scoped:warning
 # Prefer var for built-in types and apparent types
 csharp_style_var_for_built_in_types = true:suggestion
 csharp_style_var_when_type_is_apparent = true:suggestion
+
+# Suppress info-only rules with no auto-fix — not actionable in CI format gate
+dotnet_diagnostic.CA1873.severity = none
+dotnet_diagnostic.CA2254.severity = none
+dotnet_diagnostic.ASP0015.severity = none
+dotnet_diagnostic.SYSLIB1045.severity = none
