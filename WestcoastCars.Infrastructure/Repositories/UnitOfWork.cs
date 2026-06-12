@@ -7,24 +7,14 @@ using WestcoastCars.Infrastructure.Data;
 
 namespace WestcoastCars.Infrastructure.Repositories;
 
-public class UnitOfWork : IUnitOfWork
+public class UnitOfWork(WestcoastCarsContext context, IVehicleTextSearchMatcher vehicleTextSearchMatcher) : IUnitOfWork
 {
-    private readonly WestcoastCarsContext _context;
-    public IVehicleRepository VehicleRepository { get; }
-    public IManufacturerRepository ManufacturerRepository { get; }
-    public IFuelTypeRepository FuelTypeRepository { get; }
-    public ITransmissionTypeRepository TransmissionTypeRepository { get; }
-    public IServiceBookingRepository ServiceBookingRepository { get; }
-
-    public UnitOfWork(WestcoastCarsContext context, IVehicleTextSearchMatcher vehicleTextSearchMatcher)
-    {
-        _context = context;
-        VehicleRepository = new VehicleRepository(context, vehicleTextSearchMatcher);
-        ManufacturerRepository = new ManufacturerRepository(context);
-        FuelTypeRepository = new FuelTypeRepository(context);
-        TransmissionTypeRepository = new TransmissionTypeRepository(context);
-        ServiceBookingRepository = new ServiceBookingRepository(context);
-    }
+    private readonly WestcoastCarsContext _context = context;
+    public IVehicleRepository VehicleRepository { get; } = new VehicleRepository(context, vehicleTextSearchMatcher);
+    public IManufacturerRepository ManufacturerRepository { get; } = new ManufacturerRepository(context);
+    public IFuelTypeRepository FuelTypeRepository { get; } = new FuelTypeRepository(context);
+    public ITransmissionTypeRepository TransmissionTypeRepository { get; } = new TransmissionTypeRepository(context);
+    public IServiceBookingRepository ServiceBookingRepository { get; } = new ServiceBookingRepository(context);
 
     public async Task<int> CompleteAsync()
     {
@@ -43,9 +33,31 @@ public class UnitOfWork : IUnitOfWork
         }
     }
 
+    public async Task ExecuteInTransactionAsync(Func<Task> action, CancellationToken cancellationToken = default)
+    {
+        var executionStrategy = _context.Database.CreateExecutionStrategy();
+
+        await executionStrategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                await action();
+                await transaction.CommitAsync(cancellationToken);
+            }
+            catch
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                throw;
+            }
+        });
+    }
+
     public void Dispose()
     {
         _context.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     private static bool TryMapUniqueConstraint(DbUpdateException exception, out string conflictMessage)
@@ -59,6 +71,8 @@ public class UnitOfWork : IUnitOfWork
                 "IX_Manufacturers_Name" => "Manufacturer with the same name already exists.",
                 "IX_FuelTypes_Name" => "FuelType with the same name already exists.",
                 "IX_TransmissionTypes_Name" => "TransmissionType with the same name already exists.",
+                "IX_ServiceBookings_ActiveSlot" => "Det valda tidsfönstret är redan bokat. Välj ett annat.",
+                "IX_ServiceBookings_ActiveRegistrationNumber" => "Det finns redan en aktiv bokning för detta registreringsnummer.",
                 _ => "A record with the same unique value already exists."
             };
 

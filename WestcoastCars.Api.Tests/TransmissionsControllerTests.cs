@@ -35,8 +35,8 @@ public class TransmissionsControllerTests
         // Arrange
         var transmissionTypes = new List<NamedObjectDto>
         {
-            new NamedObjectDto { Id = 1, Name = "Manual" },
-            new NamedObjectDto { Id = 2, Name = "Automatic" }
+            new() { Id = 1, Name = "Manual" },
+            new() { Id = 2, Name = "Automatic" }
         };
         _mediatorMock.Setup(m => m.Send(It.IsAny<ListAllTransmissionsQuery>(), default)).ReturnsAsync(transmissionTypes);
 
@@ -87,7 +87,7 @@ public class TransmissionsControllerTests
     public async Task Update_ShouldReturnNoContent_WhenUpdateIsSuccessful()
     {
         // Arrange
-        int transmissionTypeId = 1;
+        var transmissionTypeId = 1;
         var transmissionTypeDto = new NamedObjectDto { Id = transmissionTypeId, Name = "UpdatedName" };
         _mediatorMock.Setup(m => m.Send(It.IsAny<UpdateTransmissionCommand>(), default)).Returns(Task.FromResult(Unit.Value));
 

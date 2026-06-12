@@ -8,14 +8,9 @@ using System.Security.Claims; // For ClaimTypes
 
 namespace WestcoastCars.Web.Handlers;
 
-public class AuthHandler : DelegatingHandler
+public class AuthHandler(IHttpContextAccessor httpContextAccessor) : DelegatingHandler
 {
-    private readonly IHttpContextAccessor _httpContextAccessor;
-
-    public AuthHandler(IHttpContextAccessor httpContextAccessor)
-    {
-        _httpContextAccessor = httpContextAccessor;
-    }
+    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {

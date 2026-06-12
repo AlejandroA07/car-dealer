@@ -8,17 +8,11 @@ using Xunit;
 
 namespace WestcoastCars.Api.IntegrationTests;
 
-public class IntegrationTestBase : IClassFixture<CustomWebApplicationFactory<Program>>, IAsyncLifetime
+public class IntegrationTestBase(CustomWebApplicationFactory<Program> factory) : IClassFixture<CustomWebApplicationFactory<Program>>, IAsyncLifetime
 {
     private static AuthenticationResponse? _cachedAdminAuthResponse;
-    protected readonly CustomWebApplicationFactory<Program> _factory;
-    protected readonly HttpClient _client;
-
-    public IntegrationTestBase(CustomWebApplicationFactory<Program> factory)
-    {
-        _factory = factory;
-        _client = factory.CreateClient();
-    }
+    protected readonly CustomWebApplicationFactory<Program> _factory = factory;
+    protected readonly HttpClient _client = factory.CreateClient();
 
     public virtual Task InitializeAsync() => _factory.ResetDatabaseAsync();
 

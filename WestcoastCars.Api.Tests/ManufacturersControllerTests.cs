@@ -35,8 +35,8 @@ public class ManufacturersControllerTests
         // Arrange
         var manufacturers = new List<NamedObjectDto>
         {
-            new NamedObjectDto { Id = 1, Name = "Volvo" },
-            new NamedObjectDto { Id = 2, Name = "Saab" }
+            new() { Id = 1, Name = "Volvo" },
+            new() { Id = 2, Name = "Saab" }
         };
         _mediatorMock.Setup(m => m.Send(It.IsAny<ListAllManufacturersQuery>(), default)).ReturnsAsync(manufacturers);
 
@@ -88,7 +88,7 @@ public class ManufacturersControllerTests
     public async Task Update_ShouldReturnNoContent_WhenUpdateIsSuccessful()
     {
         // Arrange
-        int manufacturerId = 1;
+        var manufacturerId = 1;
         var manufacturerDto = new NamedObjectDto { Id = manufacturerId, Name = "UpdatedName" };
         _mediatorMock.Setup(m => m.Send(It.IsAny<UpdateManufacturerCommand>(), default)).Returns(Task.FromResult(Unit.Value));
 

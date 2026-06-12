@@ -31,20 +31,12 @@ namespace WestcoastCars.Api.Controllers;
 [ApiController]
 [Route("api/v1/vehicles")]
 [Tags("Vehicles")]
-public class VehiclesController : ControllerBase
+public class VehiclesController(IMediator mediator, ILogger<VehiclesController> logger, AppTelemetry telemetry, IMemoryCache cache) : ControllerBase
 {
-    private readonly IMediator _mediator;
-    private readonly ILogger<VehiclesController> _logger;
-    private readonly AppTelemetry _telemetry;
-    private readonly IMemoryCache _cache;
-
-    public VehiclesController(IMediator mediator, ILogger<VehiclesController> logger, AppTelemetry telemetry, IMemoryCache cache)
-    {
-        _mediator = mediator;
-        _logger = logger;
-        _telemetry = telemetry;
-        _cache = cache;
-    }
+    private readonly IMediator _mediator = mediator;
+    private readonly ILogger<VehiclesController> _logger = logger;
+    private readonly AppTelemetry _telemetry = telemetry;
+    private readonly IMemoryCache _cache = cache;
 
     /// <summary>
     /// Searches vehicles by various criteria.
@@ -340,7 +332,7 @@ public class VehiclesController : ControllerBase
     [ProducesResponseType(400)]
     [ProducesResponseType(401)]
     [ProducesResponseType(403)]
-    public async Task<IActionResult> BulkDelete([FromQuery] string? make, [FromQuery] string? model, [FromQuery] bool? isSold, [FromQuery] int? minMileage, [FromQuery] int? maxMileage)
+    public async Task<IActionResult> BulkDelete([FromQuery] string make, [FromQuery] string model, [FromQuery] bool? isSold, [FromQuery] int? minMileage, [FromQuery] int? maxMileage)
     {
         if (make is null && model is null && isSold is null && minMileage is null && maxMileage is null)
             return BadRequest("At least one filter must be specified.");

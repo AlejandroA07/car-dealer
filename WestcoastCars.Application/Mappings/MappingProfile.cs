@@ -28,7 +28,8 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.ImageUrls, opt => opt.MapFrom(src => BuildImageUrls(src.ImageUrl, src.GalleryUrls)));
 
         CreateMap<ServiceBooking, ServiceBookingSummaryDto>()
-            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+            .ForMember(dest => dest.TimeSlot, opt => opt.MapFrom(src => src.TimeSlot.ToString()));
     }
 
     private static List<string> DeserializeEquipment(string? json)
@@ -46,7 +47,7 @@ public class MappingProfile : Profile
             {
                 var gallery = JsonSerializer.Deserialize<List<string>>(galleryJson);
                 if (gallery is { Count: > 0 })
-                    return gallery.Select(NormalizeImageUrl).ToList();
+                    return [.. gallery.Select(NormalizeImageUrl)];
             }
             catch { }
         }
@@ -57,7 +58,7 @@ public class MappingProfile : Profile
     private static string NormalizeImageUrl(string? imageUrl) =>
         string.IsNullOrEmpty(imageUrl) || imageUrl == "no-car.png"
             ? "/images/no-car.png"
-            : imageUrl.StartsWith("/") || imageUrl.StartsWith("http")
+            : imageUrl.StartsWith('/') || imageUrl.StartsWith("http")
                 ? imageUrl
                 : "/images/" + imageUrl;
 }

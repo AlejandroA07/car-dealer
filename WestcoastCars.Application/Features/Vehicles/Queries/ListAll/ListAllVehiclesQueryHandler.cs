@@ -5,16 +5,10 @@ using WestcoastCars.Contracts.DTOs;
 
 namespace WestcoastCars.Application.Features.Vehicles.Queries.ListAll;
 
-public class ListAllVehiclesQueryHandler : IRequestHandler<ListAllVehiclesQuery, PagedResult<VehicleSummaryDto>>
+public class ListAllVehiclesQueryHandler(IUnitOfWork unitOfWork, IMapper mapper) : IRequestHandler<ListAllVehiclesQuery, PagedResult<VehicleSummaryDto>>
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
-
-    public ListAllVehiclesQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
-    {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-    }
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IMapper _mapper = mapper;
 
     public async Task<PagedResult<VehicleSummaryDto>> Handle(ListAllVehiclesQuery request, CancellationToken cancellationToken)
     {

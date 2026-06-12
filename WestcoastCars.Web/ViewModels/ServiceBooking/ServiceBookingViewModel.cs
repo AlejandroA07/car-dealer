@@ -14,10 +14,12 @@ public class ServiceBookingViewModel
     [Display(Name = "Typ av service")]
     public string ServiceType { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Välj ett datum")]
-    [DataType(DataType.Date)]
+    [Required(ErrorMessage = "Välj ett tidsfönster")]
     [Display(Name = "Datum för bokning")]
-    public DateTime BookingDate { get; set; } = DateTime.Now.AddDays(1);
+    public DateTime? BookingDate { get; set; }
+
+    [Range(0, 2, ErrorMessage = "Välj ett tidsfönster")]
+    public int TimeSlot { get; set; } = -1;
 
     [Required(ErrorMessage = "Ditt namn måste anges")]
     [MaxLength(100)]
@@ -38,4 +40,6 @@ public class ServiceBookingViewModel
     [MaxLength(2000)]
     [Display(Name = "Meddelande (valfritt)")]
     public string Description { get; set; } = string.Empty;
+
+    public string? IdempotencyKey { get; set; }
 }

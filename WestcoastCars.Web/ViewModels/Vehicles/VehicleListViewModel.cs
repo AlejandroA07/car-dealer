@@ -5,9 +5,9 @@ namespace WestcoastCars.Web.ViewModels.Vehicles;
 
 public class VehicleListViewModel
 {
-    public IList<VehicleSummaryDto> Vehicles { get; set; } = new List<VehicleSummaryDto>();
+    public IList<VehicleSummaryDto> Vehicles { get; set; } = [];
     public VehicleSearchDto Search { get; set; } = new VehicleSearchDto();
-    public IEnumerable<SelectListItem> Manufacturers { get; set; } = new List<SelectListItem>();
+    public IEnumerable<SelectListItem> Manufacturers { get; set; } = [];
     public int CurrentPage { get; set; } = 1;
     public int PageSize { get; set; } = 15;
     public int TotalVehicles { get; set; }

@@ -2,9 +2,6 @@ using System;
 
 namespace WestcoastCars.Application.Exceptions;
 
-public class PersistenceException : Exception
+public class PersistenceException(string message) : Exception(message)
 {
-    public PersistenceException(string message) : base(message)
-    {
-    }
 }

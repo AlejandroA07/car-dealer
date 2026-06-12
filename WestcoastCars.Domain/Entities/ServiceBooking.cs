@@ -9,11 +9,13 @@ public class ServiceBooking : BaseEntity
     public string VehicleRegistrationNumber { get; set; } = string.Empty;
     public string ServiceType { get; set; } = string.Empty;
     public DateTime BookingDate { get; set; }
+    public TimeSlot TimeSlot { get; set; }
     public string CustomerName { get; set; } = string.Empty;
     public string CustomerEmail { get; set; } = string.Empty;
     public string CustomerPhone { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public BookingStatus Status { get; private set; } = BookingStatus.Pending;
+    public string? IdempotencyKey { get; set; }
 
     public void Confirm()
     {

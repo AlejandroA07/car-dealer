@@ -8,22 +8,14 @@ using WestcoastCars.Domain.Entities;
 
 namespace WestcoastCars.Application.Features.Manufacturers.Queries.GetById;
 
-public class GetManufacturerByIdQueryHandler : IRequestHandler<GetManufacturerByIdQuery, NamedObjectDto?>
+public class GetManufacturerByIdQueryHandler(IUnitOfWork unitOfWork, IMapper mapper) : IRequestHandler<GetManufacturerByIdQuery, NamedObjectDto?>
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
-
-    public GetManufacturerByIdQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
-    {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-    }
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IMapper _mapper = mapper;
 
     public async Task<NamedObjectDto?> Handle(GetManufacturerByIdQuery request, CancellationToken cancellationToken)
     {
-        var repository = _unitOfWork.ManufacturerRepository;
-        if (repository is null) throw new InvalidOperationException("Repository for Manufacturer is not available.");
-
+        var repository = _unitOfWork.ManufacturerRepository ?? throw new InvalidOperationException("Repository for Manufacturer is not available.");
         var manufacturer = await repository.GetByIdAsync(request.Id);
         if (manufacturer is null) return null;
 

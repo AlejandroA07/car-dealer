@@ -8,26 +8,14 @@ using WestcoastCars.Contracts.DTOs;
 
 namespace WestcoastCars.Application.Features.Vehicles.Queries.GetById;
 
-public class GetVehicleByIdQueryHandler : IRequestHandler<GetVehicleByIdQuery, VehicleDetailsDto>
+public class GetVehicleByIdQueryHandler(IUnitOfWork unitOfWork, IMapper mapper) : IRequestHandler<GetVehicleByIdQuery, VehicleDetailsDto>
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
-
-    public GetVehicleByIdQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
-    {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-    }
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IMapper _mapper = mapper;
 
     public async Task<VehicleDetailsDto> Handle(GetVehicleByIdQuery request, CancellationToken cancellationToken)
     {
-        var vehicle = await _unitOfWork.VehicleRepository.GetByIdAsync(request.Id);
-
-        if (vehicle == null)
-        {
-            throw new NotFoundException($"Vehicle with ID {request.Id} not found");
-        }
-
+        var vehicle = await _unitOfWork.VehicleRepository.GetByIdAsync(request.Id) ?? throw new NotFoundException($"Vehicle with ID {request.Id} not found");
         return _mapper.Map<VehicleDetailsDto>(vehicle);
     }
 }

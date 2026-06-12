@@ -5,12 +5,8 @@ using WestcoastCars.Contracts.DTOs;
 
 namespace WestcoastCars.Api.IntegrationTests;
 
-public class FuelTypesIntegrationTests : IntegrationTestBase
+public class FuelTypesIntegrationTests(CustomWebApplicationFactory<Program> factory) : IntegrationTestBase(factory)
 {
-    public FuelTypesIntegrationTests(CustomWebApplicationFactory<Program> factory) : base(factory)
-    {
-    }
-
     [Fact]
     public async Task FuelTypeCrudFlow_ShouldCreateGetUpdateAndDeleteFuelType()
     {

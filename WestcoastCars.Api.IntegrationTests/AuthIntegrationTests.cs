@@ -5,12 +5,8 @@ using WestcoastCars.Contracts.Auth;
 
 namespace WestcoastCars.Api.IntegrationTests;
 
-public class AuthIntegrationTests : IntegrationTestBase
+public class AuthIntegrationTests(CustomWebApplicationFactory<Program> factory) : IntegrationTestBase(factory)
 {
-    public AuthIntegrationTests(CustomWebApplicationFactory<Program> factory) : base(factory)
-    {
-    }
-
     [Fact]
     public async Task Register_ShouldCreateCustomerAndReturnJwt()
     {

@@ -33,7 +33,7 @@ public class UpdateVehicleCommandHandlerTests
         _handler = new UpdateVehicleCommandHandler(_unitOfWorkMock.Object);
     }
 
-    private Vehicle CreateTestVehicle(int id, string regNo)
+    private static Vehicle CreateTestVehicle(int id, string regNo)
     {
         return new Vehicle
         {

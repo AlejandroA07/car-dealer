@@ -7,20 +7,13 @@ using WestcoastCars.Domain.Entities;
 
 namespace WestcoastCars.Application.Features.Vehicles.Commands.RefreshInventoryFromBlocket;
 
-public class RefreshInventoryFromBlocketCommandHandler : IRequestHandler<RefreshInventoryFromBlocketCommand, RefreshInventoryFromBlocketResult>
+public class RefreshInventoryFromBlocketCommandHandler(IBlocketApiClient blocketApiClient, IBlocketVehicleImportMapper mapper, IUnitOfWork unitOfWork) : IRequestHandler<RefreshInventoryFromBlocketCommand, RefreshInventoryFromBlocketResult>
 {
     private const int MaxImportLimit = 50;
 
-    private readonly IBlocketApiClient _blocketApiClient;
-    private readonly IBlocketVehicleImportMapper _mapper;
-    private readonly IUnitOfWork _unitOfWork;
-
-    public RefreshInventoryFromBlocketCommandHandler(IBlocketApiClient blocketApiClient, IBlocketVehicleImportMapper mapper, IUnitOfWork unitOfWork)
-    {
-        _blocketApiClient = blocketApiClient;
-        _mapper = mapper;
-        _unitOfWork = unitOfWork;
-    }
+    private readonly IBlocketApiClient _blocketApiClient = blocketApiClient;
+    private readonly IBlocketVehicleImportMapper _mapper = mapper;
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
     public async Task<RefreshInventoryFromBlocketResult> Handle(RefreshInventoryFromBlocketCommand request, CancellationToken cancellationToken)
     {
@@ -96,7 +89,8 @@ public class RefreshInventoryFromBlocketCommandHandler : IRequestHandler<Refresh
                     mappedVehicle.WheelDrive = request.WheelDrive;
 
                 // Skip only after details fetch if critical fields are still missing.
-                if (!mappedVehicle.ModelYear.HasValue)
+                if (string.IsNullOrWhiteSpace(mappedVehicle.RegistrationNumber) ||
+                    !IsValidModelYear(mappedVehicle.ModelYear))
                 {
                     totalSkipped++;
                     continue;
@@ -214,7 +208,7 @@ public class RefreshInventoryFromBlocketCommandHandler : IRequestHandler<Refresh
     private async Task<List<Vehicle>> BuildVehicleEntitiesAsync(IEnumerable<BlocketVehicleImportData> preparedVehicles)
     {
         var vehicles = new List<Vehicle>();
-        var preparedVehicleList = preparedVehicles as IReadOnlyCollection<BlocketVehicleImportData> ?? preparedVehicles.ToList();
+        var preparedVehicleList = preparedVehicles as IReadOnlyCollection<BlocketVehicleImportData> ?? [.. preparedVehicles];
 
         if (preparedVehicleList.Count == 0)
         {
@@ -253,7 +247,7 @@ public class RefreshInventoryFromBlocketCommandHandler : IRequestHandler<Refresh
             {
                 RegistrationNumber = preparedVehicle.RegistrationNumber,
                 Model = preparedVehicle.Model,
-                ModelYear = preparedVehicle.ModelYear.Value,
+                ModelYear = preparedVehicle.ModelYear!.Value,
                 Mileage = preparedVehicle.Mileage,
                 ImageUrl = preparedVehicle.ImageUrl,
                 Price = preparedVehicle.Price,
@@ -347,10 +341,7 @@ public class RefreshInventoryFromBlocketCommandHandler : IRequestHandler<Refresh
         {
             var name = NormalizeLookupName(nameSelector(lookup), "Unknown");
 
-            if (!dictionary.ContainsKey(name))
-            {
-                dictionary.Add(name, lookup);
-            }
+            dictionary.TryAdd(name, lookup);
         }
 
         return dictionary;

@@ -1,18 +1,18 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using WestcoastCars.Domain.Common.Enums;
 using WestcoastCars.Domain.Entities;
 
 namespace WestcoastCars.Infrastructure.Data;
 
-public class WestcoastCarsContext : IdentityDbContext<IdentityUser>
+public class WestcoastCarsContext(DbContextOptions<WestcoastCarsContext> options) : IdentityDbContext<IdentityUser>(options)
 {
     public DbSet<Vehicle> Vehicles { get; set; }
     public DbSet<Manufacturer> Manufacturers { get; set; }
     public DbSet<FuelType> FuelTypes { get; set; }
     public DbSet<TransmissionType> TransmissionTypes { get; set; }
     public DbSet<ServiceBooking> ServiceBookings { get; set; }
-    public WestcoastCarsContext(DbContextOptions<WestcoastCarsContext> options) : base(options) { }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -144,7 +144,30 @@ public class WestcoastCarsContext : IdentityDbContext<IdentityUser>
 
         modelBuilder.Entity<ServiceBooking>()
             .Property(sb => sb.VehicleRegistrationNumber)
-            .HasMaxLength(10);
+            .HasMaxLength(10)
+            .HasColumnType("citext");
+
+        modelBuilder.Entity<ServiceBooking>()
+            .HasIndex(sb => new { sb.BookingDate, sb.TimeSlot })
+            .HasDatabaseName("IX_ServiceBookings_ActiveSlot")
+            .IsUnique()
+            .HasFilter($@"""Status"" NOT IN ({(int)BookingStatus.Cancelled}, {(int)BookingStatus.Completed})");
+
+        modelBuilder.Entity<ServiceBooking>()
+            .HasIndex(sb => sb.VehicleRegistrationNumber)
+            .HasDatabaseName("IX_ServiceBookings_ActiveRegistrationNumber")
+            .IsUnique()
+            .HasFilter($@"""Status"" NOT IN ({(int)BookingStatus.Cancelled}, {(int)BookingStatus.Completed})");
+
+        modelBuilder.Entity<ServiceBooking>()
+            .Property(sb => sb.IdempotencyKey)
+            .HasMaxLength(36);
+
+        modelBuilder.Entity<ServiceBooking>()
+            .HasIndex(sb => sb.IdempotencyKey)
+            .HasDatabaseName("IX_ServiceBookings_IdempotencyKey")
+            .IsUnique()
+            .HasFilter(@"""IdempotencyKey"" IS NOT NULL");
 
         modelBuilder.Entity<ServiceBooking>()
             .Property(sb => sb.ServiceType)

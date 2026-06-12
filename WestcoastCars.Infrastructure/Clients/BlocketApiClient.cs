@@ -9,9 +9,9 @@ using WestcoastCars.Infrastructure.Options;
 
 namespace WestcoastCars.Infrastructure.Clients;
 
-public class BlocketApiClient : IBlocketApiClient
+public class BlocketApiClient(HttpClient httpClient, IOptions<BlocketApiOptions> options, ILogger<BlocketApiClient> logger) : IBlocketApiClient
 {
-    private readonly ILogger<BlocketApiClient> _logger;
+    private readonly ILogger<BlocketApiClient> _logger = logger;
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true
@@ -22,15 +22,8 @@ public class BlocketApiClient : IBlocketApiClient
     private static readonly SemaphoreSlim RequestThrottle = new(1, 1);
     private static DateTimeOffset _nextAllowedRequestAt = DateTimeOffset.MinValue;
 
-    private readonly HttpClient _httpClient;
-    private readonly BlocketApiOptions _options;
-
-    public BlocketApiClient(HttpClient httpClient, IOptions<BlocketApiOptions> options, ILogger<BlocketApiClient> logger)
-    {
-        _httpClient = httpClient;
-        _options = options?.Value ?? new BlocketApiOptions();
-        _logger = logger;
-    }
+    private readonly HttpClient _httpClient = httpClient;
+    private readonly BlocketApiOptions _options = options?.Value ?? new BlocketApiOptions();
 
     public async Task<BlocketCarSearchResponse> SearchCarsAsync(BlocketCarSearchRequest request, CancellationToken cancellationToken = default)
     {
@@ -92,13 +85,7 @@ public class BlocketApiClient : IBlocketApiClient
             response.EnsureSuccessStatusCode();
 
             await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
-            var payload = await JsonSerializer.DeserializeAsync<T>(responseStream, JsonOptions, cancellationToken);
-
-            if (payload is null)
-            {
-                throw new InvalidOperationException($"Blocket API returned an empty payload for '{requestUri}'.");
-            }
-
+            var payload = await JsonSerializer.DeserializeAsync<T>(responseStream, JsonOptions, cancellationToken) ?? throw new InvalidOperationException($"Blocket API returned an empty payload for '{requestUri}'.");
             return payload;
         }
     }

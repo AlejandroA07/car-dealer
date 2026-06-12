@@ -10,22 +10,14 @@ using WestcoastCars.Domain.Entities;
 
 namespace WestcoastCars.Application.Features.FuelTypes.Queries.ListAll;
 
-public class ListAllFuelTypesQueryHandler : IRequestHandler<ListAllFuelTypesQuery, IEnumerable<NamedObjectDto>>
+public class ListAllFuelTypesQueryHandler(IUnitOfWork unitOfWork, IMapper mapper) : IRequestHandler<ListAllFuelTypesQuery, IEnumerable<NamedObjectDto>>
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
-
-    public ListAllFuelTypesQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
-    {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-    }
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IMapper _mapper = mapper;
 
     public async Task<IEnumerable<NamedObjectDto>> Handle(ListAllFuelTypesQuery request, CancellationToken cancellationToken)
     {
-        var repository = _unitOfWork.FuelTypeRepository;
-        if (repository is null) throw new InvalidOperationException("Repository for FuelType is not available.");
-
+        var repository = _unitOfWork.FuelTypeRepository ?? throw new InvalidOperationException("Repository for FuelType is not available.");
         var fuelTypes = await repository.GetAllAsync();
         return _mapper.Map<IEnumerable<NamedObjectDto>>(fuelTypes);
     }

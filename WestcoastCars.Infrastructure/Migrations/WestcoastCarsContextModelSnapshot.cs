@@ -321,12 +321,19 @@ namespace WestcoastCars.Infrastructure.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 
+                    b.Property<string>("IdempotencyKey")
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)");
+
                     b.Property<string>("ServiceType")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
                     b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TimeSlot")
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -340,11 +347,25 @@ namespace WestcoastCars.Infrastructure.Migrations
                     b.Property<string>("VehicleRegistrationNumber")
                         .IsRequired()
                         .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
-
+                        .HasColumnType("citext");
                     b.HasKey("Id");
 
+                    b.HasIndex("BookingDate", "TimeSlot")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ServiceBookings_ActiveSlot")
+                        .HasFilter("\"Status\" NOT IN (2, 3)");
+
                     b.HasIndex("VehicleId");
+
+                    b.HasIndex("VehicleRegistrationNumber")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ServiceBookings_ActiveRegistrationNumber")
+                        .HasFilter("\"Status\" NOT IN (2, 3)");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ServiceBookings_IdempotencyKey")
+                        .HasFilter("\"IdempotencyKey\" IS NOT NULL");
 
                     b.ToTable("ServiceBookings");
                 });

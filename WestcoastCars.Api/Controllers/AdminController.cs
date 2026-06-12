@@ -16,14 +16,9 @@ namespace WestcoastCars.Api.Controllers;
 [Route("api/admin")]
 [Tags("Administration")]
 [Authorize(Roles = "Admin", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-public class AdminController : ControllerBase
+public class AdminController(IAdminService adminService) : ControllerBase
 {
-    private readonly IAdminService _adminService;
-
-    public AdminController(IAdminService adminService)
-    {
-        _adminService = adminService;
-    }
+    private readonly IAdminService _adminService = adminService;
 
     /// <summary>
     /// Creates a new user with a specific role.

@@ -64,5 +64,5 @@ public class Vehicle : BaseEntity
     [ForeignKey("TransmissionTypeId")]
     public required TransmissionType TransmissionType { get; set; }
 
-    public ICollection<ServiceBooking> ServiceBookings { get; set; } = new List<ServiceBooking>();
+    public ICollection<ServiceBooking> ServiceBookings { get; set; } = [];
 }

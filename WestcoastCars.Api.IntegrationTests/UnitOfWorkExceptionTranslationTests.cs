@@ -9,12 +9,8 @@ using WestcoastCars.Infrastructure.Repositories;
 
 namespace WestcoastCars.Api.IntegrationTests;
 
-public class UnitOfWorkExceptionTranslationTests : IntegrationTestBase
+public class UnitOfWorkExceptionTranslationTests(CustomWebApplicationFactory<Program> factory) : IntegrationTestBase(factory)
 {
-    public UnitOfWorkExceptionTranslationTests(CustomWebApplicationFactory<Program> factory) : base(factory)
-    {
-    }
-
     [Fact]
     public async Task CompleteAsync_ShouldTranslateUniqueVehicleRegistrationViolation_ToConflictException()
     {

@@ -13,12 +13,8 @@ using Xunit;
 
 namespace WestcoastCars.Api.IntegrationTests;
 
-public class VehiclesIntegrationTests : IntegrationTestBase
+public class VehiclesIntegrationTests(CustomWebApplicationFactory<Program> factory) : IntegrationTestBase(factory)
 {
-    public VehiclesIntegrationTests(CustomWebApplicationFactory<Program> factory) : base(factory)
-    {
-    }
-
     [Fact]
     public async Task ListAll_ShouldReturnOk()
     {

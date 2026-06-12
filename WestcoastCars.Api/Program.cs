@@ -91,10 +91,26 @@ builder.Services.AddRateLimiter(options =>
         o.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
         o.QueueLimit = 0;
     });
+    options.AddFixedWindowLimiter("booking-create", o =>
+    {
+        o.PermitLimit = builder.Configuration.GetValue<int>("RateLimiting:BookingCreatePermitLimit", 5);
+        o.Window = TimeSpan.FromMinutes(10);
+        o.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        o.QueueLimit = 0;
+    });
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
 
 builder.Services.AddMemoryCache();
+
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Frontend", policy =>
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyMethod()
+              .AllowAnyHeader());
+});
 
 builder.Services.AddHttpLogging(logging =>
 {
@@ -250,6 +266,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseStaticFiles();
 
+app.UseCors("Frontend");
+
 app.UseHttpLogging();
 
 app.UseRateLimiter();
@@ -297,4 +315,3 @@ static string SanitizeConnectionString(string connectionString)
     }
 }
 
-public partial class Program { }

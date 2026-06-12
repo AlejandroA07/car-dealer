@@ -69,11 +69,13 @@ public static class DependencyInjection
         .AddDefaultTokenProviders();
 
         services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
+        services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
 
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
         services.AddScoped<WestcoastCars.Application.Services.IAuthService, AuthService>();
         services.AddScoped<WestcoastCars.Application.Services.IAdminService, AdminService>();
+        services.AddScoped<WestcoastCars.Application.Services.IEmailService, EmailService>();
 
         return services;
     }

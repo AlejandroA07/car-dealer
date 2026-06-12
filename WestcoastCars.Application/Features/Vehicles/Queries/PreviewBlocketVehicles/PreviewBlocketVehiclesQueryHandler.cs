@@ -7,19 +7,11 @@ using WestcoastCars.Contracts.DTOs;
 
 namespace WestcoastCars.Application.Features.Vehicles.Queries.PreviewBlocketVehicles;
 
-public class PreviewBlocketVehiclesQueryHandler : IRequestHandler<PreviewBlocketVehiclesQuery, List<BlocketPreviewDto>>
+public class PreviewBlocketVehiclesQueryHandler(IBlocketApiClient blocketApiClient, IUnitOfWork unitOfWork, ILogger<PreviewBlocketVehiclesQueryHandler> logger) : IRequestHandler<PreviewBlocketVehiclesQuery, List<BlocketPreviewDto>>
 {
-    private readonly IBlocketApiClient _blocketApiClient;
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly ILogger<PreviewBlocketVehiclesQueryHandler> _logger;
-
-    public PreviewBlocketVehiclesQueryHandler(IBlocketApiClient blocketApiClient, IUnitOfWork unitOfWork, ILogger<PreviewBlocketVehiclesQueryHandler> logger)
-    {
-        _blocketApiClient = blocketApiClient;
-        _unitOfWork = unitOfWork;
-        _logger = logger;
-    }
-
+    private readonly IBlocketApiClient _blocketApiClient = blocketApiClient;
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly ILogger<PreviewBlocketVehiclesQueryHandler> _logger = logger;
     private const int MaxPages = 30;
 
     public async Task<List<BlocketPreviewDto>> Handle(PreviewBlocketVehiclesQuery request, CancellationToken cancellationToken)

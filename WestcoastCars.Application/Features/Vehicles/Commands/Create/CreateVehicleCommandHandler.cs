@@ -8,30 +8,18 @@ using WestcoastCars.Domain.Entities;
 
 namespace WestcoastCars.Application.Features.Vehicles.Commands.Create;
 
-public class CreateVehicleCommandHandler : IRequestHandler<CreateVehicleCommand, VehicleDetailsDto>
+public class CreateVehicleCommandHandler(IUnitOfWork unitOfWork, IMapper mapper) : IRequestHandler<CreateVehicleCommand, VehicleDetailsDto>
 {
     private const string DefaultCarImageName = "/images/no-car.png";
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
-
-    public CreateVehicleCommandHandler(IUnitOfWork unitOfWork, IMapper mapper)
-    {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-    }
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IMapper _mapper = mapper;
 
     public async Task<VehicleDetailsDto> Handle(CreateVehicleCommand request, CancellationToken cancellationToken)
     {
         // Validate related entities
-        var manufacturer = await _unitOfWork.ManufacturerRepository.GetByIdAsync(request.ManufacturerId);
-        if (manufacturer == null) throw new NotFoundException($"Manufacturer with ID {request.ManufacturerId} not found");
-
-        var fuelType = await _unitOfWork.FuelTypeRepository.GetByIdAsync(request.FuelTypeId);
-        if (fuelType == null) throw new NotFoundException($"Fuel type with ID {request.FuelTypeId} not found");
-
-        var transmissionType = await _unitOfWork.TransmissionTypeRepository.GetByIdAsync(request.TransmissionTypeId);
-        if (transmissionType == null) throw new NotFoundException($"Transmission type with ID {request.TransmissionTypeId} not found");
-
+        var manufacturer = await _unitOfWork.ManufacturerRepository.GetByIdAsync(request.ManufacturerId) ?? throw new NotFoundException($"Manufacturer with ID {request.ManufacturerId} not found");
+        var fuelType = await _unitOfWork.FuelTypeRepository.GetByIdAsync(request.FuelTypeId) ?? throw new NotFoundException($"Fuel type with ID {request.FuelTypeId} not found");
+        var transmissionType = await _unitOfWork.TransmissionTypeRepository.GetByIdAsync(request.TransmissionTypeId) ?? throw new NotFoundException($"Transmission type with ID {request.TransmissionTypeId} not found");
         var vehicle = new Vehicle
         {
             RegistrationNumber = request.RegistrationNumber,

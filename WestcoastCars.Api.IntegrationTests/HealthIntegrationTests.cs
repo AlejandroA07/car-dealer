@@ -4,12 +4,8 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace WestcoastCars.Api.IntegrationTests;
 
-public class HealthIntegrationTests : IntegrationTestBase
+public class HealthIntegrationTests(CustomWebApplicationFactory<Program> factory) : IntegrationTestBase(factory)
 {
-    public HealthIntegrationTests(CustomWebApplicationFactory<Program> factory) : base(factory)
-    {
-    }
-
     [Fact]
     public async Task HealthEndpoint_ShouldReturnHealthy_WhenDatabaseIsAvailable()
     {

@@ -5,16 +5,10 @@ using WestcoastCars.Contracts.DTOs;
 
 namespace WestcoastCars.Application.Features.ServiceBookings.Queries.ListAll;
 
-public class ListServiceBookingsQueryHandler : IRequestHandler<ListServiceBookingsQuery, PagedResult<ServiceBookingSummaryDto>>
+public class ListServiceBookingsQueryHandler(IUnitOfWork unitOfWork, IMapper mapper) : IRequestHandler<ListServiceBookingsQuery, PagedResult<ServiceBookingSummaryDto>>
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
-
-    public ListServiceBookingsQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
-    {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-    }
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IMapper _mapper = mapper;
 
     public async Task<PagedResult<ServiceBookingSummaryDto>> Handle(ListServiceBookingsQuery request, CancellationToken cancellationToken)
     {
@@ -22,7 +16,7 @@ public class ListServiceBookingsQueryHandler : IRequestHandler<ListServiceBookin
         {
             Page = request.Page,
             PageSize = request.PageSize
-        });
+        }, request.IsActive);
 
         return new PagedResult<ServiceBookingSummaryDto>
         {

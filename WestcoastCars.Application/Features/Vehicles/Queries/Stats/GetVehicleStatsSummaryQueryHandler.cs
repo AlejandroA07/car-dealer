@@ -4,14 +4,9 @@ using WestcoastCars.Contracts.DTOs;
 
 namespace WestcoastCars.Application.Features.Vehicles.Queries.Stats;
 
-public class GetVehicleStatsSummaryQueryHandler : IRequestHandler<GetVehicleStatsSummaryQuery, VehicleStatsSummaryDto>
+public class GetVehicleStatsSummaryQueryHandler(IUnitOfWork unitOfWork) : IRequestHandler<GetVehicleStatsSummaryQuery, VehicleStatsSummaryDto>
 {
-    private readonly IUnitOfWork _unitOfWork;
-
-    public GetVehicleStatsSummaryQueryHandler(IUnitOfWork unitOfWork)
-    {
-        _unitOfWork = unitOfWork;
-    }
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
     public async Task<VehicleStatsSummaryDto> Handle(GetVehicleStatsSummaryQuery request, CancellationToken cancellationToken)
     {

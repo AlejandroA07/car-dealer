@@ -3,14 +3,9 @@ using WestcoastCars.Application.Interfaces;
 
 namespace WestcoastCars.Application.Features.Vehicles.Commands.PurgeSourceRemoved;
 
-public class PurgeSourceRemovedVehiclesCommandHandler : IRequestHandler<PurgeSourceRemovedVehiclesCommand, PurgeSourceRemovedVehiclesResult>
+public class PurgeSourceRemovedVehiclesCommandHandler(IUnitOfWork unitOfWork) : IRequestHandler<PurgeSourceRemovedVehiclesCommand, PurgeSourceRemovedVehiclesResult>
 {
-    private readonly IUnitOfWork _unitOfWork;
-
-    public PurgeSourceRemovedVehiclesCommandHandler(IUnitOfWork unitOfWork)
-    {
-        _unitOfWork = unitOfWork;
-    }
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
     public async Task<PurgeSourceRemovedVehiclesResult> Handle(PurgeSourceRemovedVehiclesCommand request, CancellationToken cancellationToken)
     {

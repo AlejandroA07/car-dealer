@@ -6,20 +6,15 @@ using WestcoastCars.Infrastructure.Data;
 
 namespace WestcoastCars.Infrastructure.Repositories;
 
-public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
+public class VehicleRepository(WestcoastCarsContext context, IVehicleTextSearchMatcher textSearchMatcher) : Repository<Vehicle>(context), IVehicleRepository
 {
     private const int DefaultPageSize = 20;
     private const int MaxPageSize = 100;
-    private readonly IVehicleTextSearchMatcher _textSearchMatcher;
+    private readonly IVehicleTextSearchMatcher _textSearchMatcher = textSearchMatcher;
 
     public VehicleRepository(WestcoastCarsContext context)
         : this(context, new CaseInsensitiveVehicleTextSearchMatcher())
     {
-    }
-
-    public VehicleRepository(WestcoastCarsContext context, IVehicleTextSearchMatcher textSearchMatcher) : base(context)
-    {
-        _textSearchMatcher = textSearchMatcher;
     }
 
     public async Task<Vehicle?> FindByRegistrationNumberAsync(string regNo)
@@ -198,7 +193,7 @@ public class VehicleRepository : Repository<Vehicle>, IVehicleRepository
             .ToListAsync();
     }
 
-    private async Task<PagedResult<Vehicle>> ToPagedResultAsync(IQueryable<Vehicle> query, int page, int pageSize)
+    private static async Task<PagedResult<Vehicle>> ToPagedResultAsync(IQueryable<Vehicle> query, int page, int pageSize)
     {
         var normalizedPage = page < 1 ? 1 : page;
         var normalizedPageSize = pageSize < 1

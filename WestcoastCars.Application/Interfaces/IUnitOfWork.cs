@@ -9,4 +9,5 @@ public interface IUnitOfWork : IDisposable
     ITransmissionTypeRepository TransmissionTypeRepository { get; }
     IServiceBookingRepository ServiceBookingRepository { get; }
     Task<int> CompleteAsync();
+    Task ExecuteInTransactionAsync(Func<Task> action, CancellationToken cancellationToken = default);
 }

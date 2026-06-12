@@ -5,22 +5,13 @@ using WestcoastCars.Application.Interfaces;
 
 namespace WestcoastCars.Application.Features.Vehicles.Commands.Update;
 
-public class UpdateVehicleCommandHandler : IRequestHandler<UpdateVehicleCommand, Unit>
+public class UpdateVehicleCommandHandler(IUnitOfWork unitOfWork) : IRequestHandler<UpdateVehicleCommand, Unit>
 {
-    private readonly IUnitOfWork _unitOfWork;
-
-    public UpdateVehicleCommandHandler(IUnitOfWork unitOfWork)
-    {
-        _unitOfWork = unitOfWork;
-    }
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
     public async Task<Unit> Handle(UpdateVehicleCommand request, CancellationToken cancellationToken)
     {
-        var vehicle = await _unitOfWork.VehicleRepository.GetByIdAsync(request.Id);
-        if (vehicle == null)
-        {
-            throw new NotFoundException($"Vehicle with ID {request.Id} not found");
-        }
+        var vehicle = await _unitOfWork.VehicleRepository.GetByIdAsync(request.Id) ?? throw new NotFoundException($"Vehicle with ID {request.Id} not found");
 
         // Validate registration number if it has changed
         if (!string.IsNullOrEmpty(request.RegistrationNumber) &&
@@ -30,14 +21,9 @@ public class UpdateVehicleCommandHandler : IRequestHandler<UpdateVehicleCommand,
         }
 
         // Validate related entities
-        var manufacturer = await _unitOfWork.ManufacturerRepository.GetByIdAsync(request.ManufacturerId);
-        if (manufacturer == null) throw new NotFoundException($"Manufacturer with ID {request.ManufacturerId} not found");
-
-        var fuelType = await _unitOfWork.FuelTypeRepository.GetByIdAsync(request.FuelTypeId);
-        if (fuelType == null) throw new NotFoundException($"Fuel type with ID {request.FuelTypeId} not found");
-
-        var transmissionType = await _unitOfWork.TransmissionTypeRepository.GetByIdAsync(request.TransmissionTypeId);
-        if (transmissionType == null) throw new NotFoundException($"Transmission type with ID {request.TransmissionTypeId} not found");
+        var manufacturer = await _unitOfWork.ManufacturerRepository.GetByIdAsync(request.ManufacturerId) ?? throw new NotFoundException($"Manufacturer with ID {request.ManufacturerId} not found");
+        var fuelType = await _unitOfWork.FuelTypeRepository.GetByIdAsync(request.FuelTypeId) ?? throw new NotFoundException($"Fuel type with ID {request.FuelTypeId} not found");
+        var transmissionType = await _unitOfWork.TransmissionTypeRepository.GetByIdAsync(request.TransmissionTypeId) ?? throw new NotFoundException($"Transmission type with ID {request.TransmissionTypeId} not found");
 
         // Update properties
         vehicle.Model = request.Model;

@@ -3,14 +3,9 @@ using WestcoastCars.Application.Interfaces;
 
 namespace WestcoastCars.Application.Features.Vehicles.Commands.BulkDelete;
 
-public class BulkDeleteVehiclesCommandHandler : IRequestHandler<BulkDeleteVehiclesCommand, BulkDeleteVehiclesResult>
+public class BulkDeleteVehiclesCommandHandler(IUnitOfWork unitOfWork) : IRequestHandler<BulkDeleteVehiclesCommand, BulkDeleteVehiclesResult>
 {
-    private readonly IUnitOfWork _unitOfWork;
-
-    public BulkDeleteVehiclesCommandHandler(IUnitOfWork unitOfWork)
-    {
-        _unitOfWork = unitOfWork;
-    }
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
     public async Task<BulkDeleteVehiclesResult> Handle(BulkDeleteVehiclesCommand request, CancellationToken cancellationToken)
     {

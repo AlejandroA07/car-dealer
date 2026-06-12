@@ -35,8 +35,8 @@ public class FuelTypesControllerTests
         // Arrange
         var fuelTypes = new List<NamedObjectDto>
         {
-            new NamedObjectDto { Id = 1, Name = "Gasoline" },
-            new NamedObjectDto { Id = 2, Name = "Diesel" }
+            new() { Id = 1, Name = "Gasoline" },
+            new() { Id = 2, Name = "Diesel" }
         };
         _mediatorMock.Setup(m => m.Send(It.IsAny<ListAllFuelTypesQuery>(), default)).ReturnsAsync(fuelTypes);
 
@@ -87,7 +87,7 @@ public class FuelTypesControllerTests
     public async Task Update_ShouldReturnNoContent_WhenUpdateIsSuccessful()
     {
         // Arrange
-        int fuelTypeId = 1;
+        var fuelTypeId = 1;
         var fuelTypeDto = new NamedObjectDto { Id = fuelTypeId, Name = "UpdatedName" };
         _mediatorMock.Setup(m => m.Send(It.IsAny<UpdateFuelTypeCommand>(), default)).Returns(Task.FromResult(Unit.Value));
 

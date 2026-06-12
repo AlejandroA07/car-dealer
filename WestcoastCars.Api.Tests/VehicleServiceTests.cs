@@ -135,14 +135,9 @@ public class VehicleServiceTests
         return new StringContent(json, Encoding.UTF8, "application/json");
     }
 
-    private sealed class StubHttpClientFactory : IHttpClientFactory
+    private sealed class StubHttpClientFactory(HttpClient httpClient) : IHttpClientFactory
     {
-        private readonly HttpClient _httpClient;
-
-        public StubHttpClientFactory(HttpClient httpClient)
-        {
-            _httpClient = httpClient;
-        }
+        private readonly HttpClient _httpClient = httpClient;
 
         public HttpClient CreateClient(string name)
         {
@@ -150,16 +145,11 @@ public class VehicleServiceTests
         }
     }
 
-    private sealed class StubHttpMessageHandler : HttpMessageHandler
+    private sealed class StubHttpMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> handler) : HttpMessageHandler
     {
-        private readonly Func<HttpRequestMessage, HttpResponseMessage> _handler;
-        private readonly object _requestLock = new();
-        private readonly List<string> _requestedUris = new();
-
-        public StubHttpMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> handler)
-        {
-            _handler = handler;
-        }
+        private readonly Func<HttpRequestMessage, HttpResponseMessage> _handler = handler;
+        private readonly Lock _requestLock = new();
+        private readonly List<string> _requestedUris = [];
 
         public HttpMethod? RequestMethod { get; private set; }
         public Uri? RequestedUri { get; private set; }

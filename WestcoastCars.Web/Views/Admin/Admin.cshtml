@@ -1,4 +1,4 @@
-@model WestcoastCars.Web.ViewModels.Admin.AdminDashboardViewModel
+@model WestcoastCars.Web.ViewModels.AdminDashboardViewModel
 @{
     ViewData["Title"] = "Admin";
     var maxStock = Math.Max(Model.StockByManufacturer.Any() ? Model.StockByManufacturer.Max(x => x.Count) : 1, 1);

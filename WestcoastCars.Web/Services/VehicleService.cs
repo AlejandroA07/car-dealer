@@ -9,7 +9,7 @@ using WestcoastCars.Contracts.DTOs;
 
 namespace WestcoastCars.Web.Services;
 
-public class VehicleService : IVehicleService
+public class VehicleService(IHttpClientFactory httpClientFactory, IConfiguration config, ILogger<VehicleService> logger, IMemoryCache cache) : IVehicleService
 {
     private const string ManufacturersCacheKey = "vehicle-form-manufacturers";
     private const string FuelTypesCacheKey = "vehicle-form-fuel-types";
@@ -20,20 +20,11 @@ public class VehicleService : IVehicleService
         PropertyNameCaseInsensitive = true
     };
 
-    private readonly HttpClient _httpClient;
-    private readonly HttpClient _longRunningHttpClient;
-    private readonly ILogger<VehicleService> _logger;
-    private readonly string _baseUrl;
-    private readonly IMemoryCache _cache;
-
-    public VehicleService(IHttpClientFactory httpClientFactory, IConfiguration config, ILogger<VehicleService> logger, IMemoryCache cache)
-    {
-        _httpClient = httpClientFactory.CreateClient("ApiClient");
-        _longRunningHttpClient = httpClientFactory.CreateClient("LongRunningApiClient");
-        _logger = logger;
-        _baseUrl = config["Services:ApiUrl"] ?? throw new InvalidOperationException("Services:ApiUrl is not configured");
-        _cache = cache;
-    }
+    private readonly HttpClient _httpClient = httpClientFactory.CreateClient("ApiClient");
+    private readonly HttpClient _longRunningHttpClient = httpClientFactory.CreateClient("LongRunningApiClient");
+    private readonly ILogger<VehicleService> _logger = logger;
+    private readonly string _baseUrl = config["Services:ApiUrl"] ?? throw new InvalidOperationException("Services:ApiUrl is not configured");
+    private readonly IMemoryCache _cache = cache;
 
     public async Task<PagedResult<VehicleSummaryDto>> ListVehiclesAsync(int page = 1, int pageSize = 20)
     {
@@ -71,13 +62,13 @@ public class VehicleService : IVehicleService
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogError("Error fetching all vehicles list: {StatusCode}", response.StatusCode);
-                return new List<VehicleSummaryDto>();
+                return [];
             }
 
             var firstPage = await response.Content.ReadFromJsonAsync<PagedResult<VehicleSummaryDto>>(JsonOptions);
             if (firstPage is null)
             {
-                return new List<VehicleSummaryDto>();
+                return [];
             }
 
             var vehicles = new List<VehicleSummaryDto>(firstPage.Items);
@@ -110,7 +101,7 @@ public class VehicleService : IVehicleService
             }
 
             return vehicles;
-        }, new List<VehicleSummaryDto>(), "listing all vehicles");
+        }, [], "listing all vehicles");
     }
 
     public async Task<VehicleDetailsDto?> GetVehicleByIdAsync(int id)
@@ -361,14 +352,14 @@ public class VehicleService : IVehicleService
     {
         try
         {
-            (int? minMileage, int? maxMileage) = model.MileageBand switch
+            (var minMileage, var maxMileage) = model.MileageBand switch
             {
-                "0-10000"     => (0,     (int?)10000),
+                "0-10000" => (0, (int?)10000),
                 "10000-20000" => (10000, (int?)20000),
                 "20000-30000" => (20000, (int?)30000),
                 "30000-40000" => (30000, (int?)40000),
-                "40000-"      => (40000, (int?)null),
-                _             => ((int?)null, (int?)null)
+                "40000-" => (40000, (int?)null),
+                _ => ((int?)null, (int?)null)
             };
 
             var response = await _longRunningHttpClient.PostAsJsonAsync($"{_baseUrl}/api/v1/vehicles/import/blocket", new
@@ -470,14 +461,14 @@ public class VehicleService : IVehicleService
     {
         try
         {
-            (int? minMileage, int? maxMileage) = model.MileageBand switch
+            (var minMileage, var maxMileage) = model.MileageBand switch
             {
-                "0-10000"     => (0,     (int?)10000),
+                "0-10000" => (0, (int?)10000),
                 "10000-20000" => (10000, (int?)20000),
                 "20000-30000" => (20000, (int?)30000),
                 "30000-40000" => (30000, (int?)40000),
-                "40000-"      => (40000, (int?)null),
-                _             => ((int?)null, (int?)null)
+                "40000-" => (40000, (int?)null),
+                _ => ((int?)null, (int?)null)
             };
 
             var response = await _longRunningHttpClient.PostAsJsonAsync($"{_baseUrl}/api/v1/vehicles/preview/blocket", new
@@ -622,24 +613,24 @@ public class VehicleService : IVehicleService
 
             await Task.WhenAll(manufacturersTask, fuelTypesTask, transmissionsTask);
 
-            var manufacturers = await manufacturersTask ?? new List<NamedObjectDto>();
-            var fuelTypes = await fuelTypesTask ?? new List<NamedObjectDto>();
-            var transmissionTypes = await transmissionsTask ?? new List<NamedObjectDto>();
+            var manufacturers = await manufacturersTask ?? [];
+            var fuelTypes = await fuelTypesTask ?? [];
+            var transmissionTypes = await transmissionsTask ?? [];
 
             viewModel.Vehicle.ManufacturerId = manufacturers.FirstOrDefault(m => m.Name.Equals(vehicleToEdit.Manufacturer, StringComparison.OrdinalIgnoreCase))?.Id ?? 0;
             viewModel.Vehicle.FuelTypeId = fuelTypes.FirstOrDefault(f => f.Name.Equals(vehicleToEdit.FuelType, StringComparison.OrdinalIgnoreCase))?.Id ?? 0;
             viewModel.Vehicle.TransmissionTypeId = transmissionTypes.FirstOrDefault(t => t.Name.Equals(vehicleToEdit.TransmissionType, StringComparison.OrdinalIgnoreCase))?.Id ?? 0;
 
-            viewModel.Manufacturers = manufacturers.Select(m => new SelectListItem { Value = m.Id.ToString(), Text = m.Name }).ToList();
-            viewModel.FuelTypes = fuelTypes.Select(f => new SelectListItem { Value = f.Id.ToString(), Text = f.Name }).ToList();
-            viewModel.TransmissionTypes = transmissionTypes.Select(t => new SelectListItem { Value = t.Id.ToString(), Text = t.Name }).ToList();
+            viewModel.Manufacturers = [.. manufacturers.Select(m => new SelectListItem { Value = m.Id.ToString(), Text = m.Name })];
+            viewModel.FuelTypes = [.. fuelTypes.Select(f => new SelectListItem { Value = f.Id.ToString(), Text = f.Name })];
+            viewModel.TransmissionTypes = [.. transmissionTypes.Select(t => new SelectListItem { Value = t.Id.ToString(), Text = t.Name })];
         }
         catch (HttpRequestException ex)
         {
             _logger.LogError(ex, "API is unavailable while loading vehicle dropdown data");
-            viewModel.Manufacturers = new List<SelectListItem>();
-            viewModel.FuelTypes = new List<SelectListItem>();
-            viewModel.TransmissionTypes = new List<SelectListItem>();
+            viewModel.Manufacturers = [];
+            viewModel.FuelTypes = [];
+            viewModel.TransmissionTypes = [];
         }
     }
 
@@ -653,20 +644,20 @@ public class VehicleService : IVehicleService
 
             await Task.WhenAll(manufacturersTask, fuelTypesTask, transmissionsTask);
 
-            var manufacturers = await manufacturersTask ?? new List<NamedObjectDto>();
-            var fuelTypes = await fuelTypesTask ?? new List<NamedObjectDto>();
-            var transmissionTypes = await transmissionsTask ?? new List<NamedObjectDto>();
+            var manufacturers = await manufacturersTask ?? [];
+            var fuelTypes = await fuelTypesTask ?? [];
+            var transmissionTypes = await transmissionsTask ?? [];
 
-            viewModel.Manufacturers = manufacturers.Select(m => new SelectListItem { Value = m.Id.ToString(), Text = m.Name }).ToList();
-            viewModel.FuelTypes = fuelTypes.Select(f => new SelectListItem { Value = f.Id.ToString(), Text = f.Name }).ToList();
-            viewModel.TransmissionTypes = transmissionTypes.Select(t => new SelectListItem { Value = t.Id.ToString(), Text = t.Name }).ToList();
+            viewModel.Manufacturers = [.. manufacturers.Select(m => new SelectListItem { Value = m.Id.ToString(), Text = m.Name })];
+            viewModel.FuelTypes = [.. fuelTypes.Select(f => new SelectListItem { Value = f.Id.ToString(), Text = f.Name })];
+            viewModel.TransmissionTypes = [.. transmissionTypes.Select(t => new SelectListItem { Value = t.Id.ToString(), Text = t.Name })];
         }
         catch (HttpRequestException ex)
         {
             _logger.LogError(ex, "API is unavailable while loading vehicle dropdown data");
-            viewModel.Manufacturers = new List<SelectListItem>();
-            viewModel.FuelTypes = new List<SelectListItem>();
-            viewModel.TransmissionTypes = new List<SelectListItem>();
+            viewModel.Manufacturers = [];
+            viewModel.FuelTypes = [];
+            viewModel.TransmissionTypes = [];
         }
     }
 
@@ -687,10 +678,10 @@ public class VehicleService : IVehicleService
         var result = await _cache.GetOrCreateAsync(cacheKey, async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = DropdownCacheDuration;
-            return await _httpClient.GetFromJsonAsync<List<NamedObjectDto>>(requestUri, JsonOptions) ?? new List<NamedObjectDto>();
+            return await _httpClient.GetFromJsonAsync<List<NamedObjectDto>>(requestUri, JsonOptions) ?? [];
         });
 
-        return result ?? new List<NamedObjectDto>();
+        return result ?? [];
     }
 
     private async Task<T> ExecuteWithApiFallback<T>(Func<Task<T>> action, T fallbackValue, string operation)

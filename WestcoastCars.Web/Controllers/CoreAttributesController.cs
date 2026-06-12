@@ -5,7 +5,11 @@ using WestcoastCars.Web.ViewModels.CoreAttributes;
 namespace WestcoastCars.Web.Controllers;
 
 [Route("CoreAttributes")]
-public class CoreAttributesController : Controller
+public class CoreAttributesController(
+    IManufacturerService manufacturerService,
+    IFuelTypeService fuelTypeService,
+    ITransmissionTypeService transmissionTypeService,
+    ILogger<CoreAttributesController> logger) : Controller
 {
     private record AttributeConfig(string Title, string Icon, string AddLabel, string ExistingLabel, string Placeholder);
 
@@ -16,22 +20,10 @@ public class CoreAttributesController : Controller
         ("transmissions", new("Växellådor",   "fa-solid fa-gears",     "Lägg till växellåda",    "Befintliga växellådor",   "t.ex. Automat")),
     ];
 
-    private readonly IManufacturerService _manufacturerService;
-    private readonly IFuelTypeService _fuelTypeService;
-    private readonly ITransmissionTypeService _transmissionTypeService;
-    private readonly ILogger<CoreAttributesController> _logger;
-
-    public CoreAttributesController(
-        IManufacturerService manufacturerService,
-        IFuelTypeService fuelTypeService,
-        ITransmissionTypeService transmissionTypeService,
-        ILogger<CoreAttributesController> logger)
-    {
-        _manufacturerService = manufacturerService;
-        _fuelTypeService = fuelTypeService;
-        _transmissionTypeService = transmissionTypeService;
-        _logger = logger;
-    }
+    private readonly IManufacturerService _manufacturerService = manufacturerService;
+    private readonly IFuelTypeService _fuelTypeService = fuelTypeService;
+    private readonly ITransmissionTypeService _transmissionTypeService = transmissionTypeService;
+    private readonly ILogger<CoreAttributesController> _logger = logger;
 
     [HttpGet]
     public async Task<IActionResult> Index()
@@ -104,7 +96,7 @@ public class CoreAttributesController : Controller
         type.ToLowerInvariant() switch
         {
             "manufacturers" => await _manufacturerService.ListAllAsync(),
-            "fueltypes"     => await _fuelTypeService.ListAllAsync(),
+            "fueltypes" => await _fuelTypeService.ListAllAsync(),
             "transmissions" => await _transmissionTypeService.ListAllAsync(),
             _ => throw new ArgumentException($"Unknown attribute type: {type}")
         };
@@ -113,7 +105,7 @@ public class CoreAttributesController : Controller
         type.ToLowerInvariant() switch
         {
             "manufacturers" => await _manufacturerService.CreateAsync(model),
-            "fueltypes"     => await _fuelTypeService.CreateAsync(model),
+            "fueltypes" => await _fuelTypeService.CreateAsync(model),
             "transmissions" => await _transmissionTypeService.CreateAsync(model),
             _ => throw new ArgumentException($"Unknown attribute type: {type}")
         };
@@ -122,7 +114,7 @@ public class CoreAttributesController : Controller
         type.ToLowerInvariant() switch
         {
             "manufacturers" => await _manufacturerService.DeleteAsync(id),
-            "fueltypes"     => await _fuelTypeService.DeleteAsync(id),
+            "fueltypes" => await _fuelTypeService.DeleteAsync(id),
             "transmissions" => await _transmissionTypeService.DeleteAsync(id),
             _ => throw new ArgumentException($"Unknown attribute type: {type}")
         };

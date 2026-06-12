@@ -8,5 +8,5 @@ public class AttributeSectionViewModel
     public string AddLabel { get; set; } = string.Empty;
     public string ExistingLabel { get; set; } = string.Empty;
     public string Placeholder { get; set; } = string.Empty;
-    public IList<AttributeItemViewModel> Items { get; set; } = new List<AttributeItemViewModel>();
+    public IList<AttributeItemViewModel> Items { get; set; } = [];
 }
