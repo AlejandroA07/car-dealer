@@ -15,7 +15,7 @@ public class CaseInsensitiveVehicleTextSearchMatcher : IVehicleTextSearchMatcher
     public Task<Vehicle?> FindByRegistrationNumberAsync(IQueryable<Vehicle> query, string registrationNumber)
     {
         var normalizedRegistrationNumber = registrationNumber.ToLowerInvariant();
-        return query.SingleOrDefaultAsync(vehicle => vehicle.RegistrationNumber.Equals(normalizedRegistrationNumber, StringComparison.CurrentCultureIgnoreCase));
+        return query.SingleOrDefaultAsync(vehicle => vehicle.RegistrationNumber!.Equals(normalizedRegistrationNumber, StringComparison.CurrentCultureIgnoreCase));
     }
 
     public IQueryable<Vehicle> ApplyManufacturerFilter(IQueryable<Vehicle> query, string make)

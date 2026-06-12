@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using WestcoastCars.Application.Exceptions;
 using WestcoastCars.Application.Features.ServiceBookings.Commands.Create;
@@ -45,7 +46,7 @@ public class CreateServiceBookingCommandHandlerTests
             .Callback<ServiceBooking>(booking => capturedBooking = booking)
             .Returns(Task.CompletedTask);
 
-        var handler = new CreateServiceBookingCommandHandler(_unitOfWorkMock.Object, _emailServiceMock.Object);
+        var handler = new CreateServiceBookingCommandHandler(_unitOfWorkMock.Object, _emailServiceMock.Object, NullLogger<CreateServiceBookingCommandHandler>.Instance);
 
         await handler.Handle(CreateCommand("ABC123"), CancellationToken.None);
 
@@ -69,7 +70,7 @@ public class CreateServiceBookingCommandHandlerTests
             .Callback<ServiceBooking>(booking => capturedBooking = booking)
             .Returns(Task.CompletedTask);
 
-        var handler = new CreateServiceBookingCommandHandler(_unitOfWorkMock.Object, _emailServiceMock.Object);
+        var handler = new CreateServiceBookingCommandHandler(_unitOfWorkMock.Object, _emailServiceMock.Object, NullLogger<CreateServiceBookingCommandHandler>.Instance);
 
         await handler.Handle(CreateCommand("UNKNOWN1"), CancellationToken.None);
 
@@ -88,7 +89,7 @@ public class CreateServiceBookingCommandHandlerTests
             .Setup(r => r.HasActiveBookingForRegistrationAsync("ABC123"))
             .ReturnsAsync(true);
 
-        var handler = new CreateServiceBookingCommandHandler(_unitOfWorkMock.Object, _emailServiceMock.Object);
+        var handler = new CreateServiceBookingCommandHandler(_unitOfWorkMock.Object, _emailServiceMock.Object, NullLogger<CreateServiceBookingCommandHandler>.Instance);
 
         await Assert.ThrowsAsync<ConflictException>(() => handler.Handle(CreateCommand("ABC123"), CancellationToken.None));
 
@@ -105,7 +106,7 @@ public class CreateServiceBookingCommandHandlerTests
             .Setup(r => r.IsSlotTakenAsync(It.IsAny<DateOnly>(), It.IsAny<TimeSlot>()))
             .ReturnsAsync(true);
 
-        var handler = new CreateServiceBookingCommandHandler(_unitOfWorkMock.Object, _emailServiceMock.Object);
+        var handler = new CreateServiceBookingCommandHandler(_unitOfWorkMock.Object, _emailServiceMock.Object, NullLogger<CreateServiceBookingCommandHandler>.Instance);
 
         await Assert.ThrowsAsync<ConflictException>(() => handler.Handle(CreateCommand("ABC123"), CancellationToken.None));
 
@@ -128,7 +129,7 @@ public class CreateServiceBookingCommandHandlerTests
                 It.IsAny<string>()))
             .ThrowsAsync(new PersistenceException("Email failed"));
 
-        var handler = new CreateServiceBookingCommandHandler(_unitOfWorkMock.Object, _emailServiceMock.Object);
+        var handler = new CreateServiceBookingCommandHandler(_unitOfWorkMock.Object, _emailServiceMock.Object, NullLogger<CreateServiceBookingCommandHandler>.Instance);
 
         await Assert.ThrowsAsync<PersistenceException>(() => handler.Handle(CreateCommand("ABC123"), CancellationToken.None));
     }

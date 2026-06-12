@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using WestcoastCars.Application.Exceptions;
 using WestcoastCars.Application.Features.ServiceBookings.Commands.Cancel;
@@ -30,7 +31,7 @@ public class CancelServiceBookingCommandHandlerTests
         var booking = CreatePendingBooking(1);
         _repositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(booking);
 
-        var handler = new CancelServiceBookingCommandHandler(_unitOfWorkMock.Object, _emailServiceMock.Object);
+        var handler = new CancelServiceBookingCommandHandler(_unitOfWorkMock.Object, _emailServiceMock.Object, NullLogger<CancelServiceBookingCommandHandler>.Instance);
         await handler.Handle(new CancelServiceBookingCommand { Id = 1, CancellationReason = "Tekniker sjuk" }, CancellationToken.None);
 
         Assert.Equal(BookingStatus.Cancelled, booking.Status);
@@ -47,7 +48,7 @@ public class CancelServiceBookingCommandHandlerTests
         booking.Confirm();
         _repositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(booking);
 
-        var handler = new CancelServiceBookingCommandHandler(_unitOfWorkMock.Object, _emailServiceMock.Object);
+        var handler = new CancelServiceBookingCommandHandler(_unitOfWorkMock.Object, _emailServiceMock.Object, NullLogger<CancelServiceBookingCommandHandler>.Instance);
         await handler.Handle(new CancelServiceBookingCommand { Id = 1, CancellationReason = "Tekniker sjuk" }, CancellationToken.None);
 
         Assert.Equal(BookingStatus.Cancelled, booking.Status);
@@ -61,7 +62,7 @@ public class CancelServiceBookingCommandHandlerTests
     {
         _repositoryMock.Setup(r => r.GetByIdAsync(99)).ReturnsAsync((ServiceBooking?)null);
 
-        var handler = new CancelServiceBookingCommandHandler(_unitOfWorkMock.Object, _emailServiceMock.Object);
+        var handler = new CancelServiceBookingCommandHandler(_unitOfWorkMock.Object, _emailServiceMock.Object, NullLogger<CancelServiceBookingCommandHandler>.Instance);
 
         await Assert.ThrowsAsync<NotFoundException>(() =>
             handler.Handle(new CancelServiceBookingCommand { Id = 99 }, CancellationToken.None));
@@ -75,7 +76,7 @@ public class CancelServiceBookingCommandHandlerTests
         booking.Complete();
         _repositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(booking);
 
-        var handler = new CancelServiceBookingCommandHandler(_unitOfWorkMock.Object, _emailServiceMock.Object);
+        var handler = new CancelServiceBookingCommandHandler(_unitOfWorkMock.Object, _emailServiceMock.Object, NullLogger<CancelServiceBookingCommandHandler>.Instance);
 
         await Assert.ThrowsAsync<ConflictException>(() =>
             handler.Handle(new CancelServiceBookingCommand { Id = 1 }, CancellationToken.None));
@@ -95,7 +96,7 @@ public class CancelServiceBookingCommandHandlerTests
                 It.IsAny<string>()))
             .ThrowsAsync(new PersistenceException("Email failed"));
 
-        var handler = new CancelServiceBookingCommandHandler(_unitOfWorkMock.Object, _emailServiceMock.Object);
+        var handler = new CancelServiceBookingCommandHandler(_unitOfWorkMock.Object, _emailServiceMock.Object, NullLogger<CancelServiceBookingCommandHandler>.Instance);
 
         await Assert.ThrowsAsync<PersistenceException>(() =>
             handler.Handle(new CancelServiceBookingCommand { Id = 1, CancellationReason = "Tekniskt fel" }, CancellationToken.None));
