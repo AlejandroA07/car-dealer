@@ -49,4 +49,16 @@ public class VehicleStateTests
         vehicle.MarkAsAvailable();
         Assert.False(vehicle.IsSold);
     }
+
+    [Fact]
+    public void MarkAsSourceRemoved_ShouldSetStatusAndTimestamp()
+    {
+        var vehicle = CreateVehicle();
+        var removedAt = new DateTime(2026, 1, 15, 12, 0, 0, DateTimeKind.Utc);
+
+        vehicle.MarkAsSourceRemoved(removedAt);
+
+        Assert.Equal("SourceRemoved", vehicle.SourceStatus);
+        Assert.Equal(removedAt, vehicle.SourceRemovedAt);
+    }
 }
