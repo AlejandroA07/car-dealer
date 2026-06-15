@@ -24,10 +24,12 @@ public class AuthenticationController(IAuthService authService) : ControllerBase
     /// <param name="request">Registration details.</param>
     /// <returns>Authentication token and user info.</returns>
     /// <response code="200">Registration successful.</response>
-    /// <response code="400">Invalid registration data or email already exists.</response>
+    /// <response code="400">Invalid registration data.</response>
+    /// <response code="409">Email already registered.</response>
     [HttpPost("register")]
     [ProducesResponseType(typeof(AuthenticationResponse), 200)]
     [ProducesResponseType(400)]
+    [ProducesResponseType(409)]
     public async Task<IActionResult> Register(RegisterRequest request)
     {
         try
@@ -51,9 +53,9 @@ public class AuthenticationController(IAuthService authService) : ControllerBase
         }
         catch (ConflictException)
         {
-            return BadRequest(new ProblemDetails
+            return Conflict(new ProblemDetails
             {
-                Status = StatusCodes.Status400BadRequest,
+                Status = StatusCodes.Status409Conflict,
                 Title = "Registration failed.",
                 Detail = "Registration failed. Check the provided details and try again.",
                 Instance = HttpContext.Request.Path

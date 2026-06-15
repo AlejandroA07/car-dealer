@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <Nullable>disable</Nullable>
+    <Nullable>enable</Nullable>
     <RootNamespace>WestcoastCars.Api</RootNamespace>
     <UserSecretsId>a4795057-ddcc-41dd-a7e1-254f32e3b636</UserSecretsId>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>

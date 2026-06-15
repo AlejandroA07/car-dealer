@@ -281,7 +281,7 @@ public class VehiclesIntegrationTests(CustomWebApplicationFactory<Program> facto
         updatedVehicle!.Model.Should().Be("XC90");
         updatedVehicle.Description.Should().Be("Updated integration flow vehicle");
 
-        var markSoldResponse = await client.PatchAsync($"/api/v1/vehicles/{createdVehicle.Id}", new StringContent(string.Empty));
+        var markSoldResponse = await client.PatchAsync($"/api/v1/vehicles/{createdVehicle.Id}/sold", new StringContent(string.Empty));
         markSoldResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         var unsoldListResponse = await _client.GetAsync("/api/v1/vehicles/list?page=1&pageSize=100");
@@ -304,10 +304,10 @@ public class VehiclesIntegrationTests(CustomWebApplicationFactory<Program> facto
         var registrationNumber = $"SOLD{Guid.NewGuid():N}"[..8].ToUpperInvariant();
         var createdVehicle = await CreateVehicleAsync(client, registrationNumber, "XC60");
 
-        var firstResponse = await client.PatchAsync($"/api/v1/vehicles/{createdVehicle.Id}", new StringContent(string.Empty));
+        var firstResponse = await client.PatchAsync($"/api/v1/vehicles/{createdVehicle.Id}/sold", new StringContent(string.Empty));
         firstResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
-        var secondResponse = await client.PatchAsync($"/api/v1/vehicles/{createdVehicle.Id}", new StringContent(string.Empty));
+        var secondResponse = await client.PatchAsync($"/api/v1/vehicles/{createdVehicle.Id}/sold", new StringContent(string.Empty));
         secondResponse.StatusCode.Should().Be(HttpStatusCode.Conflict);
     }
 

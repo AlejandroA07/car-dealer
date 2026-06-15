@@ -51,11 +51,6 @@ public static class DependencyInjection
         }
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
-        services.AddScoped<IVehicleRepository, VehicleRepository>();
-        services.AddScoped<IManufacturerRepository, ManufacturerRepository>();
-        services.AddScoped<IFuelTypeRepository, FuelTypeRepository>();
-        services.AddScoped<ITransmissionTypeRepository, TransmissionTypeRepository>();
-        services.AddScoped<IServiceBookingRepository, ServiceBookingRepository>();
 
         services.AddIdentity<IdentityUser, IdentityRole>(options =>
         {

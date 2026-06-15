@@ -23,7 +23,7 @@ public class TransmissionsController(IMediator mediator, IMemoryCache cache) : C
 {
     private readonly IMediator _mediator = mediator;
     private readonly IMemoryCache _cache = cache;
-    private const string CacheKey = "lookup:transmissions";
+    private const string CacheKey = LookupCacheKeys.Transmissions;
 
     /// <summary>
     /// Lists all transmission types.
@@ -34,7 +34,7 @@ public class TransmissionsController(IMediator mediator, IMemoryCache cache) : C
     [ProducesResponseType(typeof(IEnumerable<NamedObjectDto>), 200)]
     public async Task<IActionResult> ListAll()
     {
-        if (!_cache.TryGetValue(CacheKey, out IEnumerable<NamedObjectDto> cached))
+        if (!_cache.TryGetValue(CacheKey, out IEnumerable<NamedObjectDto>? cached))
         {
             cached = await _mediator.Send(new ListAllTransmissionsQuery());
             _cache.Set(CacheKey, cached, TimeSpan.FromMinutes(10));

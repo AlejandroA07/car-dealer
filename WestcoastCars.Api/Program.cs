@@ -130,48 +130,49 @@ builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
 });
 
-builder.Services.AddSwaggerExamplesFromAssemblyOf<VehicleDtoExample>();
-builder.Services.AddSwaggerExamplesFromAssemblyOf<LoginRequestExample>();
-
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
+if (builder.Environment.IsDevelopment())
 {
-    c.SwaggerDoc("v1", new OpenApiInfo
+    builder.Services.AddSwaggerExamplesFromAssemblyOf<VehicleDtoExample>();
+    builder.Services.AddSwaggerExamplesFromAssemblyOf<LoginRequestExample>();
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen(c =>
     {
-        Title = "Westcoast Cars API",
-        Version = "v1",
-        Description = "API for managing vehicle inventory, manufacturers, and service bookings."
-    });
-
-    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-    c.IncludeXmlComments(xmlPath);
-
-    var contractsXmlPath = Path.Combine(AppContext.BaseDirectory, "WestcoastCars.Contracts.xml");
-    if (File.Exists(contractsXmlPath))
-        c.IncludeXmlComments(contractsXmlPath);
-
-    c.ExampleFilters();
-
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        Scheme = "bearer",
-        BearerFormat = "JWT",
-        In = ParameterLocation.Header,
-        Description = "Enter your JWT token in the format: {token}. Example: eyJhbGciOiJIUzI1NiIs..."
-    });
-
-    c.AddSecurityRequirement(document => new OpenApiSecurityRequirement
-    {
+        c.SwaggerDoc("v1", new OpenApiInfo
         {
-            new OpenApiSecuritySchemeReference("Bearer", document),
-            new List<string>()
-        }
+            Title = "Westcoast Cars API",
+            Version = "v1",
+            Description = "API for managing vehicle inventory, manufacturers, and service bookings."
+        });
+
+        var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+        var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+        c.IncludeXmlComments(xmlPath);
+
+        var contractsXmlPath = Path.Combine(AppContext.BaseDirectory, "WestcoastCars.Contracts.xml");
+        if (File.Exists(contractsXmlPath))
+            c.IncludeXmlComments(contractsXmlPath);
+
+        c.ExampleFilters();
+
+        c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+        {
+            Name = "Authorization",
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+            In = ParameterLocation.Header,
+            Description = "Enter your JWT token in the format: {token}. Example: eyJhbGciOiJIUzI1NiIs..."
+        });
+
+        c.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+        {
+            {
+                new OpenApiSecuritySchemeReference("Bearer", document),
+                new List<string>()
+            }
+        });
     });
-});
+}
 
 var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? throw new InvalidOperationException("JwtOptions section is missing or invalid");
 
@@ -243,7 +244,7 @@ using (var scope = app.Services.CreateScope())
         logger.LogCritical(ex,
             "Main API cannot start because the PostgreSQL database is unavailable or migration/seeding failed. Database: {Database}. Connection: {ConnectionString}. Verify PostgreSQL is running and check ConnectionStrings:DefaultConnection.",
             "westcoast_cars",
-            SanitizeConnectionString(builder.Configuration.GetConnectionString("DefaultConnection")));
+            SanitizeConnectionString(builder.Configuration.GetConnectionString("DefaultConnection")!));
         throw;
     }
 }
@@ -277,10 +278,9 @@ app.UseExceptionHandler("/error");
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapHealthChecks("/health");
 app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions { Predicate = _ => false });
-app.MapHealthChecks("/health/ready");
-app.MapPrometheusScrapingEndpoint();
+app.MapHealthChecks("/health/ready").RequireHost("localhost", "127.0.0.1");
+app.MapPrometheusScrapingEndpoint().RequireHost("localhost", "127.0.0.1");
 app.MapControllers();
 
 app.Run();

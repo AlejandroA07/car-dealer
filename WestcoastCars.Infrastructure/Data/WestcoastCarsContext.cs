@@ -35,7 +35,7 @@ public class WestcoastCarsContext(DbContextOptions<WestcoastCarsContext> options
 
         modelBuilder.Entity<Manufacturer>()
             .Property(m => m.Name)
-            .HasMaxLength(50);
+            .HasColumnType("citext");
 
         modelBuilder.Entity<Manufacturer>()
             .HasIndex(manufacturer => manufacturer.Name)
@@ -195,8 +195,6 @@ public class WestcoastCarsContext(DbContextOptions<WestcoastCarsContext> options
             .HasForeignKey(serviceBooking => serviceBooking.VehicleId)
             .OnDelete(DeleteBehavior.SetNull);
 
-        // Manufacturer name uniqueness is migration-managed via a PostgreSQL lower("Name") index
-        // because the same column also needs a trigram GIN index for fast ILIKE substring search.
     }
 
     public override int SaveChanges()
