@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using Moq;
 using WestcoastCars.Application.Features.Vehicles.Commands.DeleteAll;
 using WestcoastCars.Application.Interfaces;
@@ -45,7 +46,7 @@ public class DeleteAllVehiclesCommandHandlerTests
         _unitOfWorkMock.Verify(u => u.CompleteAsync(), Times.Never);
     }
 
-    private static IReadOnlyList<Vehicle> BuildVehicles(int count) =>
+    private static ReadOnlyCollection<Vehicle> BuildVehicles(int count) =>
         Enumerable.Range(1, count).Select(i => new Vehicle
         {
             RegistrationNumber = $"REG{i}",
