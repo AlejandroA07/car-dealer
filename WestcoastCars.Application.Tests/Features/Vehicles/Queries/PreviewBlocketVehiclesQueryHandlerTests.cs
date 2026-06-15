@@ -42,7 +42,10 @@ public class PreviewBlocketVehiclesQueryHandlerTests
         var importedVehicle = new Vehicle
         {
             ExternalListingId = "EXT-EXISTING",
-            Model = "XC60", ModelYear = 2022, ImageUrl = "img.png", Description = "x",
+            Model = "XC60",
+            ModelYear = 2022,
+            ImageUrl = "img.png",
+            Description = "x",
             Manufacturer = new Manufacturer { Name = "Volvo" },
             FuelType = new FuelType { Name = "Petrol" },
             TransmissionType = new TransmissionType { Name = "Auto" }

@@ -69,9 +69,15 @@ public class ImportSelectedBlocketVehiclesCommandHandlerTests
             .Setup(m => m.Map(It.IsAny<BlocketCarSearchItem>(), It.IsAny<BlocketCarAdDetails>(), It.IsAny<DateTime>()))
             .Returns(new BlocketVehicleImportData
             {
-                ExternalListingId = "EXT-1", RegistrationNumber = "REG1",
-                Manufacturer = "Volvo", FuelType = "Petrol", TransmissionType = "Automatic",
-                Model = "XC60", ModelYear = 2022, ImageUrl = "img.png", Description = "test"
+                ExternalListingId = "EXT-1",
+                RegistrationNumber = "REG1",
+                Manufacturer = "Volvo",
+                FuelType = "Petrol",
+                TransmissionType = "Automatic",
+                Model = "XC60",
+                ModelYear = 2022,
+                ImageUrl = "img.png",
+                Description = "test"
             });
 
         var result = await _handler.Handle(
@@ -89,9 +95,14 @@ public class ImportSelectedBlocketVehiclesCommandHandlerTests
     {
         var existing = new Vehicle
         {
-            ExternalListingId = "EXT-2", RegistrationNumber = "REG2",
-            Model = "XC60", ModelYear = 2022, ImageUrl = "img.png", Description = "old",
-            Price = 100_000, Mileage = 50_000,
+            ExternalListingId = "EXT-2",
+            RegistrationNumber = "REG2",
+            Model = "XC60",
+            ModelYear = 2022,
+            ImageUrl = "img.png",
+            Description = "old",
+            Price = 100_000,
+            Mileage = 50_000,
             Manufacturer = new Manufacturer { Name = "Volvo" },
             FuelType = new FuelType { Name = "Petrol" },
             TransmissionType = new TransmissionType { Name = "Automatic" }
@@ -105,10 +116,17 @@ public class ImportSelectedBlocketVehiclesCommandHandlerTests
             .Setup(m => m.Map(It.IsAny<BlocketCarSearchItem>(), It.IsAny<BlocketCarAdDetails>(), It.IsAny<DateTime>()))
             .Returns(new BlocketVehicleImportData
             {
-                ExternalListingId = "EXT-2", RegistrationNumber = "REG2",
-                Manufacturer = "Volvo", FuelType = "Petrol", TransmissionType = "Automatic",
-                Model = "XC60", ModelYear = 2022, ImageUrl = "img.png", Description = "updated",
-                Price = 95_000, Mileage = 55_000
+                ExternalListingId = "EXT-2",
+                RegistrationNumber = "REG2",
+                Manufacturer = "Volvo",
+                FuelType = "Petrol",
+                TransmissionType = "Automatic",
+                Model = "XC60",
+                ModelYear = 2022,
+                ImageUrl = "img.png",
+                Description = "updated",
+                Price = 95_000,
+                Mileage = 55_000
             });
 
         var result = await _handler.Handle(
@@ -132,9 +150,14 @@ public class ImportSelectedBlocketVehiclesCommandHandlerTests
             .Setup(m => m.Map(It.IsAny<BlocketCarSearchItem>(), It.IsAny<BlocketCarAdDetails>(), It.IsAny<DateTime>()))
             .Returns(new BlocketVehicleImportData
             {
-                ExternalListingId = "EXT-3", ModelYear = null,
-                Manufacturer = "Volvo", FuelType = "Petrol", TransmissionType = "Automatic",
-                Model = "XC60", ImageUrl = "img.png", Description = "no year"
+                ExternalListingId = "EXT-3",
+                ModelYear = null,
+                Manufacturer = "Volvo",
+                FuelType = "Petrol",
+                TransmissionType = "Automatic",
+                Model = "XC60",
+                ImageUrl = "img.png",
+                Description = "no year"
             });
 
         var result = await _handler.Handle(

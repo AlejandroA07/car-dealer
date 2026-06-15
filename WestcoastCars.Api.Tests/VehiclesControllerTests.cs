@@ -328,7 +328,7 @@ public class VehiclesControllerTests
     {
         _mediatorMock
             .Setup(m => m.Send(It.IsAny<PreviewBlocketVehiclesQuery>(), default))
-            .ReturnsAsync(new List<BlocketPreviewDto>());
+            .ReturnsAsync([]);
 
         await _controller.PreviewBlocket(null);
 

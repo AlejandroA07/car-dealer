@@ -19,7 +19,7 @@ public class WebVehiclesControllerTests
     {
         _manufacturerServiceMock
             .Setup(s => s.ListAllAsync())
-            .ReturnsAsync(new List<AttributeItemViewModel>());
+            .ReturnsAsync([]);
     }
 
     [Fact]

@@ -28,7 +28,10 @@ public class GetVehicleByRegNoQueryHandlerTests
         var vehicle = new Vehicle
         {
             RegistrationNumber = "ABC123",
-            Model = "XC60", ModelYear = 2022, ImageUrl = "img.png", Description = "test",
+            Model = "XC60",
+            ModelYear = 2022,
+            ImageUrl = "img.png",
+            Description = "test",
             Manufacturer = new Manufacturer { Name = "Volvo" },
             FuelType = new FuelType { Name = "Petrol" },
             TransmissionType = new TransmissionType { Name = "Auto" }
