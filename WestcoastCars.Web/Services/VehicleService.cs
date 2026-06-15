@@ -138,7 +138,7 @@ public class VehicleService(IHttpClientFactory httpClientFactory, IConfiguration
     {
         return await ExecuteWithApiFallback(async () =>
         {
-            var response = await _httpClient.PatchAsync($"{_baseUrl}/api/v1/vehicles/{id}", null);
+            var response = await _httpClient.PatchAsync($"{_baseUrl}/api/v1/vehicles/{id}/sold", null);
             if (response.IsSuccessStatusCode)
             {
                 _logger.LogInformation("Vehicle {VehicleId} marked as sold successfully", id);

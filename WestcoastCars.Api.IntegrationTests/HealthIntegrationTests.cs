@@ -9,7 +9,7 @@ public class HealthIntegrationTests(CustomWebApplicationFactory<Program> factory
     [Fact]
     public async Task HealthEndpoint_ShouldReturnHealthy_WhenDatabaseIsAvailable()
     {
-        var response = await _client.GetAsync("/health");
+        var response = await _client.GetAsync("/health/ready");
 
         response.IsSuccessStatusCode.Should().BeTrue();
         var content = await response.Content.ReadAsStringAsync();

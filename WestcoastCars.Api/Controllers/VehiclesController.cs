@@ -195,16 +195,36 @@ public class VehiclesController(IMediator mediator, ILogger<VehiclesController> 
     /// <summary>
     /// Manually syncs the latest Blocket vehicle listings. Requires Admin or Salesperson role.
     /// </summary>
-    /// <param name="command">Sync options such as limit, org id, locations, and models.</param>
+    /// <param name="dto">Sync options such as limit, org id, locations, and models.</param>
     /// <returns>A summary of the sync result.</returns>
     [HttpPost("import/blocket")]
     [Authorize(Roles = "Admin,Salesperson")]
     [ProducesResponseType(typeof(RefreshInventoryFromBlocketResult), 200)]
     [ProducesResponseType(401)]
     [ProducesResponseType(403)]
-    public async Task<IActionResult> SyncBlocket([FromBody] RefreshInventoryFromBlocketCommand command)
+    public async Task<IActionResult> SyncBlocket([FromBody] BlocketSearchParamsDto dto)
     {
-        var request = command ?? new RefreshInventoryFromBlocketCommand();
+        var request = new RefreshInventoryFromBlocketCommand
+        {
+            Limit = dto?.Limit ?? 50,
+            Query = dto?.Query,
+            SortOrder = dto?.SortOrder,
+            OrgId = dto?.OrgId,
+            Locations = dto?.Locations,
+            Manufacturers = dto?.Manufacturers,
+            PriceFrom = dto?.PriceFrom,
+            PriceTo = dto?.PriceTo,
+            YearFrom = dto?.YearFrom,
+            YearTo = dto?.YearTo,
+            MinMileage = dto?.MinMileage,
+            MaxMileage = dto?.MaxMileage,
+            Colors = dto?.Colors,
+            TransmissionFilter = dto?.TransmissionFilter,
+            WheelDrive = dto?.WheelDrive,
+            HorsepowerFrom = dto?.HorsepowerFrom,
+            HorsepowerTo = dto?.HorsepowerTo,
+            FuelTypeFilter = dto?.FuelTypeFilter
+        };
         _logger.LogInformation("Starting manual Blocket sync with limit {Limit}", request.Limit);
         using var activity = _telemetry.StartBlocketSyncActivity(request.Limit);
         var startedAt = Stopwatch.StartNew();
@@ -217,9 +237,9 @@ public class VehiclesController(IMediator mediator, ILogger<VehiclesController> 
             activity?.SetTag("blocket_sync.total_added", result.TotalAdded);
             activity?.SetTag("blocket_sync.total_updated", result.TotalUpdated);
             activity?.SetTag("blocket_sync.total_flagged", result.TotalFlagged);
-            _cache.Remove("lookup:manufacturers");
-            _cache.Remove("lookup:fueltypes");
-            _cache.Remove("lookup:transmissions");
+            _cache.Remove(LookupCacheKeys.Manufacturers);
+            _cache.Remove(LookupCacheKeys.FuelTypes);
+            _cache.Remove(LookupCacheKeys.Transmissions);
             return Ok(result);
         }
         catch
@@ -238,9 +258,29 @@ public class VehiclesController(IMediator mediator, ILogger<VehiclesController> 
     [ProducesResponseType(typeof(List<BlocketPreviewDto>), 200)]
     [ProducesResponseType(401)]
     [ProducesResponseType(403)]
-    public async Task<IActionResult> PreviewBlocket([FromBody] PreviewBlocketVehiclesQuery query)
+    public async Task<IActionResult> PreviewBlocket([FromBody] BlocketSearchParamsDto dto)
     {
-        var request = query ?? new PreviewBlocketVehiclesQuery();
+        var request = new PreviewBlocketVehiclesQuery
+        {
+            Limit = dto?.Limit ?? 50,
+            Query = dto?.Query,
+            SortOrder = dto?.SortOrder,
+            OrgId = dto?.OrgId,
+            Locations = dto?.Locations,
+            Manufacturers = dto?.Manufacturers,
+            PriceFrom = dto?.PriceFrom,
+            PriceTo = dto?.PriceTo,
+            YearFrom = dto?.YearFrom,
+            YearTo = dto?.YearTo,
+            MinMileage = dto?.MinMileage,
+            MaxMileage = dto?.MaxMileage,
+            Colors = dto?.Colors,
+            TransmissionFilter = dto?.TransmissionFilter,
+            WheelDrive = dto?.WheelDrive,
+            HorsepowerFrom = dto?.HorsepowerFrom,
+            HorsepowerTo = dto?.HorsepowerTo,
+            FuelTypeFilter = dto?.FuelTypeFilter
+        };
         _logger.LogInformation("Previewing Blocket listings with limit {Limit}", request.Limit);
         var result = await _mediator.Send(request);
         return Ok(result);
@@ -254,10 +294,15 @@ public class VehiclesController(IMediator mediator, ILogger<VehiclesController> 
     [ProducesResponseType(typeof(ImportSelectedResult), 200)]
     [ProducesResponseType(401)]
     [ProducesResponseType(403)]
-    public async Task<IActionResult> ImportSelected([FromBody] ImportSelectedBlocketVehiclesCommand command)
+    public async Task<IActionResult> ImportSelected([FromBody] ImportSelectedRequestDto dto)
     {
-        _logger.LogInformation("Importing {Count} selected Blocket listings", command?.ExternalListingIds.Count ?? 0);
-        var result = await _mediator.Send(command ?? new ImportSelectedBlocketVehiclesCommand());
+        var command = new ImportSelectedBlocketVehiclesCommand
+        {
+            ExternalListingIds = dto?.ExternalListingIds ?? [],
+            ImageUrlsById = dto?.ImageUrlsById ?? []
+        };
+        _logger.LogInformation("Importing {Count} selected Blocket listings", command.ExternalListingIds.Count);
+        var result = await _mediator.Send(command);
         _cache.Remove("lookup:manufacturers");
         _cache.Remove("lookup:fueltypes");
         _cache.Remove("lookup:transmissions");
@@ -334,9 +379,6 @@ public class VehiclesController(IMediator mediator, ILogger<VehiclesController> 
     [ProducesResponseType(403)]
     public async Task<IActionResult> BulkDelete([FromQuery] string make, [FromQuery] string model, [FromQuery] bool? isSold, [FromQuery] int? minMileage, [FromQuery] int? maxMileage)
     {
-        if (make is null && model is null && isSold is null && minMileage is null && maxMileage is null)
-            return BadRequest("At least one filter must be specified.");
-
         var result = await _mediator.Send(new BulkDeleteVehiclesCommand
         {
             Make = make,
@@ -438,7 +480,7 @@ public class VehiclesController(IMediator mediator, ILogger<VehiclesController> 
     /// </summary>
     /// <param name="id">The ID of the vehicle.</param>
     /// <returns>No content.</returns>
-    [HttpPatch("{id}")]
+    [HttpPatch("{id}/sold")]
     [Authorize(Roles = "Admin,Salesperson")]
     [ProducesResponseType(204)]
     [ProducesResponseType(401)]

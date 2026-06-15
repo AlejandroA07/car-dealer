@@ -244,7 +244,7 @@ public class VehiclesControllerTests
             .Setup(mediator => mediator.Send(It.IsAny<RefreshInventoryFromBlocketCommand>(), default))
             .ReturnsAsync(syncResult);
 
-        var result = await _controller.SyncBlocket(new RefreshInventoryFromBlocketCommand { Limit = 50 });
+        var result = await _controller.SyncBlocket(new BlocketSearchParamsDto { Limit = 50 });
 
         var okResult = Assert.IsType<OkObjectResult>(result);
         var returnValue = Assert.IsType<RefreshInventoryFromBlocketResult>(okResult.Value);
@@ -317,7 +317,7 @@ public class VehiclesControllerTests
             .Setup(m => m.Send(It.IsAny<PreviewBlocketVehiclesQuery>(), default))
             .ReturnsAsync(preview);
 
-        var result = await _controller.PreviewBlocket(new PreviewBlocketVehiclesQuery { Limit = 10 });
+        var result = await _controller.PreviewBlocket(new BlocketSearchParamsDto { Limit = 10 });
 
         var ok = Assert.IsType<OkObjectResult>(result);
         Assert.Same(preview, ok.Value);
@@ -345,7 +345,7 @@ public class VehiclesControllerTests
             .ReturnsAsync(importResult);
 
         var result = await _controller.ImportSelected(
-            new ImportSelectedBlocketVehiclesCommand { ExternalListingIds = ["A", "B"] });
+            new ImportSelectedRequestDto { ExternalListingIds = ["A", "B"] });
 
         var ok = Assert.IsType<OkObjectResult>(result);
         Assert.Same(importResult, ok.Value);
@@ -419,15 +419,6 @@ public class VehiclesControllerTests
 
         var ok = Assert.IsType<OkObjectResult>(result);
         Assert.Same(deleteResult, ok.Value);
-    }
-
-    [Fact]
-    public async Task BulkDelete_ShouldReturnBadRequest_WhenNoFiltersProvided()
-    {
-        var result = await _controller.BulkDelete(null, null, null, null, null);
-
-        Assert.IsType<BadRequestObjectResult>(result);
-        _mediatorMock.Verify(m => m.Send(It.IsAny<BulkDeleteVehiclesCommand>(), default), Times.Never);
     }
 
     [Fact]

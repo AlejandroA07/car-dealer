@@ -23,7 +23,7 @@ public class FuelTypesController(IMediator mediator, IMemoryCache cache) : Contr
 {
     private readonly IMediator _mediator = mediator;
     private readonly IMemoryCache _cache = cache;
-    private const string CacheKey = "lookup:fueltypes";
+    private const string CacheKey = LookupCacheKeys.FuelTypes;
 
     /// <summary>
     /// Lists all fuel types.
@@ -34,7 +34,7 @@ public class FuelTypesController(IMediator mediator, IMemoryCache cache) : Contr
     [ProducesResponseType(typeof(IEnumerable<NamedObjectDto>), 200)]
     public async Task<IActionResult> ListAll()
     {
-        if (!_cache.TryGetValue(CacheKey, out IEnumerable<NamedObjectDto> cached))
+        if (!_cache.TryGetValue(CacheKey, out IEnumerable<NamedObjectDto>? cached))
         {
             cached = await _mediator.Send(new ListAllFuelTypesQuery());
             _cache.Set(CacheKey, cached, TimeSpan.FromMinutes(10));

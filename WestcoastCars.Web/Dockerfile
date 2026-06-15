@@ -48,6 +48,8 @@ COPY --from=build /app/publish .
 RUN mkdir /app/keys
 RUN chown app /app/keys
 
+USER app
+
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \

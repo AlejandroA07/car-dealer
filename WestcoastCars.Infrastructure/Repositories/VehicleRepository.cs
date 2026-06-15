@@ -137,24 +137,33 @@ public class VehicleRepository(WestcoastCarsContext context, IVehicleTextSearchM
 
     public async Task<IEnumerable<VehicleStatsByMileageDto>> GetStatsByMileageAsync()
     {
-        var result = new List<VehicleStatsByMileageDto>();
-        foreach (var (label, min, max) in MileageBands)
-        {
-            var query = _context.Vehicles.Where(v => v.SourceStatus != "SourceRemoved" && v.Mileage >= min);
-            if (max.HasValue) query = query.Where(v => v.Mileage < max.Value);
-            var count = await query.CountAsync();
-            result.Add(new VehicleStatsByMileageDto(label, min, max, count));
-        }
-        return result;
+        var mileages = await _context.Vehicles
+            .Where(v => v.SourceStatus != "SourceRemoved")
+            .Select(v => v.Mileage)
+            .ToListAsync();
+
+        return MileageBands.Select(band => new VehicleStatsByMileageDto(
+            band.Label,
+            band.Min,
+            band.Max,
+            mileages.Count(m => m >= band.Min && (!band.Max.HasValue || m < band.Max.Value))));
     }
 
     public async Task<VehicleStatsSummaryDto> GetStatsSummaryAsync()
     {
-        var baseQuery = _context.Vehicles.AsQueryable();
-        var totalSold = await baseQuery.CountAsync(v => v.IsSold && v.SourceStatus != "SourceRemoved");
-        var totalUnsold = await baseQuery.CountAsync(v => !v.IsSold && v.SourceStatus != "SourceRemoved");
-        var totalSourceRemoved = await baseQuery.CountAsync(v => v.SourceStatus == "SourceRemoved");
-        return new VehicleStatsSummaryDto(totalSold + totalUnsold, totalSold, totalUnsold, totalSourceRemoved);
+        var counts = await _context.Vehicles
+            .GroupBy(_ => 1)
+            .Select(g => new
+            {
+                Sold = g.Count(v => v.IsSold && v.SourceStatus != "SourceRemoved"),
+                Unsold = g.Count(v => !v.IsSold && v.SourceStatus != "SourceRemoved"),
+                SourceRemoved = g.Count(v => v.SourceStatus == "SourceRemoved")
+            })
+            .FirstOrDefaultAsync();
+
+        return counts is null
+            ? new VehicleStatsSummaryDto(0, 0, 0, 0)
+            : new VehicleStatsSummaryDto(counts.Sold + counts.Unsold, counts.Sold, counts.Unsold, counts.SourceRemoved);
     }
 
     public async Task<IReadOnlyList<Vehicle>> GetForBulkDeleteAsync(string? make, string? model, bool? isSold, int? minMileage, int? maxMileage)

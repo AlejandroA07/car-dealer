@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using WestcoastCars.Api.Controllers;
 using WestcoastCars.Application.Common.Interfaces.Authentication;
+using WestcoastCars.Application.Exceptions;
 using WestcoastCars.Application.Services;
 using WestcoastCars.Contracts.Admin;
 using WestcoastCars.Contracts.Auth;
@@ -91,6 +92,20 @@ public class AuthenticationControllerTests
         var response = Assert.IsType<AuthenticationResponse>(okResult.Value);
         Assert.Equal(authResult.User.Id, response.Id);
         Assert.Equal(authResult.Token, response.Token);
+    }
+
+    [Fact]
+    public async Task Register_ShouldReturn409_WhenEmailAlreadyExists()
+    {
+        var controller = CreateController();
+
+        _authServiceMock
+            .Setup(service => service.RegisterAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+            .ThrowsAsync(new ConflictException("Email already registered."));
+
+        var result = await controller.Register(new RegisterRequest("Jane", "Doe", "jane.doe@example.com", "Password123!"));
+
+        Assert.IsType<ConflictObjectResult>(result);
     }
 
     [Fact]
