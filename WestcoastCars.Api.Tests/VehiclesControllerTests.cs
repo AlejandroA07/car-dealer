@@ -12,8 +12,14 @@ using WestcoastCars.Application.Features.Vehicles.Commands.RefreshInventoryFromB
 using WestcoastCars.Application.Features.Vehicles.Commands.Update;
 using WestcoastCars.Application.Features.Vehicles.Queries.GetById;
 using WestcoastCars.Application.Features.Vehicles.Queries.GetByRegNo;
+using WestcoastCars.Application.Features.Vehicles.Commands.BulkDelete;
+using WestcoastCars.Application.Features.Vehicles.Commands.DeleteAll;
+using WestcoastCars.Application.Features.Vehicles.Commands.ImportSelectedBlocketVehicles;
+using WestcoastCars.Application.Features.Vehicles.Commands.PurgeSourceRemoved;
 using WestcoastCars.Application.Features.Vehicles.Queries.ListAll;
+using WestcoastCars.Application.Features.Vehicles.Queries.PreviewBlocketVehicles;
 using WestcoastCars.Application.Features.Vehicles.Queries.Search;
+using WestcoastCars.Application.Features.Vehicles.Queries.Stats;
 using WestcoastCars.Contracts.DTOs;
 using System.Collections.Generic;
 using System.Threading;
@@ -287,5 +293,154 @@ public class VehiclesControllerTests
         // Assert
         Assert.IsType<NoContentResult>(result);
         _mediatorMock.Verify(m => m.Send(It.Is<DeleteVehicleCommand>(command => command.Id == 1), default), Times.Once);
+    }
+
+    [Fact]
+    public async Task ListAllIncludingSold_ShouldReturnOkWithPagedResult()
+    {
+        var paged = new PagedResult<VehicleSummaryDto> { Items = [], TotalCount = 0, Page = 1, PageSize = 20 };
+        _mediatorMock
+            .Setup(m => m.Send(It.IsAny<ListAllVehiclesIncludingSoldQuery>(), default))
+            .ReturnsAsync(paged);
+
+        var result = await _controller.ListAllIncludingSold(new PagedQueryDto());
+
+        var ok = Assert.IsType<OkObjectResult>(result);
+        Assert.Same(paged, ok.Value);
+    }
+
+    [Fact]
+    public async Task PreviewBlocket_ShouldReturnOkWithPreviewList()
+    {
+        var preview = new List<BlocketPreviewDto> { new() { ExternalListingId = "X1" } };
+        _mediatorMock
+            .Setup(m => m.Send(It.IsAny<PreviewBlocketVehiclesQuery>(), default))
+            .ReturnsAsync(preview);
+
+        var result = await _controller.PreviewBlocket(new PreviewBlocketVehiclesQuery { Limit = 10 });
+
+        var ok = Assert.IsType<OkObjectResult>(result);
+        Assert.Same(preview, ok.Value);
+    }
+
+    [Fact]
+    public async Task PreviewBlocket_ShouldUseDefaultQuery_WhenBodyIsNull()
+    {
+        _mediatorMock
+            .Setup(m => m.Send(It.IsAny<PreviewBlocketVehiclesQuery>(), default))
+            .ReturnsAsync(new List<BlocketPreviewDto>());
+
+        await _controller.PreviewBlocket(null);
+
+        _mediatorMock.Verify(m => m.Send(
+            It.Is<PreviewBlocketVehiclesQuery>(q => q.Limit == 50), default), Times.Once);
+    }
+
+    [Fact]
+    public async Task ImportSelected_ShouldReturnOkWithImportResult()
+    {
+        var importResult = new ImportSelectedResult { TotalSelected = 2, TotalAdded = 2 };
+        _mediatorMock
+            .Setup(m => m.Send(It.IsAny<ImportSelectedBlocketVehiclesCommand>(), default))
+            .ReturnsAsync(importResult);
+
+        var result = await _controller.ImportSelected(
+            new ImportSelectedBlocketVehiclesCommand { ExternalListingIds = ["A", "B"] });
+
+        var ok = Assert.IsType<OkObjectResult>(result);
+        Assert.Same(importResult, ok.Value);
+    }
+
+    [Fact]
+    public async Task PurgeSourceRemoved_ShouldReturnOkWithDeleteCount()
+    {
+        var purgeResult = new PurgeSourceRemovedVehiclesResult(3);
+        _mediatorMock
+            .Setup(m => m.Send(It.IsAny<PurgeSourceRemovedVehiclesCommand>(), default))
+            .ReturnsAsync(purgeResult);
+
+        var result = await _controller.PurgeSourceRemoved();
+
+        var ok = Assert.IsType<OkObjectResult>(result);
+        Assert.Same(purgeResult, ok.Value);
+    }
+
+    [Fact]
+    public async Task StatsByModel_ShouldReturnOkWithStats()
+    {
+        var stats = new List<VehicleStatsByModelDto> { new("XC60", 5) };
+        _mediatorMock
+            .Setup(m => m.Send(It.IsAny<GetVehicleStatsByModelQuery>(), default))
+            .ReturnsAsync(stats);
+
+        var result = await _controller.StatsByModel();
+
+        var ok = Assert.IsType<OkObjectResult>(result);
+        Assert.Same(stats, ok.Value);
+    }
+
+    [Fact]
+    public async Task StatsByMileage_ShouldReturnOkWithStats()
+    {
+        var stats = new List<VehicleStatsByMileageDto> { new("0-50k", 0, 50000, 3) };
+        _mediatorMock
+            .Setup(m => m.Send(It.IsAny<GetVehicleStatsByMileageQuery>(), default))
+            .ReturnsAsync(stats);
+
+        var result = await _controller.StatsByMileage();
+
+        var ok = Assert.IsType<OkObjectResult>(result);
+        Assert.Same(stats, ok.Value);
+    }
+
+    [Fact]
+    public async Task StatsSummary_ShouldReturnOkWithSummary()
+    {
+        var summary = new VehicleStatsSummaryDto(10, 3, 7, 0);
+        _mediatorMock
+            .Setup(m => m.Send(It.IsAny<GetVehicleStatsSummaryQuery>(), default))
+            .ReturnsAsync(summary);
+
+        var result = await _controller.StatsSummary();
+
+        var ok = Assert.IsType<OkObjectResult>(result);
+        Assert.Equal(summary, ok.Value);
+    }
+
+    [Fact]
+    public async Task BulkDelete_ShouldReturnOkWithDeleteCount_WhenFilterProvided()
+    {
+        var deleteResult = new BulkDeleteVehiclesResult(4);
+        _mediatorMock
+            .Setup(m => m.Send(It.IsAny<BulkDeleteVehiclesCommand>(), default))
+            .ReturnsAsync(deleteResult);
+
+        var result = await _controller.BulkDelete("Volvo", null, null, null, null);
+
+        var ok = Assert.IsType<OkObjectResult>(result);
+        Assert.Same(deleteResult, ok.Value);
+    }
+
+    [Fact]
+    public async Task BulkDelete_ShouldReturnBadRequest_WhenNoFiltersProvided()
+    {
+        var result = await _controller.BulkDelete(null, null, null, null, null);
+
+        Assert.IsType<BadRequestObjectResult>(result);
+        _mediatorMock.Verify(m => m.Send(It.IsAny<BulkDeleteVehiclesCommand>(), default), Times.Never);
+    }
+
+    [Fact]
+    public async Task DeleteAll_ShouldReturnOkWithDeleteCount()
+    {
+        var deleteResult = new DeleteAllVehiclesResult(15);
+        _mediatorMock
+            .Setup(m => m.Send(It.IsAny<DeleteAllVehiclesCommand>(), default))
+            .ReturnsAsync(deleteResult);
+
+        var result = await _controller.DeleteAll();
+
+        var ok = Assert.IsType<OkObjectResult>(result);
+        Assert.Same(deleteResult, ok.Value);
     }
 }
