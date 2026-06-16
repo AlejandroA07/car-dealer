@@ -190,7 +190,7 @@ public class VehiclesController(IMediator mediator, ILogger<VehiclesController> 
     [ProducesResponseType(typeof(RefreshInventoryFromBlocketResult), 200)]
     [ProducesResponseType(401)]
     [ProducesResponseType(403)]
-    public async Task<IActionResult> SyncBlocket([FromBody] BlocketSearchParamsDto dto)
+    public async Task<IActionResult> SyncBlocket([FromBody] BlocketSearchParamsDto? dto)
     {
         var request = new RefreshInventoryFromBlocketCommand
         {
@@ -246,7 +246,7 @@ public class VehiclesController(IMediator mediator, ILogger<VehiclesController> 
     [ProducesResponseType(typeof(List<BlocketPreviewDto>), 200)]
     [ProducesResponseType(401)]
     [ProducesResponseType(403)]
-    public async Task<IActionResult> PreviewBlocket([FromBody] BlocketSearchParamsDto dto)
+    public async Task<IActionResult> PreviewBlocket([FromBody] BlocketSearchParamsDto? dto)
     {
         var request = new PreviewBlocketVehiclesQuery
         {
@@ -377,7 +377,7 @@ public class VehiclesController(IMediator mediator, ILogger<VehiclesController> 
     [ProducesResponseType(400)]
     [ProducesResponseType(401)]
     [ProducesResponseType(403)]
-    public async Task<IActionResult> BulkDelete([FromQuery] string make, [FromQuery] string model, [FromQuery] bool? isSold, [FromQuery] int? minMileage, [FromQuery] int? maxMileage)
+    public async Task<IActionResult> BulkDelete([FromQuery] string? make, [FromQuery] string? model, [FromQuery] bool? isSold, [FromQuery] int? minMileage, [FromQuery] int? maxMileage)
     {
         var result = await _mediator.Send(new BulkDeleteVehiclesCommand
         {

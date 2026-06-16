@@ -147,15 +147,10 @@ public class RefreshInventoryFromBlocketCommandHandlerTests
     [Fact]
     public async Task Handle_ShouldAddNewVehicle_WhenNoExistingMatchByExternalId()
     {
-        var existingVehicles = new List<Vehicle>
-        {
-            // no ExternalListingId — legacy vehicle, won't be matched or flagged
-            new() { Id = 1, Source = "Blocket", RegistrationNumber = "OLD001", Model = "Old", ModelYear = 2020, ImageUrl = "x", Description = "x", Manufacturer = new Manufacturer { Name = "VOLVO" }, FuelType = new FuelType { Name = "Petrol" }, TransmissionType = new TransmissionType { Name = "Automatic" } }
-        };
-
+        // legacy vehicle has no ExternalListingId — not in the index, won't be matched or flagged
         _vehicleRepositoryMock
-            .Setup(repository => repository.GetAllImportedFromBlocketAsync())
-            .ReturnsAsync(existingVehicles);
+            .Setup(repository => repository.GetBlocketVehicleIndexAsync())
+            .ReturnsAsync(new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase));
 
         _blocketApiClientMock
             .SetupSequence(client => client.SearchCarsAsync(It.IsAny<BlocketCarSearchRequest>(), It.IsAny<CancellationToken>()))
@@ -187,7 +182,7 @@ public class RefreshInventoryFromBlocketCommandHandlerTests
         Assert.Equal(0, result.TotalUpdated);
         Assert.Equal(0, result.TotalFlagged);
         _vehicleRepositoryMock.Verify(repository => repository.GetAllAsync(), Times.Never);
-        _vehicleRepositoryMock.Verify(repository => repository.GetAllImportedFromBlocketAsync(), Times.Once);
+        _vehicleRepositoryMock.Verify(repository => repository.GetBlocketVehicleIndexAsync(), Times.Once);
         _vehicleRepositoryMock.Verify(repository => repository.RemoveRange(It.IsAny<IEnumerable<Vehicle>>()), Times.Never);
         _vehicleRepositoryMock.Verify(repository => repository.AddRangeAsync(It.Is<IEnumerable<Vehicle>>(vehicles => vehicles.Count() == 1)), Times.Once);
         _unitOfWorkMock.Verify(unitOfWork => unitOfWork.CompleteAsync(), Times.Once);
@@ -214,7 +209,11 @@ public class RefreshInventoryFromBlocketCommandHandlerTests
         };
 
         _vehicleRepositoryMock
-            .Setup(repository => repository.GetAllImportedFromBlocketAsync())
+            .Setup(repository => repository.GetBlocketVehicleIndexAsync())
+            .ReturnsAsync(new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase) { ["EXT-1"] = 1 });
+
+        _vehicleRepositoryMock
+            .Setup(repository => repository.GetByIdsAsync(It.IsAny<IReadOnlyCollection<int>>()))
             .ReturnsAsync([existingVehicle]);
 
         _blocketApiClientMock
@@ -274,7 +273,11 @@ public class RefreshInventoryFromBlocketCommandHandlerTests
         };
 
         _vehicleRepositoryMock
-            .Setup(repository => repository.GetAllImportedFromBlocketAsync())
+            .Setup(repository => repository.GetBlocketVehicleIndexAsync())
+            .ReturnsAsync(new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase) { ["EXT-OLD"] = 1 });
+
+        _vehicleRepositoryMock
+            .Setup(repository => repository.GetByIdsAsync(It.IsAny<IReadOnlyCollection<int>>()))
             .ReturnsAsync([existingVehicle]);
 
         _blocketApiClientMock
@@ -573,7 +576,11 @@ public class RefreshInventoryFromBlocketCommandHandlerTests
     private void SetupLookupRepositories()
     {
         _vehicleRepositoryMock
-            .Setup(repository => repository.GetAllImportedFromBlocketAsync())
+            .Setup(repository => repository.GetBlocketVehicleIndexAsync())
+            .ReturnsAsync(new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase));
+
+        _vehicleRepositoryMock
+            .Setup(repository => repository.GetByIdsAsync(It.IsAny<IReadOnlyCollection<int>>()))
             .ReturnsAsync([]);
 
         _manufacturerRepositoryMock

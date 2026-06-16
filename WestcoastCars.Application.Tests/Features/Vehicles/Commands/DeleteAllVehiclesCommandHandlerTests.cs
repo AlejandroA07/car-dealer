@@ -1,8 +1,6 @@
-using System.Collections.ObjectModel;
 using Moq;
 using WestcoastCars.Application.Features.Vehicles.Commands.DeleteAll;
 using WestcoastCars.Application.Interfaces;
-using WestcoastCars.Domain.Entities;
 using Xunit;
 
 namespace WestcoastCars.Application.Tests.Features.Vehicles.Commands;
@@ -20,42 +18,24 @@ public class DeleteAllVehiclesCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ShouldDeleteAllVehicles_WhenVehiclesExist()
+    public async Task Handle_ShouldReturnDeletedCount_WhenVehiclesExist()
     {
-        var vehicles = BuildVehicles(3);
-
-        _repositoryMock.Setup(r => r.GetAllForDeleteAsync()).ReturnsAsync(vehicles);
-        _unitOfWorkMock.Setup(u => u.CompleteAsync()).ReturnsAsync(1);
+        _repositoryMock.Setup(r => r.DeleteAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync(3);
 
         var result = await _handler.Handle(new DeleteAllVehiclesCommand(), CancellationToken.None);
 
         Assert.Equal(3, result.TotalDeleted);
-        _repositoryMock.Verify(r => r.RemoveRange(vehicles), Times.Once);
-        _unitOfWorkMock.Verify(u => u.CompleteAsync(), Times.Once);
+        _repositoryMock.Verify(r => r.DeleteAllAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task Handle_ShouldNotDeleteOrSave_WhenNoVehiclesExist()
+    public async Task Handle_ShouldReturnZero_WhenNoVehiclesExist()
     {
-        _repositoryMock.Setup(r => r.GetAllForDeleteAsync()).ReturnsAsync(new List<Vehicle>().AsReadOnly());
+        _repositoryMock.Setup(r => r.DeleteAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync(0);
 
         var result = await _handler.Handle(new DeleteAllVehiclesCommand(), CancellationToken.None);
 
         Assert.Equal(0, result.TotalDeleted);
-        _repositoryMock.Verify(r => r.RemoveRange(It.IsAny<IEnumerable<Vehicle>>()), Times.Never);
-        _unitOfWorkMock.Verify(u => u.CompleteAsync(), Times.Never);
+        _repositoryMock.Verify(r => r.DeleteAllAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
-
-    private static ReadOnlyCollection<Vehicle> BuildVehicles(int count) =>
-        Enumerable.Range(1, count).Select(i => new Vehicle
-        {
-            RegistrationNumber = $"REG{i}",
-            Model = "XC60",
-            ModelYear = 2022,
-            ImageUrl = "img.png",
-            Description = "test",
-            Manufacturer = new Manufacturer { Name = "Volvo" },
-            FuelType = new FuelType { Name = "Petrol" },
-            TransmissionType = new TransmissionType { Name = "Auto" }
-        }).ToList().AsReadOnly();
 }

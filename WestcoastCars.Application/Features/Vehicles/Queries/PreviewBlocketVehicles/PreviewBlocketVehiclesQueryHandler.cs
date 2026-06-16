@@ -22,10 +22,8 @@ public class PreviewBlocketVehiclesQueryHandler(IBlocketApiClient blocketApiClie
         var currentPage = 1;
         var skipNoRegNo = 0; var skipYear = 0; var skipMileage = 0; var skipTransmission = 0; var skipFuel = 0;
 
-        var existingIds = (await _unitOfWork.VehicleRepository.GetAllImportedFromBlocketAsync())
-            .Where(v => !string.IsNullOrWhiteSpace(v.ExternalListingId))
-            .Select(v => v.ExternalListingId!)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var blocketIndex = await _unitOfWork.VehicleRepository.GetBlocketVehicleIndexAsync();
+        var existingIds = blocketIndex.Keys.ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         while (results.Count < limit && currentPage <= MaxPages)
         {

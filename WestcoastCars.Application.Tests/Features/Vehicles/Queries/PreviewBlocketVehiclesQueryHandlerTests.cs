@@ -19,7 +19,8 @@ public class PreviewBlocketVehiclesQueryHandlerTests
     public PreviewBlocketVehiclesQueryHandlerTests()
     {
         _unitOfWorkMock.Setup(u => u.VehicleRepository).Returns(_vehicleRepoMock.Object);
-        _vehicleRepoMock.Setup(r => r.GetAllImportedFromBlocketAsync()).ReturnsAsync([]);
+        _vehicleRepoMock.Setup(r => r.GetBlocketVehicleIndexAsync())
+            .ReturnsAsync(new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase));
         _handler = new PreviewBlocketVehiclesQueryHandler(
             _apiClientMock.Object, _unitOfWorkMock.Object, _loggerMock.Object);
     }
@@ -50,7 +51,8 @@ public class PreviewBlocketVehiclesQueryHandlerTests
             FuelType = new FuelType { Name = "Petrol" },
             TransmissionType = new TransmissionType { Name = "Auto" }
         };
-        _vehicleRepoMock.Setup(r => r.GetAllImportedFromBlocketAsync()).ReturnsAsync([importedVehicle]);
+        _vehicleRepoMock.Setup(r => r.GetBlocketVehicleIndexAsync())
+            .ReturnsAsync(new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase) { ["EXT-EXISTING"] = 1 });
 
         _apiClientMock
             .SetupSequence(c => c.SearchCarsAsync(It.IsAny<BlocketCarSearchRequest>(), It.IsAny<CancellationToken>()))

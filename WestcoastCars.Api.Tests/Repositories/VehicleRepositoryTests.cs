@@ -53,20 +53,21 @@ public class VehicleRepositoryTests
     }
 
     [Fact]
-    public async Task GetAllImportedFromBlocketAsync_ShouldReturnOnlyBlocketVehicles()
+    public async Task GetBlocketVehicleIndexAsync_ShouldReturnOnlyActiveBlocketVehicles()
     {
         var databaseName = Guid.NewGuid().ToString();
-        await SeedVehicleAsync(databaseName, "BLK123", "Blocket");
+        await SeedVehicleAsync(databaseName, "BLK123", "Blocket", externalListingId: "EXT-1");
+        await SeedVehicleAsync(databaseName, "BLK456", "Blocket", externalListingId: "EXT-2", sourceStatus: "SourceRemoved");
         await SeedVehicleAsync(databaseName, "MAN123", null);
 
         await using var queryContext = CreateContext(databaseName);
         var repository = new VehicleRepository(queryContext);
 
-        var vehicles = (await repository.GetAllImportedFromBlocketAsync()).ToList();
+        var index = await repository.GetBlocketVehicleIndexAsync();
 
-        Assert.Single(vehicles);
-        Assert.Equal("BLK123", vehicles[0].RegistrationNumber);
-        Assert.Equal("Blocket", vehicles[0].Source);
+        Assert.Single(index);
+        Assert.True(index.ContainsKey("EXT-1"));
+        Assert.False(index.ContainsKey("EXT-2"));
     }
 
     [Fact]
@@ -94,7 +95,9 @@ public class VehicleRepositoryTests
         string databaseName,
         string registrationNumber = "ABC123",
         string? source = null,
-        int modelYear = 2024)
+        int modelYear = 2024,
+        string? externalListingId = null,
+        string? sourceStatus = null)
     {
         await using var seedContext = CreateContext(databaseName);
 
@@ -113,8 +116,11 @@ public class VehicleRepositoryTests
             Manufacturer = manufacturer,
             FuelType = fuelType,
             TransmissionType = transmissionType,
-            Source = source
+            Source = source,
+            ExternalListingId = externalListingId
         };
+        if (sourceStatus == "SourceRemoved")
+            vehicle.MarkAsSourceRemoved(DateTime.UtcNow);
 
         seedContext.Manufacturers.Add(manufacturer);
         seedContext.FuelTypes.Add(fuelType);

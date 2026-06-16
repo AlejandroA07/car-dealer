@@ -9,14 +9,7 @@ public class DeleteAllVehiclesCommandHandler(IUnitOfWork unitOfWork) : IRequestH
 
     public async Task<DeleteAllVehiclesResult> Handle(DeleteAllVehiclesCommand request, CancellationToken cancellationToken)
     {
-        var vehicles = await _unitOfWork.VehicleRepository.GetAllForDeleteAsync();
-
-        if (vehicles.Count > 0)
-        {
-            _unitOfWork.VehicleRepository.RemoveRange(vehicles);
-            await _unitOfWork.CompleteAsync();
-        }
-
-        return new DeleteAllVehiclesResult(vehicles.Count);
+        var deleted = await _unitOfWork.VehicleRepository.DeleteAllAsync(cancellationToken);
+        return new DeleteAllVehiclesResult(deleted);
     }
 }

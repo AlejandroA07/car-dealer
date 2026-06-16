@@ -20,14 +20,12 @@ public class RefreshInventoryFromBlocketCommandHandler(IBlocketApiClient blocket
         var (preparedVehicles, pagesFetched, totalFetched, totalSkipped, appliedLimit, seenIds) =
             await FetchAndFilterVehiclesAsync(request, cancellationToken);
 
-        var (newVehicles, updatedCount, existingByExternalId) =
-            await PartitionAndUpdateExistingAsync(preparedVehicles);
+        var (newVehicles, updatedCount, flaggedCount) =
+            await PartitionUpdateAndFlagAsync(preparedVehicles, seenIds);
 
         var addedVehicles = await BuildVehicleEntitiesAsync(newVehicles);
         if (addedVehicles.Count > 0)
             await _unitOfWork.VehicleRepository.AddRangeAsync(addedVehicles);
-
-        var flaggedCount = FlagRemovedVehicles(existingByExternalId, seenIds);
 
         await _unitOfWork.CompleteAsync();
         return new RefreshInventoryFromBlocketResult
@@ -132,40 +130,20 @@ public class RefreshInventoryFromBlocketCommandHandler(IBlocketApiClient blocket
         return (preparedVehicles, pagesFetched, totalFetched, totalSkipped, appliedLimit, seenExternalListingIds);
     }
 
-    private async Task<(List<BlocketVehicleImportData> NewVehicles, int UpdatedCount, Dictionary<string, Vehicle> ExistingByExternalId)>
-        PartitionAndUpdateExistingAsync(List<BlocketVehicleImportData> preparedVehicles)
+    private async Task<(List<BlocketVehicleImportData> NewVehicles, int UpdatedCount, int FlaggedCount)>
+        PartitionUpdateAndFlagAsync(List<BlocketVehicleImportData> preparedVehicles, HashSet<string> seenIds)
     {
-        var existingByExternalId = (await _unitOfWork.VehicleRepository.GetAllImportedFromBlocketAsync())
-            .Where(v => !string.IsNullOrWhiteSpace(v.ExternalListingId))
-            .ToDictionary(v => v.ExternalListingId!, StringComparer.OrdinalIgnoreCase);
+        var blocketIndex = await _unitOfWork.VehicleRepository.GetBlocketVehicleIndexAsync();
 
         var newVehicles = new List<BlocketVehicleImportData>();
-        var updatedCount = 0;
+        var updateIds = new HashSet<int>();
 
         foreach (var prepared in preparedVehicles)
         {
-            if (existingByExternalId.TryGetValue(prepared.ExternalListingId!, out var existing))
+            if (!string.IsNullOrWhiteSpace(prepared.ExternalListingId) &&
+                blocketIndex.TryGetValue(prepared.ExternalListingId, out var existingId))
             {
-                existing.Price = prepared.Price;
-                existing.Mileage = prepared.Mileage;
-                existing.ImportedAt = prepared.ImportedAt;
-                existing.Color = prepared.Color;
-                existing.WheelDrive = prepared.WheelDrive;
-                existing.Horsepower = prepared.Horsepower;
-                existing.BodyType = prepared.BodyType;
-                existing.Doors = prepared.Doors;
-                existing.EngineVolume = prepared.EngineVolume;
-                existing.City = prepared.City;
-                existing.Address = prepared.Address;
-                existing.Equipment = VehicleFieldSerializer.ToJsonArray(prepared.Equipment);
-                existing.GalleryUrls = VehicleFieldSerializer.ToJsonArray(prepared.GalleryUrls);
-                existing.Seats = prepared.Seats;
-                existing.MaxTrailerWeight = prepared.MaxTrailerWeight;
-                existing.OwnerCount = prepared.OwnerCount;
-                existing.LastInspectionDate = prepared.LastInspectionDate;
-                existing.NextInspectionDate = prepared.NextInspectionDate;
-                _unitOfWork.VehicleRepository.Update(existing);
-                updatedCount++;
+                updateIds.Add(existingId);
             }
             else
             {
@@ -173,23 +151,59 @@ public class RefreshInventoryFromBlocketCommandHandler(IBlocketApiClient blocket
             }
         }
 
-        return (newVehicles, updatedCount, existingByExternalId);
-    }
+        var flagIds = blocketIndex
+            .Where(kvp => !seenIds.Contains(kvp.Key))
+            .Select(kvp => kvp.Value)
+            .ToList();
 
-    private int FlagRemovedVehicles(Dictionary<string, Vehicle> existingByExternalId, HashSet<string> seenExternalListingIds)
-    {
+        var allTargetIds = updateIds.Union(flagIds).ToList();
+        var trackedEntities = allTargetIds.Count > 0
+            ? await _unitOfWork.VehicleRepository.GetByIdsAsync(allTargetIds)
+            : [];
+        var trackedByExtId = trackedEntities
+            .Where(v => !string.IsNullOrWhiteSpace(v.ExternalListingId))
+            .ToDictionary(v => v.ExternalListingId!, StringComparer.OrdinalIgnoreCase);
+
+        var updatedCount = 0;
+        foreach (var prepared in preparedVehicles)
+        {
+            if (string.IsNullOrWhiteSpace(prepared.ExternalListingId)) continue;
+            if (!trackedByExtId.TryGetValue(prepared.ExternalListingId, out var existing)) continue;
+
+            existing.Price = prepared.Price;
+            existing.Mileage = prepared.Mileage;
+            existing.ImportedAt = prepared.ImportedAt;
+            existing.Color = prepared.Color;
+            existing.WheelDrive = prepared.WheelDrive;
+            existing.Horsepower = prepared.Horsepower;
+            existing.BodyType = prepared.BodyType;
+            existing.Doors = prepared.Doors;
+            existing.EngineVolume = prepared.EngineVolume;
+            existing.City = prepared.City;
+            existing.Address = prepared.Address;
+            existing.Equipment = VehicleFieldSerializer.ToJsonArray(prepared.Equipment);
+            existing.GalleryUrls = VehicleFieldSerializer.ToJsonArray(prepared.GalleryUrls);
+            existing.Seats = prepared.Seats;
+            existing.MaxTrailerWeight = prepared.MaxTrailerWeight;
+            existing.OwnerCount = prepared.OwnerCount;
+            existing.LastInspectionDate = prepared.LastInspectionDate;
+            existing.NextInspectionDate = prepared.NextInspectionDate;
+            _unitOfWork.VehicleRepository.Update(existing);
+            updatedCount++;
+        }
+
         var removedAtUtc = DateTime.UtcNow;
         var flaggedCount = 0;
-        foreach (var (extId, vehicle) in existingByExternalId)
+        foreach (var (extId, _) in blocketIndex)
         {
-            if (!seenExternalListingIds.Contains(extId))
-            {
-                vehicle.MarkAsSourceRemoved(removedAtUtc);
-                _unitOfWork.VehicleRepository.Update(vehicle);
-                flaggedCount++;
-            }
+            if (seenIds.Contains(extId)) continue;
+            if (!trackedByExtId.TryGetValue(extId, out var vehicle)) continue;
+            vehicle.MarkAsSourceRemoved(removedAtUtc);
+            _unitOfWork.VehicleRepository.Update(vehicle);
+            flaggedCount++;
         }
-        return flaggedCount;
+
+        return (newVehicles, updatedCount, flaggedCount);
     }
 
     private static bool PassesMileageFilter(BlocketCarSearchItem item, int? min, int? max)

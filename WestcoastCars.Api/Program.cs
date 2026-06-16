@@ -103,6 +103,13 @@ builder.Services.AddRateLimiter(options =>
 
 builder.Services.AddMemoryCache();
 
+builder.Services.AddResponseCompression(opts =>
+{
+    opts.EnableForHttps = true;
+    opts.Providers.Add<Microsoft.AspNetCore.ResponseCompression.BrotliCompressionProvider>();
+    opts.Providers.Add<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProvider>();
+});
+
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 builder.Services.AddCors(options =>
 {
@@ -257,6 +264,8 @@ if (app.Environment.IsDevelopment())
         c.ShowExtensions();
     });
 }
+
+app.UseResponseCompression();
 
 app.UseStaticFiles();
 

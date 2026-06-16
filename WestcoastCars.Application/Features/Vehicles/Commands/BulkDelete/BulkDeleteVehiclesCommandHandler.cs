@@ -12,15 +12,9 @@ public class BulkDeleteVehiclesCommandHandler(IUnitOfWork unitOfWork) : IRequest
         if (request.Make is null && request.Model is null && request.IsSold is null && request.MinMileage is null && request.MaxMileage is null)
             throw new InvalidOperationException("At least one filter must be specified for bulk delete.");
 
-        var vehicles = await _unitOfWork.VehicleRepository.GetForBulkDeleteAsync(
-            request.Make, request.Model, request.IsSold, request.MinMileage, request.MaxMileage);
+        var deleted = await _unitOfWork.VehicleRepository.BulkDeleteAsync(
+            request.Make, request.Model, request.IsSold, request.MinMileage, request.MaxMileage, cancellationToken);
 
-        if (vehicles.Count > 0)
-        {
-            _unitOfWork.VehicleRepository.RemoveRange(vehicles);
-            await _unitOfWork.CompleteAsync();
-        }
-
-        return new BulkDeleteVehiclesResult(vehicles.Count);
+        return new BulkDeleteVehiclesResult(deleted);
     }
 }

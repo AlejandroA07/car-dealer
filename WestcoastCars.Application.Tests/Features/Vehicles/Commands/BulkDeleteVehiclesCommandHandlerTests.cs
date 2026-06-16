@@ -1,8 +1,6 @@
-using System.Collections.ObjectModel;
 using Moq;
 using WestcoastCars.Application.Features.Vehicles.Commands.BulkDelete;
 using WestcoastCars.Application.Interfaces;
-using WestcoastCars.Domain.Entities;
 using Xunit;
 
 namespace WestcoastCars.Application.Tests.Features.Vehicles.Commands;
@@ -25,54 +23,36 @@ public class BulkDeleteVehiclesCommandHandlerTests
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _handler.Handle(new BulkDeleteVehiclesCommand(), CancellationToken.None));
 
-        _repositoryMock.Verify(r => r.GetForBulkDeleteAsync(
-            It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<bool?>(), It.IsAny<int?>(), It.IsAny<int?>()),
+        _repositoryMock.Verify(r => r.BulkDeleteAsync(
+            It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<bool?>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
     [Fact]
-    public async Task Handle_ShouldDeleteVehicles_WhenMatchingVehiclesFound()
+    public async Task Handle_ShouldReturnDeletedCount_WhenMatchingVehiclesFound()
     {
-        var vehicles = BuildVehicles(2);
-
         _repositoryMock
-            .Setup(r => r.GetForBulkDeleteAsync("Volvo", null, null, null, null))
-            .ReturnsAsync(vehicles);
-        _unitOfWorkMock.Setup(u => u.CompleteAsync()).ReturnsAsync(1);
+            .Setup(r => r.BulkDeleteAsync("Volvo", null, null, null, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(2);
 
         var result = await _handler.Handle(
             new BulkDeleteVehiclesCommand { Make = "Volvo" }, CancellationToken.None);
 
         Assert.Equal(2, result.TotalDeleted);
-        _repositoryMock.Verify(r => r.RemoveRange(vehicles), Times.Once);
-        _unitOfWorkMock.Verify(u => u.CompleteAsync(), Times.Once);
+        _repositoryMock.Verify(r => r.BulkDeleteAsync("Volvo", null, null, null, null, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task Handle_ShouldNotDeleteOrSave_WhenNoMatchingVehiclesFound()
+    public async Task Handle_ShouldReturnZero_WhenNoMatchingVehiclesFound()
     {
         _repositoryMock
-            .Setup(r => r.GetForBulkDeleteAsync(null, "XC60", null, null, null))
-            .ReturnsAsync(new List<Vehicle>().AsReadOnly());
+            .Setup(r => r.BulkDeleteAsync(null, "XC60", null, null, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
 
         var result = await _handler.Handle(
             new BulkDeleteVehiclesCommand { Model = "XC60" }, CancellationToken.None);
 
         Assert.Equal(0, result.TotalDeleted);
-        _repositoryMock.Verify(r => r.RemoveRange(It.IsAny<IEnumerable<Vehicle>>()), Times.Never);
-        _unitOfWorkMock.Verify(u => u.CompleteAsync(), Times.Never);
+        _repositoryMock.Verify(r => r.BulkDeleteAsync(null, "XC60", null, null, null, It.IsAny<CancellationToken>()), Times.Once);
     }
-
-    private static ReadOnlyCollection<Vehicle> BuildVehicles(int count) =>
-        Enumerable.Range(1, count).Select(i => new Vehicle
-        {
-            RegistrationNumber = $"REG{i}",
-            Model = "XC60",
-            ModelYear = 2022,
-            ImageUrl = "img.png",
-            Description = "test",
-            Manufacturer = new Manufacturer { Name = "Volvo" },
-            FuelType = new FuelType { Name = "Petrol" },
-            TransmissionType = new TransmissionType { Name = "Auto" }
-        }).ToList().AsReadOnly();
 }
