@@ -1,10 +1,7 @@
 using AutoMapper;
 using MediatR;
-using System.Threading;
-using System.Threading.Tasks;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Contracts.DTOs;
-using WestcoastCars.Domain.Entities;
 
 namespace WestcoastCars.Application.Features.FuelTypes.Queries.GetById;
 
@@ -15,11 +12,8 @@ public class GetFuelTypeByIdQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
 
     public async Task<NamedObjectDto?> Handle(GetFuelTypeByIdQuery request, CancellationToken cancellationToken)
     {
-        var repository = _unitOfWork.FuelTypeRepository ?? throw new InvalidOperationException("Repository for FuelType is not available.");
-        var fuelType = await repository.GetByIdAsync(request.Id);
+        var fuelType = await _unitOfWork.FuelTypeRepository.GetByIdAsync(request.Id);
         if (fuelType is null) return null;
-
-        var result = _mapper.Map<NamedObjectDto>(fuelType!);
-        return result;
+        return _mapper.Map<NamedObjectDto>(fuelType);
     }
 }

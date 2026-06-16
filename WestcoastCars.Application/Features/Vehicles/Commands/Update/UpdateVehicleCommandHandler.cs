@@ -1,5 +1,5 @@
-using System.Text.Json;
 using MediatR;
+using WestcoastCars.Application.Common.Helpers;
 using WestcoastCars.Application.Exceptions;
 using WestcoastCars.Application.Interfaces;
 
@@ -56,8 +56,8 @@ public class UpdateVehicleCommandHandler(IUnitOfWork unitOfWork) : IRequestHandl
         vehicle.OwnerCount = request.OwnerCount;
         vehicle.LastInspectionDate = request.LastInspectionDate;
         vehicle.NextInspectionDate = request.NextInspectionDate;
-        vehicle.Equipment = ToJsonArray(request.Equipment);
-        vehicle.GalleryUrls = ToJsonArray(request.GalleryUrls);
+        vehicle.Equipment = VehicleFieldSerializer.ToJsonArray(request.Equipment);
+        vehicle.GalleryUrls = VehicleFieldSerializer.ToJsonArray(request.GalleryUrls);
 
         _unitOfWork.VehicleRepository.Update(vehicle);
 
@@ -65,13 +65,4 @@ public class UpdateVehicleCommandHandler(IUnitOfWork unitOfWork) : IRequestHandl
         return Unit.Value;
     }
 
-    private static string? ToJsonArray(string? newlineSeparated)
-    {
-        if (string.IsNullOrWhiteSpace(newlineSeparated)) return null;
-        var items = newlineSeparated
-            .Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Where(s => !string.IsNullOrWhiteSpace(s))
-            .ToList();
-        return items.Count > 0 ? JsonSerializer.Serialize(items) : null;
-    }
 }

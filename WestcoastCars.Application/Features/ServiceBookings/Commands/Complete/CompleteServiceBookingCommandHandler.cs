@@ -27,7 +27,7 @@ public class CompleteServiceBookingCommandHandler(IUnitOfWork unitOfWork, IDateT
             throw new ConflictException(ex.Message);
         }
 
-        await _unitOfWork.CompleteAsync();
+        await _unitOfWork.CompleteOrThrowAsync("Failed to complete service booking");
         return Unit.Value;
     }
 }

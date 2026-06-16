@@ -26,10 +26,7 @@ public class CancelServiceBookingCommandHandler(IUnitOfWork unitOfWork, IEmailSe
             throw new ConflictException(ex.Message);
         }
 
-        await _unitOfWork.ExecuteInTransactionAsync(async () =>
-        {
-            await _unitOfWork.CompleteOrThrowAsync("Failed to cancel service booking");
-        }, cancellationToken);
+        await _unitOfWork.CompleteOrThrowAsync("Failed to cancel service booking");
 
         try
         {

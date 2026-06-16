@@ -11,13 +11,12 @@ public class DeleteFuelTypeCommandHandler(IUnitOfWork unitOfWork) : IRequestHand
 
     public async Task Handle(DeleteFuelTypeCommand request, CancellationToken cancellationToken)
     {
-        var repository = _unitOfWork.FuelTypeRepository ?? throw new InvalidOperationException("Repository for FuelType is not available.");
-        var fuelTypeToDelete = await repository.GetByIdAsync(request.Id) ?? throw new NotFoundException($"FuelType with id '{request.Id}' not found.");
+        var fuelTypeToDelete = await _unitOfWork.FuelTypeRepository.GetByIdAsync(request.Id) ?? throw new NotFoundException($"FuelType with id '{request.Id}' not found.");
         var hasVehicles = await _unitOfWork.VehicleRepository.FirstOrDefaultAsync(v => v.FuelTypeId == request.Id);
         if (hasVehicles is not null)
             throw new ConflictException($"Cannot delete fuel type '{fuelTypeToDelete.Name}' because it has vehicles assigned to it.");
 
-        repository.Remove(fuelTypeToDelete!);
+        _unitOfWork.FuelTypeRepository.Remove(fuelTypeToDelete);
 
         await _unitOfWork.CompleteOrThrowAsync("Failed to delete fuel type");
     }

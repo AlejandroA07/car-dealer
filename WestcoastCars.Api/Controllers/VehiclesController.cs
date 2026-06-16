@@ -172,24 +172,12 @@ public class VehiclesController(IMediator mediator, ILogger<VehiclesController> 
         };
 
         _logger.LogInformation("Creating new vehicle with registration: {RegNo} via MediatR", command.RegistrationNumber);
-
-        using var activity = _telemetry.StartVehicleActivity("create", command.RegistrationNumber);
-        var startedAt = Stopwatch.StartNew();
-
-        try
+        return await ExecuteWithVehicleTelemetryAsync("create", async activity =>
         {
             var result = await _mediator.Send(command);
-            startedAt.Stop();
-            _telemetry.RecordVehicleOperation("create", "success", startedAt.Elapsed);
             activity?.SetTag("vehicle.id", result.Id);
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
-        }
-        catch
-        {
-            startedAt.Stop();
-            _telemetry.RecordVehicleOperation("create", "failure", startedAt.Elapsed);
-            throw;
-        }
+        }, regNo: command.RegistrationNumber);
     }
 
     /// <summary>
@@ -457,22 +445,11 @@ public class VehiclesController(IMediator mediator, ILogger<VehiclesController> 
         };
 
         _logger.LogInformation("Updating vehicle {Id} via MediatR", id);
-        using var activity = _telemetry.StartVehicleActivity("update", command.RegistrationNumber, id);
-        var startedAt = Stopwatch.StartNew();
-
-        try
+        return await ExecuteWithVehicleTelemetryAsync("update", async _ =>
         {
             await _mediator.Send(command);
-            startedAt.Stop();
-            _telemetry.RecordVehicleOperation("update", "success", startedAt.Elapsed);
             return NoContent();
-        }
-        catch
-        {
-            startedAt.Stop();
-            _telemetry.RecordVehicleOperation("update", "failure", startedAt.Elapsed);
-            throw;
-        }
+        }, regNo: command.RegistrationNumber, vehicleId: id);
     }
 
     /// <summary>
@@ -489,22 +466,11 @@ public class VehiclesController(IMediator mediator, ILogger<VehiclesController> 
     public async Task<IActionResult> MarkAsSold(int id)
     {
         _logger.LogInformation("Marking vehicle {Id} as sold via MediatR", id);
-        using var activity = _telemetry.StartVehicleActivity("mark-as-sold", vehicleId: id);
-        var startedAt = Stopwatch.StartNew();
-
-        try
+        return await ExecuteWithVehicleTelemetryAsync("mark-as-sold", async _ =>
         {
             await _mediator.Send(new MarkAsSoldCommand { Id = id });
-            startedAt.Stop();
-            _telemetry.RecordVehicleOperation("mark-as-sold", "success", startedAt.Elapsed);
             return NoContent();
-        }
-        catch
-        {
-            startedAt.Stop();
-            _telemetry.RecordVehicleOperation("mark-as-sold", "failure", startedAt.Elapsed);
-            throw;
-        }
+        }, vehicleId: id);
     }
 
     /// <summary>
@@ -521,20 +487,32 @@ public class VehiclesController(IMediator mediator, ILogger<VehiclesController> 
     public async Task<IActionResult> Delete(int id)
     {
         _logger.LogInformation("Deleting vehicle {Id} via MediatR", id);
-        using var activity = _telemetry.StartVehicleActivity("delete", vehicleId: id);
-        var startedAt = Stopwatch.StartNew();
-
-        try
+        return await ExecuteWithVehicleTelemetryAsync("delete", async _ =>
         {
             await _mediator.Send(new DeleteVehicleCommand { Id = id });
-            startedAt.Stop();
-            _telemetry.RecordVehicleOperation("delete", "success", startedAt.Elapsed);
             return NoContent();
+        }, vehicleId: id);
+    }
+
+    private async Task<IActionResult> ExecuteWithVehicleTelemetryAsync(
+        string operation,
+        Func<Activity?, Task<IActionResult>> action,
+        string? regNo = null,
+        int? vehicleId = null)
+    {
+        using var activity = _telemetry.StartVehicleActivity(operation, regNo, vehicleId);
+        var startedAt = Stopwatch.StartNew();
+        try
+        {
+            var result = await action(activity);
+            startedAt.Stop();
+            _telemetry.RecordVehicleOperation(operation, "success", startedAt.Elapsed);
+            return result;
         }
         catch
         {
             startedAt.Stop();
-            _telemetry.RecordVehicleOperation("delete", "failure", startedAt.Elapsed);
+            _telemetry.RecordVehicleOperation(operation, "failure", startedAt.Elapsed);
             throw;
         }
     }

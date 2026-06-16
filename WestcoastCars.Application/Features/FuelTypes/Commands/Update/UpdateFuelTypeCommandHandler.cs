@@ -11,10 +11,9 @@ public class UpdateFuelTypeCommandHandler(IUnitOfWork unitOfWork) : IRequestHand
 
     public async Task Handle(UpdateFuelTypeCommand request, CancellationToken cancellationToken)
     {
-        var repository = _unitOfWork.FuelTypeRepository ?? throw new InvalidOperationException("Repository for FuelType is not available.");
-        var fuelTypeToUpdate = await repository.GetByIdAsync(request.Id) ?? throw new NotFoundException($"FuelType with id '{request.Id}' not found.");
-        fuelTypeToUpdate!.Name = request.Name;
-        repository.Update(fuelTypeToUpdate!);
+        var fuelTypeToUpdate = await _unitOfWork.FuelTypeRepository.GetByIdAsync(request.Id) ?? throw new NotFoundException($"FuelType with id '{request.Id}' not found.");
+        fuelTypeToUpdate.Name = request.Name;
+        _unitOfWork.FuelTypeRepository.Update(fuelTypeToUpdate);
 
         await _unitOfWork.CompleteOrThrowAsync("Failed to update fuel type");
     }

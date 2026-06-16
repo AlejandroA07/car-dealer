@@ -33,22 +33,13 @@ public static class DependencyInjection
 
         var connectionString = ResolvePostgreSqlConnectionString(configuration);
 
-        if (IsSqliteInMemory(connectionString))
-        {
-            services.AddDbContext<WestcoastCarsContext>(options =>
-                options.UseSqlite(connectionString));
-            services.AddScoped<IVehicleTextSearchMatcher, CaseInsensitiveVehicleTextSearchMatcher>();
-        }
-        else
-        {
-            services.AddDbContext<WestcoastCarsContext>(options =>
-                options.UseNpgsql(connectionString, postgresOptions =>
-                {
-                    postgresOptions.MigrationsHistoryTable("__EFMigrationsHistory_WestcoastCars");
-                    postgresOptions.EnableRetryOnFailure();
-                }));
-            services.AddScoped<IVehicleTextSearchMatcher, PostgreSqlVehicleTextSearchMatcher>();
-        }
+        services.AddDbContext<WestcoastCarsContext>(options =>
+            options.UseNpgsql(connectionString, postgresOptions =>
+            {
+                postgresOptions.MigrationsHistoryTable("__EFMigrationsHistory_WestcoastCars");
+                postgresOptions.EnableRetryOnFailure();
+            }));
+        services.AddScoped<IVehicleTextSearchMatcher, PostgreSqlVehicleTextSearchMatcher>();
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
@@ -73,12 +64,6 @@ public static class DependencyInjection
         services.AddScoped<WestcoastCars.Application.Services.IEmailService, EmailService>();
 
         return services;
-    }
-
-    private static bool IsSqliteInMemory(string connectionString)
-    {
-        return connectionString == "DataSource=:memory:" ||
-            connectionString.Contains("Mode=Memory", StringComparison.OrdinalIgnoreCase);
     }
 
     private static string ResolvePostgreSqlConnectionString(IConfiguration configuration)

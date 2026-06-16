@@ -1,5 +1,5 @@
-using System.Text.Json;
 using MediatR;
+using WestcoastCars.Application.Common.Helpers;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Application.Models.Blocket;
 using WestcoastCars.Application.Services;
@@ -16,6 +16,37 @@ public class RefreshInventoryFromBlocketCommandHandler(IBlocketApiClient blocket
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
     public async Task<RefreshInventoryFromBlocketResult> Handle(RefreshInventoryFromBlocketCommand request, CancellationToken cancellationToken)
+    {
+        var (preparedVehicles, pagesFetched, totalFetched, totalSkipped, appliedLimit, seenIds) =
+            await FetchAndFilterVehiclesAsync(request, cancellationToken);
+
+        var (newVehicles, updatedCount, existingByExternalId) =
+            await PartitionAndUpdateExistingAsync(preparedVehicles);
+
+        var addedVehicles = await BuildVehicleEntitiesAsync(newVehicles);
+        if (addedVehicles.Count > 0)
+            await _unitOfWork.VehicleRepository.AddRangeAsync(addedVehicles);
+
+        var flaggedCount = FlagRemovedVehicles(existingByExternalId, seenIds);
+
+        await _unitOfWork.CompleteAsync();
+        return new RefreshInventoryFromBlocketResult
+        {
+            RequestedLimit = request.Limit,
+            AppliedLimit = appliedLimit,
+            PagesFetched = pagesFetched,
+            TotalFetched = totalFetched,
+            TotalPrepared = preparedVehicles.Count,
+            TotalAdded = addedVehicles.Count,
+            TotalUpdated = updatedCount,
+            TotalFlagged = flaggedCount,
+            TotalSkipped = totalSkipped,
+            Vehicles = preparedVehicles
+        };
+    }
+
+    private async Task<(List<BlocketVehicleImportData> PreparedVehicles, int PagesFetched, int TotalFetched, int TotalSkipped, int AppliedLimit, HashSet<string> SeenExternalListingIds)>
+        FetchAndFilterVehiclesAsync(RefreshInventoryFromBlocketCommand request, CancellationToken cancellationToken)
     {
         var appliedLimit = NormalizeLimit(request.Limit);
         var preparedVehicles = new List<BlocketVehicleImportData>(appliedLimit);
@@ -52,18 +83,14 @@ public class RefreshInventoryFromBlocketCommandHandler(IBlocketApiClient blocket
             pagesFetched++;
 
             if (searchResponse.Docs.Count == 0)
-            {
                 break;
-            }
 
             totalFetched += searchResponse.Docs.Count;
 
             foreach (var searchItem in searchResponse.Docs)
             {
                 if (preparedVehicles.Count >= appliedLimit)
-                {
                     break;
-                }
 
                 // Pre-filter on fields available in the search result — avoids unnecessary detail fetches.
                 // Registration number and model year are NOT pre-filtered here: Blocket omits them
@@ -102,6 +129,12 @@ public class RefreshInventoryFromBlocketCommandHandler(IBlocketApiClient blocket
             currentPage++;
         }
 
+        return (preparedVehicles, pagesFetched, totalFetched, totalSkipped, appliedLimit, seenExternalListingIds);
+    }
+
+    private async Task<(List<BlocketVehicleImportData> NewVehicles, int UpdatedCount, Dictionary<string, Vehicle> ExistingByExternalId)>
+        PartitionAndUpdateExistingAsync(List<BlocketVehicleImportData> preparedVehicles)
+    {
         var existingByExternalId = (await _unitOfWork.VehicleRepository.GetAllImportedFromBlocketAsync())
             .Where(v => !string.IsNullOrWhiteSpace(v.ExternalListingId))
             .ToDictionary(v => v.ExternalListingId!, StringComparer.OrdinalIgnoreCase);
@@ -124,8 +157,8 @@ public class RefreshInventoryFromBlocketCommandHandler(IBlocketApiClient blocket
                 existing.EngineVolume = prepared.EngineVolume;
                 existing.City = prepared.City;
                 existing.Address = prepared.Address;
-                existing.Equipment = prepared.Equipment.Count > 0 ? JsonSerializer.Serialize(prepared.Equipment) : null;
-                existing.GalleryUrls = prepared.GalleryUrls.Count > 0 ? JsonSerializer.Serialize(prepared.GalleryUrls) : null;
+                existing.Equipment = VehicleFieldSerializer.ToJsonArray(prepared.Equipment);
+                existing.GalleryUrls = VehicleFieldSerializer.ToJsonArray(prepared.GalleryUrls);
                 existing.Seats = prepared.Seats;
                 existing.MaxTrailerWeight = prepared.MaxTrailerWeight;
                 existing.OwnerCount = prepared.OwnerCount;
@@ -140,12 +173,11 @@ public class RefreshInventoryFromBlocketCommandHandler(IBlocketApiClient blocket
             }
         }
 
-        var addedVehicles = await BuildVehicleEntitiesAsync(newVehicles);
-        if (addedVehicles.Count > 0)
-        {
-            await _unitOfWork.VehicleRepository.AddRangeAsync(addedVehicles);
-        }
+        return (newVehicles, updatedCount, existingByExternalId);
+    }
 
+    private int FlagRemovedVehicles(Dictionary<string, Vehicle> existingByExternalId, HashSet<string> seenExternalListingIds)
+    {
         var removedAtUtc = DateTime.UtcNow;
         var flaggedCount = 0;
         foreach (var (extId, vehicle) in existingByExternalId)
@@ -157,22 +189,7 @@ public class RefreshInventoryFromBlocketCommandHandler(IBlocketApiClient blocket
                 flaggedCount++;
             }
         }
-
-        await _unitOfWork.CompleteAsync();
-
-        return new RefreshInventoryFromBlocketResult
-        {
-            RequestedLimit = request.Limit,
-            AppliedLimit = appliedLimit,
-            PagesFetched = pagesFetched,
-            TotalFetched = totalFetched,
-            TotalPrepared = preparedVehicles.Count,
-            TotalAdded = addedVehicles.Count,
-            TotalUpdated = updatedCount,
-            TotalFlagged = flaggedCount,
-            TotalSkipped = totalSkipped,
-            Vehicles = preparedVehicles
-        };
+        return flaggedCount;
     }
 
     private static bool PassesMileageFilter(BlocketCarSearchItem item, int? min, int? max)
@@ -265,12 +282,8 @@ public class RefreshInventoryFromBlocketCommandHandler(IBlocketApiClient blocket
                 EngineVolume = preparedVehicle.EngineVolume,
                 City = preparedVehicle.City,
                 Address = preparedVehicle.Address,
-                Equipment = preparedVehicle.Equipment.Count > 0
-                    ? JsonSerializer.Serialize(preparedVehicle.Equipment)
-                    : null,
-                GalleryUrls = preparedVehicle.GalleryUrls.Count > 0
-                    ? JsonSerializer.Serialize(preparedVehicle.GalleryUrls)
-                    : null,
+                Equipment = VehicleFieldSerializer.ToJsonArray(preparedVehicle.Equipment),
+                GalleryUrls = VehicleFieldSerializer.ToJsonArray(preparedVehicle.GalleryUrls),
                 Seats = preparedVehicle.Seats,
                 MaxTrailerWeight = preparedVehicle.MaxTrailerWeight,
                 OwnerCount = preparedVehicle.OwnerCount,

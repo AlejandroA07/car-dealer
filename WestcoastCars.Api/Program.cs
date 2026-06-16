@@ -206,23 +206,16 @@ using (var scope = app.Services.CreateScope())
     var logger = services.GetRequiredService<ILogger<Program>>();
     try
     {
-        if (context.Database.IsRelational() && !context.Database.IsSqlite())
-        {
-            await context.Database.MigrateAsync();
+        await context.Database.MigrateAsync();
 
-            if (context.Database.GetDbConnection() is NpgsqlConnection npgsqlConnection)
+        if (context.Database.GetDbConnection() is NpgsqlConnection npgsqlConnection)
+        {
+            if (npgsqlConnection.State != System.Data.ConnectionState.Open)
             {
-                if (npgsqlConnection.State != System.Data.ConnectionState.Open)
-                {
-                    await npgsqlConnection.OpenAsync();
-                }
-
-                await npgsqlConnection.ReloadTypesAsync(CancellationToken.None);
+                await npgsqlConnection.OpenAsync();
             }
-        }
-        else if (context.Database.IsSqlite())
-        {
-            await context.Database.EnsureCreatedAsync();
+
+            await npgsqlConnection.ReloadTypesAsync(CancellationToken.None);
         }
 
         var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
