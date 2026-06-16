@@ -26,7 +26,7 @@ public class ImportSelectedBlocketVehiclesCommandHandlerTests
         _unitOfWorkMock.Setup(u => u.TransmissionTypeRepository).Returns(_transmissionRepoMock.Object);
         _unitOfWorkMock.Setup(u => u.CompleteAsync()).ReturnsAsync(1);
 
-        _vehicleRepoMock.Setup(r => r.GetAllImportedFromBlocketAsync()).ReturnsAsync([]);
+        _vehicleRepoMock.Setup(r => r.GetByExternalIdsAsync(It.IsAny<IReadOnlyCollection<string>>())).ReturnsAsync([]);
         _manufacturerRepoMock.Setup(r => r.GetAllAsync()).ReturnsAsync([new Manufacturer { Name = "Volvo" }]);
         _fuelTypeRepoMock.Setup(r => r.GetAllAsync()).ReturnsAsync([new FuelType { Name = "Petrol" }]);
         _transmissionRepoMock.Setup(r => r.GetAllAsync()).ReturnsAsync([new TransmissionType { Name = "Automatic" }]);
@@ -108,7 +108,7 @@ public class ImportSelectedBlocketVehiclesCommandHandlerTests
             TransmissionType = new TransmissionType { Name = "Automatic" }
         };
 
-        _vehicleRepoMock.Setup(r => r.GetAllImportedFromBlocketAsync()).ReturnsAsync([existing]);
+        _vehicleRepoMock.Setup(r => r.GetByExternalIdsAsync(It.IsAny<IReadOnlyCollection<string>>())).ReturnsAsync([existing]);
         _apiClientMock
             .Setup(c => c.GetCarAdAsync("EXT-2", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new BlocketCarAdDetails());

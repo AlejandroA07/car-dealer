@@ -34,11 +34,11 @@ public class FuelTypesController(IMediator mediator, IMemoryCache cache) : Contr
     [ProducesResponseType(typeof(IEnumerable<NamedObjectDto>), 200)]
     public async Task<IActionResult> ListAll()
     {
-        if (!_cache.TryGetValue(CacheKey, out IEnumerable<NamedObjectDto>? cached))
+        var cached = await _cache.GetOrCreateAsync(CacheKey, async entry =>
         {
-            cached = await _mediator.Send(new ListAllFuelTypesQuery());
-            _cache.Set(CacheKey, cached, TimeSpan.FromMinutes(10));
-        }
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10);
+            return await _mediator.Send(new ListAllFuelTypesQuery());
+        });
         return Ok(cached);
     }
 

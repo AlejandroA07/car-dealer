@@ -1,7 +1,6 @@
 using Moq;
 using WestcoastCars.Application.Features.Vehicles.Commands.PurgeSourceRemoved;
 using WestcoastCars.Application.Interfaces;
-using WestcoastCars.Domain.Entities;
 using Xunit;
 
 namespace WestcoastCars.Application.Tests.Features.Vehicles.Commands;
@@ -19,42 +18,24 @@ public class PurgeSourceRemovedVehiclesCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ShouldDeleteSourceRemovedVehicles_WhenTheyExist()
+    public async Task Handle_ShouldReturnDeletedCount_WhenSourceRemovedVehiclesExist()
     {
-        var vehicles = BuildVehicles(2);
-
-        _repositoryMock.Setup(r => r.GetAllSourceRemovedFromBlocketAsync()).ReturnsAsync(vehicles);
-        _unitOfWorkMock.Setup(u => u.CompleteAsync()).ReturnsAsync(1);
+        _repositoryMock.Setup(r => r.PurgeSourceRemovedAsync(It.IsAny<CancellationToken>())).ReturnsAsync(2);
 
         var result = await _handler.Handle(new PurgeSourceRemovedVehiclesCommand(), CancellationToken.None);
 
         Assert.Equal(2, result.TotalDeleted);
-        _repositoryMock.Verify(r => r.RemoveRange(It.IsAny<IEnumerable<Vehicle>>()), Times.Once);
-        _unitOfWorkMock.Verify(u => u.CompleteAsync(), Times.Once);
+        _repositoryMock.Verify(r => r.PurgeSourceRemovedAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task Handle_ShouldNotDeleteOrSave_WhenNoSourceRemovedVehiclesExist()
+    public async Task Handle_ShouldReturnZero_WhenNoSourceRemovedVehiclesExist()
     {
-        _repositoryMock.Setup(r => r.GetAllSourceRemovedFromBlocketAsync()).ReturnsAsync([]);
+        _repositoryMock.Setup(r => r.PurgeSourceRemovedAsync(It.IsAny<CancellationToken>())).ReturnsAsync(0);
 
         var result = await _handler.Handle(new PurgeSourceRemovedVehiclesCommand(), CancellationToken.None);
 
         Assert.Equal(0, result.TotalDeleted);
-        _repositoryMock.Verify(r => r.RemoveRange(It.IsAny<IEnumerable<Vehicle>>()), Times.Never);
-        _unitOfWorkMock.Verify(u => u.CompleteAsync(), Times.Never);
+        _repositoryMock.Verify(r => r.PurgeSourceRemovedAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
-
-    private static List<Vehicle> BuildVehicles(int count) =>
-        [.. Enumerable.Range(1, count).Select(i => new Vehicle
-        {
-            RegistrationNumber = $"REG{i}",
-            Model = "XC60",
-            ModelYear = 2022,
-            ImageUrl = "img.png",
-            Description = "test",
-            Manufacturer = new Manufacturer { Name = "Volvo" },
-            FuelType = new FuelType { Name = "Petrol" },
-            TransmissionType = new TransmissionType { Name = "Auto" }
-        })];
 }

@@ -52,12 +52,42 @@ public class VehicleRepository(WestcoastCarsContext context, IVehicleTextSearchM
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Vehicle>> GetAllSourceRemovedFromBlocketAsync()
+    public async Task<IReadOnlyDictionary<string, int>> GetBlocketVehicleIndexAsync()
     {
-        return await _context.Vehicles
-            .Where(v => v.Source == "Blocket" && v.SourceStatus == "SourceRemoved")
+        var pairs = await _context.Vehicles
+            .Where(v => v.Source == "Blocket"
+                     && v.SourceStatus != "SourceRemoved"
+                     && v.ExternalListingId != null)
+            .Select(v => new { v.ExternalListingId, v.Id })
             .ToListAsync();
+
+        return pairs.ToDictionary(x => x.ExternalListingId!, x => x.Id, StringComparer.OrdinalIgnoreCase);
     }
+
+    public async Task<List<Vehicle>> GetByIdsAsync(IReadOnlyCollection<int> ids)
+        => await _context.Vehicles.Where(v => ids.Contains(v.Id)).ToListAsync();
+
+    public async Task<List<Vehicle>> GetByExternalIdsAsync(IReadOnlyCollection<string> externalIds)
+        => await _context.Vehicles.Where(v => externalIds.Contains(v.ExternalListingId!)).ToListAsync();
+
+    public async Task<int> DeleteAllAsync(CancellationToken cancellationToken = default)
+        => await _context.Vehicles.ExecuteDeleteAsync(cancellationToken);
+
+    public async Task<int> BulkDeleteAsync(string? make, string? model, bool? isSold, int? minMileage, int? maxMileage, CancellationToken cancellationToken = default)
+    {
+        var query = _context.Vehicles.AsQueryable();
+        if (make is not null) query = query.Where(v => v.Manufacturer.Name == make);
+        if (model is not null) query = query.Where(v => v.Model == model);
+        if (isSold.HasValue) query = query.Where(v => v.IsSold == isSold.Value);
+        if (minMileage.HasValue) query = query.Where(v => v.Mileage >= minMileage.Value);
+        if (maxMileage.HasValue) query = query.Where(v => v.Mileage < maxMileage.Value);
+        return await query.ExecuteDeleteAsync(cancellationToken);
+    }
+
+    public async Task<int> PurgeSourceRemovedAsync(CancellationToken cancellationToken = default)
+        => await _context.Vehicles
+            .Where(v => v.Source == "Blocket" && v.SourceStatus == "SourceRemoved")
+            .ExecuteDeleteAsync(cancellationToken);
 
     public async Task<PagedResult<Vehicle>> SearchAsync(VehicleSearchDto search)
     {
@@ -137,16 +167,24 @@ public class VehicleRepository(WestcoastCarsContext context, IVehicleTextSearchM
 
     public async Task<IEnumerable<VehicleStatsByMileageDto>> GetStatsByMileageAsync()
     {
-        var mileages = await _context.Vehicles
+        var counts = await _context.Vehicles
             .Where(v => v.SourceStatus != "SourceRemoved")
-            .Select(v => v.Mileage)
-            .ToListAsync();
+            .GroupBy(_ => 1)
+            .Select(g => new
+            {
+                Band0 = g.Count(v => v.Mileage >= 0 && v.Mileage < 10000),
+                Band1 = g.Count(v => v.Mileage >= 10000 && v.Mileage < 20000),
+                Band2 = g.Count(v => v.Mileage >= 20000 && v.Mileage < 30000),
+                Band3 = g.Count(v => v.Mileage >= 30000 && v.Mileage < 40000),
+                Band4 = g.Count(v => v.Mileage >= 40000)
+            })
+            .FirstOrDefaultAsync();
 
-        return MileageBands.Select(band => new VehicleStatsByMileageDto(
-            band.Label,
-            band.Min,
-            band.Max,
-            mileages.Count(m => m >= band.Min && (!band.Max.HasValue || m < band.Max.Value))));
+        int[] bandCounts = counts is null
+            ? [0, 0, 0, 0, 0]
+            : [counts.Band0, counts.Band1, counts.Band2, counts.Band3, counts.Band4];
+
+        return MileageBands.Select((band, i) => new VehicleStatsByMileageDto(band.Label, band.Min, band.Max, bandCounts[i]));
     }
 
     public async Task<VehicleStatsSummaryDto> GetStatsSummaryAsync()
@@ -166,21 +204,6 @@ public class VehicleRepository(WestcoastCarsContext context, IVehicleTextSearchM
             : new VehicleStatsSummaryDto(counts.Sold + counts.Unsold, counts.Sold, counts.Unsold, counts.SourceRemoved);
     }
 
-    public async Task<IReadOnlyList<Vehicle>> GetForBulkDeleteAsync(string? make, string? model, bool? isSold, int? minMileage, int? maxMileage)
-    {
-        var query = _context.Vehicles.AsQueryable();
-        if (make is not null) query = query.Where(v => v.Manufacturer.Name == make);
-        if (model is not null) query = query.Where(v => v.Model == model);
-        if (isSold.HasValue) query = query.Where(v => v.IsSold == isSold.Value);
-        if (minMileage.HasValue) query = query.Where(v => v.Mileage >= minMileage.Value);
-        if (maxMileage.HasValue) query = query.Where(v => v.Mileage < maxMileage.Value);
-        return await query.ToListAsync();
-    }
-
-    public async Task<IReadOnlyList<Vehicle>> GetAllForDeleteAsync()
-    {
-        return await _context.Vehicles.ToListAsync();
-    }
 
     public override async Task<Vehicle?> GetByIdAsync(int id)
     {

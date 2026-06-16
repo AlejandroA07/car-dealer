@@ -142,6 +142,11 @@ public class WestcoastCarsContext(DbContextOptions<WestcoastCarsContext> options
             .HasIndex(vehicle => vehicle.SourceStatus)
             .HasDatabaseName("IX_Vehicles_SourceStatus");
 
+        modelBuilder.Entity<Vehicle>()
+            .HasIndex(v => v.Id)
+            .HasDatabaseName("IX_Vehicles_Active")
+            .HasFilter("\"SourceStatus\" != 'SourceRemoved'");
+
         modelBuilder.Entity<ServiceBooking>()
             .Property(sb => sb.VehicleRegistrationNumber)
             .HasMaxLength(10)

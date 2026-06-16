@@ -43,7 +43,11 @@ public class ImportSelectedBlocketVehiclesCommandHandler(IBlocketApiClient block
             preparedVehicles.Add(mapped);
         }
 
-        var existingByExternalId = (await _unitOfWork.VehicleRepository.GetAllImportedFromBlocketAsync())
+        var requestedExternalIds = preparedVehicles
+            .Where(p => !string.IsNullOrWhiteSpace(p.ExternalListingId))
+            .Select(p => p.ExternalListingId!)
+            .ToList();
+        var existingByExternalId = (await _unitOfWork.VehicleRepository.GetByExternalIdsAsync(requestedExternalIds))
             .Where(v => !string.IsNullOrWhiteSpace(v.ExternalListingId))
             .ToDictionary(v => v.ExternalListingId!, StringComparer.OrdinalIgnoreCase);
 

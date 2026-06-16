@@ -34,11 +34,11 @@ public class TransmissionsController(IMediator mediator, IMemoryCache cache) : C
     [ProducesResponseType(typeof(IEnumerable<NamedObjectDto>), 200)]
     public async Task<IActionResult> ListAll()
     {
-        if (!_cache.TryGetValue(CacheKey, out IEnumerable<NamedObjectDto>? cached))
+        var cached = await _cache.GetOrCreateAsync(CacheKey, async entry =>
         {
-            cached = await _mediator.Send(new ListAllTransmissionsQuery());
-            _cache.Set(CacheKey, cached, TimeSpan.FromMinutes(10));
-        }
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10);
+            return await _mediator.Send(new ListAllTransmissionsQuery());
+        });
         return Ok(cached);
     }
 

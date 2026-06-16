@@ -7,14 +7,17 @@ namespace WestcoastCars.Application.Interfaces;
 public interface IVehicleRepository : IRepository<Vehicle>
 {
     Task<Vehicle?> FindByRegistrationNumberAsync(string regNo);
-    Task<IEnumerable<Vehicle>> GetAllImportedFromBlocketAsync();
-    Task<IEnumerable<Vehicle>> GetAllSourceRemovedFromBlocketAsync();
+    Task<IReadOnlyDictionary<string, int>> GetBlocketVehicleIndexAsync();
+    Task<List<Vehicle>> GetByIdsAsync(IReadOnlyCollection<int> ids);
+    Task<List<Vehicle>> GetByExternalIdsAsync(IReadOnlyCollection<string> externalIds);
+
     Task<PagedResult<Vehicle>> GetAllPagedAsync(PagedQueryDto pagination);
     Task<PagedResult<Vehicle>> GetUnsoldAsync(PagedQueryDto pagination);
     Task<PagedResult<Vehicle>> SearchAsync(VehicleSearchDto search);
     Task<IEnumerable<VehicleStatsByModelDto>> GetStatsByModelAsync();
     Task<IEnumerable<VehicleStatsByMileageDto>> GetStatsByMileageAsync();
     Task<VehicleStatsSummaryDto> GetStatsSummaryAsync();
-    Task<IReadOnlyList<Vehicle>> GetForBulkDeleteAsync(string? make, string? model, bool? isSold, int? minMileage, int? maxMileage);
-    Task<IReadOnlyList<Vehicle>> GetAllForDeleteAsync();
+    Task<int> DeleteAllAsync(CancellationToken cancellationToken = default);
+    Task<int> BulkDeleteAsync(string? make, string? model, bool? isSold, int? minMileage, int? maxMileage, CancellationToken cancellationToken = default);
+    Task<int> PurgeSourceRemovedAsync(CancellationToken cancellationToken = default);
 }

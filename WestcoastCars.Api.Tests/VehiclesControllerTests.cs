@@ -40,7 +40,7 @@ public class VehiclesControllerTests
         _mediatorMock = new Mock<IMediator>();
         _loggerMock = new Mock<ILogger<VehiclesController>>();
         _telemetry = new AppTelemetry();
-        _controller = new VehiclesController(_mediatorMock.Object, _loggerMock.Object, _telemetry, Mock.Of<IMemoryCache>());
+        _controller = new VehiclesController(_mediatorMock.Object, _loggerMock.Object, _telemetry, new MemoryCache(new MemoryCacheOptions()));
     }
 
     [Fact]
