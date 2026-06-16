@@ -24,19 +24,19 @@ public class AuthService(
         var user = await _userManager.FindByEmailAsync(email);
         if (user is null)
         {
-            _logger.LogWarning("Login failed: User with email {Email} not found.", email);
+            _logger.LogWarning("Login failed: user not found.");
             return null;
         }
 
         var result = await _signInManager.CheckPasswordSignInAsync(user, password, lockoutOnFailure: true);
         if (!result.Succeeded)
         {
-            _logger.LogWarning("Login failed: Password check failed for user {Email}. IsLockedOut: {IsLockedOut}, IsNotAllowed: {IsNotAllowed}, RequiresTwoFactor: {RequiresTwoFactor}",
-                email, result.IsLockedOut, result.IsNotAllowed, result.RequiresTwoFactor);
+            _logger.LogWarning("Login failed for user {UserId}. IsLockedOut: {IsLockedOut}, IsNotAllowed: {IsNotAllowed}, RequiresTwoFactor: {RequiresTwoFactor}",
+                user.Id, result.IsLockedOut, result.IsNotAllowed, result.RequiresTwoFactor);
             return null;
         }
 
-        _logger.LogInformation("User {Email} logged in successfully.", email);
+        _logger.LogInformation("User {UserId} logged in successfully.", user.Id);
 
         var roles = await _userManager.GetRolesAsync(user);
         var claims = await _userManager.GetClaimsAsync(user);

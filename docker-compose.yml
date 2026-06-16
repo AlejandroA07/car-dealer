@@ -9,13 +9,16 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=westcoast_cars;Username=postgres;Password=${POSTGRES_PASSWORD}
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=westcoast_cars;Username=postgres;Password=${POSTGRES_PASSWORD};SSL Mode=Prefer
       - apiImageUrl=http://api:8080/images/
       - JwtSettings__Secret=${JWT_SECRET}
       - AdminSettings__Password=${ADMIN_PASSWORD}
+      - DataProtectionPath=/app/keys
     depends_on:
       db:
         condition: service_healthy
+    volumes:
+      - ./dpkeys:/app/keys
 
   web:
     build:
