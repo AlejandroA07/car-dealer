@@ -1,6 +1,6 @@
-using System.Text.Json;
 using AutoMapper;
 using MediatR;
+using WestcoastCars.Application.Common.Helpers;
 using WestcoastCars.Application.Exceptions;
 using WestcoastCars.Application.Interfaces;
 using WestcoastCars.Contracts.DTOs;
@@ -45,8 +45,8 @@ public class CreateVehicleCommandHandler(IUnitOfWork unitOfWork, IMapper mapper)
             OwnerCount = request.OwnerCount,
             LastInspectionDate = request.LastInspectionDate,
             NextInspectionDate = request.NextInspectionDate,
-            Equipment = ToJsonArray(request.Equipment),
-            GalleryUrls = ToJsonArray(request.GalleryUrls)
+            Equipment = VehicleFieldSerializer.ToJsonArray(request.Equipment),
+            GalleryUrls = VehicleFieldSerializer.ToJsonArray(request.GalleryUrls)
         };
 
         if (request.IsSold) vehicle.MarkAsSold();
@@ -57,13 +57,4 @@ public class CreateVehicleCommandHandler(IUnitOfWork unitOfWork, IMapper mapper)
         return _mapper.Map<VehicleDetailsDto>(vehicle);
     }
 
-    private static string? ToJsonArray(string? newlineSeparated)
-    {
-        if (string.IsNullOrWhiteSpace(newlineSeparated)) return null;
-        var items = newlineSeparated
-            .Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Where(s => !string.IsNullOrWhiteSpace(s))
-            .ToList();
-        return items.Count > 0 ? JsonSerializer.Serialize(items) : null;
-    }
 }

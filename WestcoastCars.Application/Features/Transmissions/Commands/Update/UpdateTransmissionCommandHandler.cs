@@ -11,10 +11,9 @@ public class UpdateTransmissionCommandHandler(IUnitOfWork unitOfWork) : IRequest
 
     public async Task Handle(UpdateTransmissionCommand request, CancellationToken cancellationToken)
     {
-        var repository = _unitOfWork.TransmissionTypeRepository ?? throw new InvalidOperationException("Repository for TransmissionType is not available.");
-        var transmissionTypeToUpdate = await repository.GetByIdAsync(request.Id) ?? throw new NotFoundException($"TransmissionType with id '{request.Id}' not found.");
-        transmissionTypeToUpdate!.Name = request.Name;
-        repository.Update(transmissionTypeToUpdate!);
+        var transmissionTypeToUpdate = await _unitOfWork.TransmissionTypeRepository.GetByIdAsync(request.Id) ?? throw new NotFoundException($"TransmissionType with id '{request.Id}' not found.");
+        transmissionTypeToUpdate.Name = request.Name;
+        _unitOfWork.TransmissionTypeRepository.Update(transmissionTypeToUpdate);
 
         await _unitOfWork.CompleteOrThrowAsync("Failed to update transmission type");
     }

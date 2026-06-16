@@ -11,13 +11,12 @@ public class DeleteTransmissionCommandHandler(IUnitOfWork unitOfWork) : IRequest
 
     public async Task Handle(DeleteTransmissionCommand request, CancellationToken cancellationToken)
     {
-        var repository = _unitOfWork.TransmissionTypeRepository ?? throw new InvalidOperationException("Repository for TransmissionType is not available.");
-        var transmissionTypeToDelete = await repository.GetByIdAsync(request.Id) ?? throw new NotFoundException($"TransmissionType with id '{request.Id}' not found.");
+        var transmissionTypeToDelete = await _unitOfWork.TransmissionTypeRepository.GetByIdAsync(request.Id) ?? throw new NotFoundException($"TransmissionType with id '{request.Id}' not found.");
         var hasVehicles = await _unitOfWork.VehicleRepository.FirstOrDefaultAsync(v => v.TransmissionTypeId == request.Id);
         if (hasVehicles is not null)
             throw new ConflictException($"Cannot delete transmission type '{transmissionTypeToDelete.Name}' because it has vehicles assigned to it.");
 
-        repository.Remove(transmissionTypeToDelete!);
+        _unitOfWork.TransmissionTypeRepository.Remove(transmissionTypeToDelete);
 
         await _unitOfWork.CompleteOrThrowAsync("Failed to delete transmission type");
     }

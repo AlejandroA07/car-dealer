@@ -13,9 +13,8 @@ public class CreateTransmissionCommandHandler(IUnitOfWork unitOfWork, IMapper ma
 
     public async Task<NamedObjectDto> Handle(CreateTransmissionCommand request, CancellationToken cancellationToken)
     {
-        var repository = _unitOfWork.TransmissionTypeRepository ?? throw new InvalidOperationException("Repository for TransmissionType is not available.");
         var transmissionTypeToAdd = new TransmissionType { Name = request.Name };
-        await repository.AddAsync(transmissionTypeToAdd);
+        await _unitOfWork.TransmissionTypeRepository.AddAsync(transmissionTypeToAdd);
 
         await _unitOfWork.CompleteOrThrowAsync("Failed to create transmission type");
         return _mapper.Map<NamedObjectDto>(transmissionTypeToAdd);

@@ -12,13 +12,12 @@ public class DeleteManufacturerCommandHandler(IUnitOfWork unitOfWork) : IRequest
 
     public async Task Handle(DeleteManufacturerCommand request, CancellationToken cancellationToken)
     {
-        var repository = _unitOfWork.ManufacturerRepository ?? throw new InvalidOperationException("Repository for Manufacturer is not available.");
-        var manufacturerToDelete = await repository.GetByIdAsync(request.Id) ?? throw new NotFoundException($"Manufacturer with id '{request.Id}' not found.");
+        var manufacturerToDelete = await _unitOfWork.ManufacturerRepository.GetByIdAsync(request.Id) ?? throw new NotFoundException($"Manufacturer with id '{request.Id}' not found.");
         var hasVehicles = await _unitOfWork.VehicleRepository.FirstOrDefaultAsync(v => v.ManufacturerId == request.Id);
         if (hasVehicles is not null)
             throw new ConflictException($"Cannot delete manufacturer '{manufacturerToDelete.Name}' because it has vehicles assigned to it.");
 
-        repository.Remove(manufacturerToDelete!);
+        _unitOfWork.ManufacturerRepository.Remove(manufacturerToDelete);
 
         await _unitOfWork.CompleteOrThrowAsync("Failed to delete manufacturer");
     }

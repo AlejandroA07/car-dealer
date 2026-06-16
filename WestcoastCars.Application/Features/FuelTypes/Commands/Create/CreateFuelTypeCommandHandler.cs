@@ -13,9 +13,8 @@ public class CreateFuelTypeCommandHandler(IUnitOfWork unitOfWork, IMapper mapper
 
     public async Task<NamedObjectDto> Handle(CreateFuelTypeCommand request, CancellationToken cancellationToken)
     {
-        var repository = _unitOfWork.FuelTypeRepository ?? throw new InvalidOperationException("Repository for FuelType is not available.");
         var fuelTypeToAdd = new FuelType { Name = request.Name };
-        await repository.AddAsync(fuelTypeToAdd);
+        await _unitOfWork.FuelTypeRepository.AddAsync(fuelTypeToAdd);
 
         await _unitOfWork.CompleteOrThrowAsync("Failed to create fuel type");
         return _mapper.Map<NamedObjectDto>(fuelTypeToAdd);

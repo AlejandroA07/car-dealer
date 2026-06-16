@@ -1,4 +1,3 @@
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using WestcoastCars.Application.Interfaces;
@@ -79,13 +78,6 @@ public class UnitOfWork(WestcoastCarsContext context, IVehicleTextSearchMatcher 
             return true;
         }
 
-        if (exception.InnerException is SqliteException sqliteException &&
-            sqliteException.SqliteExtendedErrorCode == 2067)
-        {
-            conflictMessage = "A record with the same unique value already exists.";
-            return true;
-        }
-
         conflictMessage = string.Empty;
         return false;
     }
@@ -103,14 +95,6 @@ public class UnitOfWork(WestcoastCarsContext context, IVehicleTextSearchMatcher 
                 _ => new ConflictException("The operation conflicts with existing related data.")
             };
 
-            return true;
-        }
-
-        if (exception.InnerException is SqliteException sqliteException &&
-            sqliteException.SqliteErrorCode == 19 &&
-            sqliteException.Message.Contains("FOREIGN KEY constraint failed", StringComparison.OrdinalIgnoreCase))
-        {
-            mappedException = new ConflictException("The operation conflicts with existing related data.");
             return true;
         }
 
