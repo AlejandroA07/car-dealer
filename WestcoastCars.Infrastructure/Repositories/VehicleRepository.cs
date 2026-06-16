@@ -168,7 +168,7 @@ public class VehicleRepository(WestcoastCarsContext context, IVehicleTextSearchM
 
     public async Task<IReadOnlyList<Vehicle>> GetForBulkDeleteAsync(string? make, string? model, bool? isSold, int? minMileage, int? maxMileage)
     {
-        var query = _context.Vehicles.AsQueryable();
+        var query = _context.Vehicles.AsNoTracking().AsQueryable();
         if (make is not null) query = query.Where(v => v.Manufacturer.Name == make);
         if (model is not null) query = query.Where(v => v.Model == model);
         if (isSold.HasValue) query = query.Where(v => v.IsSold == isSold.Value);

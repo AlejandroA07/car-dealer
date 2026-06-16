@@ -323,7 +323,11 @@ public class VehiclesController(IMediator mediator, ILogger<VehiclesController> 
     [ProducesResponseType(403)]
     public async Task<IActionResult> StatsByModel()
     {
-        var result = await _mediator.Send(new GetVehicleStatsByModelQuery());
+        var result = await _cache.GetOrCreateAsync(LookupCacheKeys.StatsByModel, async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(30);
+            return await _mediator.Send(new GetVehicleStatsByModelQuery());
+        });
         return Ok(result);
     }
 
@@ -337,7 +341,11 @@ public class VehiclesController(IMediator mediator, ILogger<VehiclesController> 
     [ProducesResponseType(403)]
     public async Task<IActionResult> StatsByMileage()
     {
-        var result = await _mediator.Send(new GetVehicleStatsByMileageQuery());
+        var result = await _cache.GetOrCreateAsync(LookupCacheKeys.StatsByMileage, async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(30);
+            return await _mediator.Send(new GetVehicleStatsByMileageQuery());
+        });
         return Ok(result);
     }
 
@@ -351,7 +359,11 @@ public class VehiclesController(IMediator mediator, ILogger<VehiclesController> 
     [ProducesResponseType(403)]
     public async Task<IActionResult> StatsSummary()
     {
-        var result = await _mediator.Send(new GetVehicleStatsSummaryQuery());
+        var result = await _cache.GetOrCreateAsync(LookupCacheKeys.StatsSummary, async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(30);
+            return await _mediator.Send(new GetVehicleStatsSummaryQuery());
+        });
         return Ok(result);
     }
 
