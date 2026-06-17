@@ -1,4 +1,4 @@
-<script type="text/javascript">
+<script type="text/javascript" nonce="@Context.Items["CspNonce"]">
     // Configure toastr options
     toastr.options = {
         "closeButton": true,
@@ -59,19 +59,19 @@
 
 @if (TempData["success"] != null)
 {
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="@Context.Items["CspNonce"]">
         toastr.success('@TempData["success"]', 'Success');
     </script>
 }
 @if (TempData["error"] != null)
 {
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="@Context.Items["CspNonce"]">
         toastr.error('@TempData["error"]', 'Error');
     </script>
 }
 @if (TempData["info"] != null)
 {
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="@Context.Items["CspNonce"]">
         toastr.info('@TempData["info"]', 'Info');
     </script>
 }

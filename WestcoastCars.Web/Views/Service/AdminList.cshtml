@@ -31,7 +31,7 @@
 }
 
 @section Scripts {
-    <script>
+    <script nonce="@Context.Items["CspNonce"]">
         (function () {
             var dialog = document.getElementById('confirm-dialog');
             var msgEl = document.getElementById('confirm-dialog-message');

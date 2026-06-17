@@ -199,7 +199,7 @@
     <button class="lightbox-next" aria-label="Nästa bild">&#8250;</button>
 </div>
 
-<script>
+<script nonce="@Context.Items["CspNonce"]">
     (function () {
         var images = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(imageList));
         var overlay = document.getElementById('lightbox');

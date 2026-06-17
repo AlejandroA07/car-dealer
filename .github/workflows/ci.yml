@@ -47,7 +47,12 @@ jobs:
         run: dotnet restore --locked-mode
 
       - name: Check for vulnerable packages
-        run: dotnet list package --vulnerable --include-transitive
+        run: |
+          dotnet list package --vulnerable --include-transitive 2>&1 | tee vuln.txt
+          if grep -q "has the following vulnerable packages" vuln.txt; then
+            echo "Vulnerable packages detected — failing build."
+            exit 1
+          fi
 
       - name: Build (Release)
         run: dotnet build --no-restore --configuration Release

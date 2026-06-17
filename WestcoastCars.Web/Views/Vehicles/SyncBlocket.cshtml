@@ -289,7 +289,7 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script>
+    <script nonce="@Context.Items["CspNonce"]">
         (function () {
             var previewForm = document.getElementById('preview-form');
             if (previewForm) {

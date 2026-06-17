@@ -29,12 +29,6 @@ public static class IdentitySeedData
             }
         }
 
-        if (string.IsNullOrEmpty(defaultPassword))
-        {
-            logger.LogError("Default password is null or empty. Cannot seed users.");
-            return;
-        }
-
         foreach (var u in Users)
         {
             if (await userManager.FindByNameAsync(u.Email) != null)

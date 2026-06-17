@@ -84,6 +84,17 @@ builder.Services.AddHealthChecks()
 
 builder.Services.AddRateLimiter(options =>
 {
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = builder.Configuration.GetValue<int>("RateLimiting:GlobalPermitLimit", 60),
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            }));
+
     options.AddFixedWindowLimiter("auth", o =>
     {
         o.PermitLimit = 10;
@@ -115,8 +126,8 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
         policy.WithOrigins(allowedOrigins)
-              .AllowAnyMethod()
-              .AllowAnyHeader());
+              .WithMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+              .WithHeaders("Content-Type", "Authorization"));
 });
 
 builder.Services.AddHttpLogging(logging =>
@@ -230,14 +241,10 @@ using (var scope = app.Services.CreateScope())
         var adminOptions = builder.Configuration.GetSection(AdminOptions.SectionName).Get<AdminOptions>();
         var adminPassword = adminOptions?.Password;
 
-        if (!string.IsNullOrEmpty(adminPassword))
-        {
-            await IdentitySeedData.SeedRolesAndUsers(userManager, roleManager, adminPassword, logger);
-        }
-        else
-        {
-            logger.LogWarning("AdminSettings:Password not found. Skipping auth user seeding.");
-        }
+        if (string.IsNullOrEmpty(adminPassword))
+            throw new InvalidOperationException("AdminSettings:Password is not configured. Set the ADMIN_PASSWORD environment variable (production) or add it to user secrets (development).");
+
+        await IdentitySeedData.SeedRolesAndUsers(userManager, roleManager, adminPassword, logger);
     }
     catch (Exception ex)
     {
@@ -266,6 +273,14 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseResponseCompression();
+
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    context.Response.Headers["X-Frame-Options"] = "DENY";
+    context.Response.Headers["Referrer-Policy"] = "no-referrer";
+    await next();
+});
 
 app.UseStaticFiles();
 

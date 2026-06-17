@@ -29,9 +29,11 @@ flowchart LR
 
 ```env
 POSTGRES_PASSWORD=your-db-password
-JWT_SECRET=your-long-random-secret
+JWT_SECRET=your-long-random-secret   # minimum 32 characters
 ADMIN_PASSWORD=your-admin-password
 ```
+
+> **Data protection keys** — both the API and Web containers persist ASP.NET Core Data Protection keys to `./dpkeys/` on the host (mounted at `/app/keys` inside each container). This directory is created automatically on first run. **Back it up.** Losing these keys invalidates all active user sessions and any encrypted payloads. Do not delete it between deployments.
 
 **2. Start the stack**
 

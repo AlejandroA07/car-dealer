@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using WestcoastCars.Web.Configurations;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Cryptography;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -111,13 +112,16 @@ if (!app.Environment.IsDevelopment())
 
 app.Use(async (context, next) =>
 {
+    var nonce = Convert.ToBase64String(RandomNumberGenerator.GetBytes(16));
+    context.Items["CspNonce"] = nonce;
+
     context.Response.Headers["X-Content-Type-Options"] = "nosniff";
     context.Response.Headers["X-Frame-Options"] = "DENY";
     context.Response.Headers["Referrer-Policy"] = "no-referrer";
     context.Response.Headers["Permissions-Policy"] = "camera=(), microphone=()";
     context.Response.Headers["Content-Security-Policy"] =
         "default-src 'self'; " +
-        "script-src 'self' 'unsafe-inline' https://kit.fontawesome.com https://code.jquery.com https://cdnjs.cloudflare.com; " +
+        $"script-src 'self' 'nonce-{nonce}' https://kit.fontawesome.com https://code.jquery.com https://cdnjs.cloudflare.com; " +
         "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://ka-f.fontawesome.com; " +
         "font-src 'self' https://ka-f.fontawesome.com; " +
         "connect-src 'self' https://ka-f.fontawesome.com; " +
