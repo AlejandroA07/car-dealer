@@ -1,21 +1,20 @@
-using AutoMapper;
 using MediatR;
 using WestcoastCars.Application.Interfaces;
+using WestcoastCars.Application.Mappings;
 using WestcoastCars.Contracts.DTOs;
 
 namespace WestcoastCars.Application.Features.Vehicles.Queries.Search;
 
-public class SearchVehiclesQueryHandler(IUnitOfWork unitOfWork, IMapper mapper) : IRequestHandler<SearchVehiclesQuery, PagedResult<VehicleSummaryDto>>
+public class SearchVehiclesQueryHandler(IUnitOfWork unitOfWork) : IRequestHandler<SearchVehiclesQuery, PagedResult<VehicleSummaryDto>>
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
-    private readonly IMapper _mapper = mapper;
 
     public async Task<PagedResult<VehicleSummaryDto>> Handle(SearchVehiclesQuery request, CancellationToken cancellationToken)
     {
         var vehicles = await _unitOfWork.VehicleRepository.SearchAsync(request.Criteria);
         return new PagedResult<VehicleSummaryDto>
         {
-            Items = _mapper.Map<List<VehicleSummaryDto>>(vehicles.Items),
+            Items = vehicles.Items.Select(v => v.ToSummaryDto()).ToList(),
             TotalCount = vehicles.TotalCount,
             Page = vehicles.Page,
             PageSize = vehicles.PageSize

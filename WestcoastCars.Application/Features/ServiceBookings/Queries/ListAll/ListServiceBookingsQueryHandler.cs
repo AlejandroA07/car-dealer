@@ -1,14 +1,13 @@
-using AutoMapper;
 using MediatR;
 using WestcoastCars.Application.Interfaces;
+using WestcoastCars.Application.Mappings;
 using WestcoastCars.Contracts.DTOs;
 
 namespace WestcoastCars.Application.Features.ServiceBookings.Queries.ListAll;
 
-public class ListServiceBookingsQueryHandler(IUnitOfWork unitOfWork, IMapper mapper) : IRequestHandler<ListServiceBookingsQuery, PagedResult<ServiceBookingSummaryDto>>
+public class ListServiceBookingsQueryHandler(IUnitOfWork unitOfWork) : IRequestHandler<ListServiceBookingsQuery, PagedResult<ServiceBookingSummaryDto>>
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
-    private readonly IMapper _mapper = mapper;
 
     public async Task<PagedResult<ServiceBookingSummaryDto>> Handle(ListServiceBookingsQuery request, CancellationToken cancellationToken)
     {
@@ -20,7 +19,7 @@ public class ListServiceBookingsQueryHandler(IUnitOfWork unitOfWork, IMapper map
 
         return new PagedResult<ServiceBookingSummaryDto>
         {
-            Items = _mapper.Map<List<ServiceBookingSummaryDto>>(paged.Items),
+            Items = paged.Items.Select(b => b.ToDto()).ToList(),
             TotalCount = paged.TotalCount,
             Page = paged.Page,
             PageSize = paged.PageSize

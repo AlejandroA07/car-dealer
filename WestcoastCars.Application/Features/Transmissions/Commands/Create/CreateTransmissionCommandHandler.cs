@@ -1,15 +1,14 @@
-using AutoMapper;
 using MediatR;
 using WestcoastCars.Application.Interfaces;
+using WestcoastCars.Application.Mappings;
 using WestcoastCars.Contracts.DTOs;
 using WestcoastCars.Domain.Entities;
 
 namespace WestcoastCars.Application.Features.Transmissions.Commands.Create;
 
-public class CreateTransmissionCommandHandler(IUnitOfWork unitOfWork, IMapper mapper) : IRequestHandler<CreateTransmissionCommand, NamedObjectDto>
+public class CreateTransmissionCommandHandler(IUnitOfWork unitOfWork) : IRequestHandler<CreateTransmissionCommand, NamedObjectDto>
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
-    private readonly IMapper _mapper = mapper;
 
     public async Task<NamedObjectDto> Handle(CreateTransmissionCommand request, CancellationToken cancellationToken)
     {
@@ -17,6 +16,6 @@ public class CreateTransmissionCommandHandler(IUnitOfWork unitOfWork, IMapper ma
         await _unitOfWork.TransmissionTypeRepository.AddAsync(transmissionTypeToAdd);
 
         await _unitOfWork.CompleteOrThrowAsync("Failed to create transmission type");
-        return _mapper.Map<NamedObjectDto>(transmissionTypeToAdd);
+        return transmissionTypeToAdd.ToDto();
     }
 }

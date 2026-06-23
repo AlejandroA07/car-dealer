@@ -1,9 +1,7 @@
-using AutoMapper;
 using Moq;
 using WestcoastCars.Application.Exceptions;
 using WestcoastCars.Application.Features.Manufacturers.Commands.Create;
 using WestcoastCars.Application.Interfaces;
-using WestcoastCars.Contracts.DTOs;
 using WestcoastCars.Domain.Entities;
 using Xunit;
 
@@ -13,18 +11,16 @@ public class CreateManufacturerCommandHandlerTests
 {
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<IManufacturerRepository> _manufacturerRepositoryMock;
-    private readonly Mock<IMapper> _mapperMock;
     private readonly CreateManufacturerCommandHandler _handler;
 
     public CreateManufacturerCommandHandlerTests()
     {
         _unitOfWorkMock = new Mock<IUnitOfWork>();
         _manufacturerRepositoryMock = new Mock<IManufacturerRepository>();
-        _mapperMock = new Mock<IMapper>();
 
         _unitOfWorkMock.Setup(u => u.ManufacturerRepository).Returns(_manufacturerRepositoryMock.Object);
 
-        _handler = new CreateManufacturerCommandHandler(_unitOfWorkMock.Object, _mapperMock.Object);
+        _handler = new CreateManufacturerCommandHandler(_unitOfWorkMock.Object);
     }
 
     [Fact]
@@ -32,17 +28,15 @@ public class CreateManufacturerCommandHandlerTests
     {
         // Arrange
         var command = new CreateManufacturerCommand { Name = "Volvo" };
-        var expectedDto = new NamedObjectDto { Id = 1, Name = "Volvo" };
 
         _unitOfWorkMock.Setup(u => u.CompleteAsync()).ReturnsAsync(1);
-        _mapperMock.Setup(m => m.Map<NamedObjectDto>(It.IsAny<Manufacturer>())).Returns(expectedDto);
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(expectedDto.Name, result.Name);
+        Assert.Equal("Volvo", result.Name);
         _manufacturerRepositoryMock.Verify(r => r.AddAsync(It.IsAny<Manufacturer>()), Times.Once);
         _unitOfWorkMock.Verify(u => u.CompleteAsync(), Times.Once);
     }

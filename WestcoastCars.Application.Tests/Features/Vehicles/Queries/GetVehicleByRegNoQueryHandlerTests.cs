@@ -1,9 +1,7 @@
-using AutoMapper;
 using Moq;
 using WestcoastCars.Application.Exceptions;
 using WestcoastCars.Application.Features.Vehicles.Queries.GetByRegNo;
 using WestcoastCars.Application.Interfaces;
-using WestcoastCars.Contracts.DTOs;
 using WestcoastCars.Domain.Entities;
 using Xunit;
 
@@ -13,13 +11,12 @@ public class GetVehicleByRegNoQueryHandlerTests
 {
     private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
     private readonly Mock<IVehicleRepository> _repositoryMock = new();
-    private readonly Mock<IMapper> _mapperMock = new();
     private readonly GetVehicleByRegNoQueryHandler _handler;
 
     public GetVehicleByRegNoQueryHandlerTests()
     {
         _unitOfWorkMock.Setup(u => u.VehicleRepository).Returns(_repositoryMock.Object);
-        _handler = new GetVehicleByRegNoQueryHandler(_unitOfWorkMock.Object, _mapperMock.Object);
+        _handler = new GetVehicleByRegNoQueryHandler(_unitOfWorkMock.Object);
     }
 
     [Fact]
@@ -36,15 +33,15 @@ public class GetVehicleByRegNoQueryHandlerTests
             FuelType = new FuelType { Name = "Petrol" },
             TransmissionType = new TransmissionType { Name = "Auto" }
         };
-        var dto = new VehicleDetailsDto();
 
         _repositoryMock.Setup(r => r.FindByRegistrationNumberAsync("ABC123")).ReturnsAsync(vehicle);
-        _mapperMock.Setup(m => m.Map<VehicleDetailsDto>(vehicle)).Returns(dto);
 
         var result = await _handler.Handle(
             new GetVehicleByRegNoQuery { RegistrationNumber = "ABC123" }, CancellationToken.None);
 
-        Assert.Same(dto, result);
+        Assert.NotNull(result);
+        Assert.Equal("ABC123", result.RegistrationNumber);
+        Assert.Equal("XC60", result.Model);
     }
 
     [Fact]

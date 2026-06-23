@@ -1,7 +1,4 @@
-using AutoMapper;
-using Microsoft.Extensions.Logging.Abstractions;
 using WestcoastCars.Application.Mappings;
-using WestcoastCars.Contracts.DTOs;
 using WestcoastCars.Domain.Entities;
 using Xunit;
 
@@ -9,17 +6,6 @@ namespace WestcoastCars.Application.Tests.Mappings;
 
 public class MappingProfileTests
 {
-    private readonly IMapper _mapper;
-
-    public MappingProfileTests()
-    {
-        var configuration = new MapperConfiguration(
-            cfg => cfg.AddProfile<MappingProfile>(),
-            NullLoggerFactory.Instance);
-
-        _mapper = configuration.CreateMapper();
-    }
-
     [Theory]
     [InlineData(null, "/images/no-car.png")]
     [InlineData("", "/images/no-car.png")]
@@ -33,8 +19,8 @@ public class MappingProfileTests
         var vehicle = CreateVehicle(imageUrl);
 
         // Act
-        var summary = _mapper.Map<VehicleSummaryDto>(vehicle);
-        var details = _mapper.Map<VehicleDetailsDto>(vehicle);
+        var summary = vehicle.ToSummaryDto();
+        var details = vehicle.ToDetailsDto();
 
         // Assert
         Assert.Equal(expectedImageUrl, summary.ImageUrl);
@@ -54,7 +40,7 @@ public class MappingProfileTests
         vehicle.Source = "Blocket";
         vehicle.PublishedAt = publishedAt;
 
-        var summary = _mapper.Map<VehicleSummaryDto>(vehicle);
+        var summary = vehicle.ToSummaryDto();
 
         Assert.Equal(vehicle.Id, summary.Id);
         Assert.Equal("Volvo XC60", summary.Name);
@@ -84,7 +70,7 @@ public class MappingProfileTests
         vehicle.Color = "Blue";
         vehicle.City = "Gothenburg";
 
-        var details = _mapper.Map<VehicleDetailsDto>(vehicle);
+        var details = vehicle.ToDetailsDto();
 
         Assert.Equal(vehicle.Id, details.Id);
         Assert.Equal(vehicle.RegistrationNumber, details.RegistrationNumber);
@@ -127,7 +113,7 @@ public class MappingProfileTests
         };
         booking.Confirm();
 
-        var summary = _mapper.Map<ServiceBookingSummaryDto>(booking);
+        var summary = booking.ToDto();
 
         Assert.Equal(booking.Id, summary.Id);
         Assert.Equal(booking.VehicleRegistrationNumber, summary.VehicleRegistrationNumber);

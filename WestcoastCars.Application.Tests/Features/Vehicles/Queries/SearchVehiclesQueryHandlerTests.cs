@@ -1,4 +1,3 @@
-using AutoMapper;
 using Moq;
 using WestcoastCars.Application.Features.Vehicles.Queries.Search;
 using WestcoastCars.Application.Interfaces;
@@ -12,13 +11,12 @@ public class SearchVehiclesQueryHandlerTests
 {
     private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
     private readonly Mock<IVehicleRepository> _repositoryMock = new();
-    private readonly Mock<IMapper> _mapperMock = new();
     private readonly SearchVehiclesQueryHandler _handler;
 
     public SearchVehiclesQueryHandlerTests()
     {
         _unitOfWorkMock.Setup(u => u.VehicleRepository).Returns(_repositoryMock.Object);
-        _handler = new SearchVehiclesQueryHandler(_unitOfWorkMock.Object, _mapperMock.Object);
+        _handler = new SearchVehiclesQueryHandler(_unitOfWorkMock.Object);
     }
 
     [Fact]
@@ -37,14 +35,12 @@ public class SearchVehiclesQueryHandlerTests
             Page = 1,
             PageSize = 20
         };
-        var mappedDtos = new List<VehicleSummaryDto> { new() };
-
         _repositoryMock.Setup(r => r.SearchAsync(criteria)).ReturnsAsync(pagedVehicles);
-        _mapperMock.Setup(m => m.Map<List<VehicleSummaryDto>>(pagedVehicles.Items)).Returns(mappedDtos);
 
         var result = await _handler.Handle(new SearchVehiclesQuery(criteria), CancellationToken.None);
 
         Assert.Equal(1, result.TotalCount);
-        Assert.Same(mappedDtos, result.Items);
+        Assert.Single(result.Items);
+        Assert.Equal("Volvo XC40", result.Items[0].Name);
     }
 }

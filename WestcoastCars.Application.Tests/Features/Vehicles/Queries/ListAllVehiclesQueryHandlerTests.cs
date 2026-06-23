@@ -1,4 +1,3 @@
-using AutoMapper;
 using Moq;
 using WestcoastCars.Application.Features.Vehicles.Queries.ListAll;
 using WestcoastCars.Application.Interfaces;
@@ -12,13 +11,12 @@ public class ListAllVehiclesQueryHandlerTests
 {
     private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
     private readonly Mock<IVehicleRepository> _repositoryMock = new();
-    private readonly Mock<IMapper> _mapperMock = new();
     private readonly ListAllVehiclesQueryHandler _handler;
 
     public ListAllVehiclesQueryHandlerTests()
     {
         _unitOfWorkMock.Setup(u => u.VehicleRepository).Returns(_repositoryMock.Object);
-        _handler = new ListAllVehiclesQueryHandler(_unitOfWorkMock.Object, _mapperMock.Object);
+        _handler = new ListAllVehiclesQueryHandler(_unitOfWorkMock.Object);
     }
 
     [Fact]
@@ -36,18 +34,14 @@ public class ListAllVehiclesQueryHandlerTests
             Page = 1,
             PageSize = 20
         };
-        var mappedDtos = new List<VehicleSummaryDto> { new() };
-
         _repositoryMock
             .Setup(r => r.GetUnsoldAsync(It.IsAny<PagedQueryDto>()))
             .ReturnsAsync(pagedVehicles);
-        _mapperMock
-            .Setup(m => m.Map<List<VehicleSummaryDto>>(pagedVehicles.Items))
-            .Returns(mappedDtos);
 
         var result = await _handler.Handle(new ListAllVehiclesQuery(), CancellationToken.None);
 
         Assert.Equal(1, result.TotalCount);
-        Assert.Same(mappedDtos, result.Items);
+        Assert.Single(result.Items);
+        Assert.Equal("Volvo XC60", result.Items[0].Name);
     }
 }

@@ -1,22 +1,20 @@
-using AutoMapper;
 using MediatR;
 using WestcoastCars.Application.Common.Helpers;
 using WestcoastCars.Application.Exceptions;
 using WestcoastCars.Application.Interfaces;
+using WestcoastCars.Application.Mappings;
 using WestcoastCars.Contracts.DTOs;
 using WestcoastCars.Domain.Entities;
 
 namespace WestcoastCars.Application.Features.Vehicles.Commands.Create;
 
-public class CreateVehicleCommandHandler(IUnitOfWork unitOfWork, IMapper mapper) : IRequestHandler<CreateVehicleCommand, VehicleDetailsDto>
+public class CreateVehicleCommandHandler(IUnitOfWork unitOfWork) : IRequestHandler<CreateVehicleCommand, VehicleDetailsDto>
 {
     private const string DefaultCarImageName = "/images/no-car.png";
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
-    private readonly IMapper _mapper = mapper;
 
     public async Task<VehicleDetailsDto> Handle(CreateVehicleCommand request, CancellationToken cancellationToken)
     {
-        // Validate related entities
         var manufacturer = await _unitOfWork.ManufacturerRepository.GetByIdAsync(request.ManufacturerId) ?? throw new NotFoundException($"Manufacturer with ID {request.ManufacturerId} not found");
         var fuelType = await _unitOfWork.FuelTypeRepository.GetByIdAsync(request.FuelTypeId) ?? throw new NotFoundException($"Fuel type with ID {request.FuelTypeId} not found");
         var transmissionType = await _unitOfWork.TransmissionTypeRepository.GetByIdAsync(request.TransmissionTypeId) ?? throw new NotFoundException($"Transmission type with ID {request.TransmissionTypeId} not found");
@@ -54,7 +52,6 @@ public class CreateVehicleCommandHandler(IUnitOfWork unitOfWork, IMapper mapper)
         await _unitOfWork.VehicleRepository.AddAsync(vehicle);
 
         await _unitOfWork.CompleteOrThrowAsync("Failed to create vehicle");
-        return _mapper.Map<VehicleDetailsDto>(vehicle);
+        return vehicle.ToDetailsDto();
     }
-
 }
