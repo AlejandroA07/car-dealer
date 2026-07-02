@@ -43,6 +43,26 @@ builder.Services.AddScoped<IManufacturerService, ManufacturerService>();
 builder.Services.AddScoped<IFuelTypeService, FuelTypeService>();
 builder.Services.AddScoped<ITransmissionTypeService, TransmissionTypeService>();
 builder.Services.AddScoped<IServiceBookingService, ServiceBookingService>();
+builder.Services.AddScoped<IImageUploadService, LocalImageUploadService>();
+
+// Configure local-disk storage for uploaded vehicle photos, served from Web's own wwwroot
+// (see LocalImageUploadService for why this lives in Web rather than the Api).
+var imageUploadsPath = builder.Configuration["ImageUploadPath"] ?? Path.Combine(builder.Environment.WebRootPath, "images", "uploads");
+if (!Path.IsPathRooted(imageUploadsPath))
+{
+    imageUploadsPath = Path.Combine(Directory.GetCurrentDirectory(), imageUploadsPath);
+}
+
+if (!Directory.Exists(imageUploadsPath))
+{
+    Directory.CreateDirectory(imageUploadsPath);
+}
+
+builder.Services.Configure<ImageUploadOptions>(options =>
+{
+    options.StoragePath = imageUploadsPath;
+    options.MaxFileSizeBytes = builder.Configuration.GetValue<long>("ImageUpload:MaxFileSizeBytes", 5 * 1024 * 1024);
+});
 
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpContextAccessor();

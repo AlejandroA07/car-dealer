@@ -8,6 +8,8 @@
 .claude/
 docs/
 dpkeys/
+web-images/
+WestcoastCars.Web/wwwroot/images/uploads/
 .env
 prod_db_password.txt
 README.md

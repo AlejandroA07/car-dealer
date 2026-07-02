@@ -35,8 +35,8 @@ public class CreateVehicleCommandValidator : AbstractValidator<CreateVehicleComm
 
         RuleFor(v => v.ImageUrl)
             .MaximumLength(500)
-            .Must(url => string.IsNullOrEmpty(url) || Uri.TryCreate(url, UriKind.Absolute, out _))
-            .WithMessage("ImageUrl must be a valid absolute URL.");
+            .Must(url => string.IsNullOrEmpty(url) || url.StartsWith('/') || Uri.TryCreate(url, UriKind.Absolute, out _))
+            .WithMessage("ImageUrl must be a root-relative path or a valid absolute URL.");
 
         RuleFor(v => v.Description)
             .MaximumLength(4000).WithMessage("Description must not exceed 4000 characters.");

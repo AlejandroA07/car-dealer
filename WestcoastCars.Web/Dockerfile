@@ -48,6 +48,10 @@ COPY --from=build /app/publish .
 RUN mkdir /app/keys
 RUN chown app /app/keys
 
+# Create and set permissions for the uploaded vehicle image folder
+RUN mkdir -p /app/wwwroot/images/uploads
+RUN chown -R app /app/wwwroot/images/uploads
+
 USER app
 
 EXPOSE 8080

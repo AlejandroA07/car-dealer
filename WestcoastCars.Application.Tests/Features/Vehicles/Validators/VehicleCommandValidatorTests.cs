@@ -58,6 +58,49 @@ public class VehicleCommandValidatorTests
         Assert.Contains(result.Errors, error => error.PropertyName == nameof(UpdateVehicleCommand.ModelYear));
     }
 
+    [Theory]
+    [InlineData("/images/uploads/photo.jpg")]
+    [InlineData("/images/no-car.png")]
+    [InlineData("https://example.com/photo.jpg")]
+    [InlineData("")]
+    public void CreateVehicleCommandValidator_ShouldAcceptRelativeAndAbsoluteImageUrls(string imageUrl)
+    {
+        var validator = new CreateVehicleCommandValidator();
+        var command = CreateValidCreateCommand();
+        command.ImageUrl = imageUrl;
+
+        var result = validator.Validate(command);
+
+        Assert.DoesNotContain(result.Errors, error => error.PropertyName == nameof(CreateVehicleCommand.ImageUrl));
+    }
+
+    [Fact]
+    public void CreateVehicleCommandValidator_ShouldRejectImageUrlWithoutLeadingSlashOrScheme()
+    {
+        var validator = new CreateVehicleCommandValidator();
+        var command = CreateValidCreateCommand();
+        command.ImageUrl = "not-a-valid-url";
+
+        var result = validator.Validate(command);
+
+        Assert.Contains(result.Errors, error => error.PropertyName == nameof(CreateVehicleCommand.ImageUrl));
+    }
+
+    [Theory]
+    [InlineData("/images/uploads/photo.jpg")]
+    [InlineData("https://example.com/photo.jpg")]
+    [InlineData("")]
+    public void UpdateVehicleCommandValidator_ShouldAcceptRelativeAndAbsoluteImageUrls(string imageUrl)
+    {
+        var validator = new UpdateVehicleCommandValidator();
+        var command = CreateValidUpdateCommand();
+        command.ImageUrl = imageUrl;
+
+        var result = validator.Validate(command);
+
+        Assert.DoesNotContain(result.Errors, error => error.PropertyName == nameof(UpdateVehicleCommand.ImageUrl));
+    }
+
     [Fact]
     public void BulkDeleteVehiclesCommandValidator_ShouldFail_WhenNoFiltersProvided()
     {

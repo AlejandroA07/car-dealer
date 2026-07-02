@@ -1,4 +1,4 @@
-Microsoft Visual Studio Solution File, Format Version 12.00
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
@@ -25,6 +25,8 @@ EndProject
 Project("{66A26720-8FB5-11D2-AA7E-00C04F688DDE}") = "Web", "Web", "{9955640C-2B97-44D5-90E0-9000C30BE3A0}"
 EndProject
 Project("{66A26720-8FB5-11D2-AA7E-00C04F688DDE}") = "Tests", "Tests", "{A26D2F47-2180-4C62-B5A3-09E8F1A92D8D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WestcoastCars.Web.Tests", "WestcoastCars.Web.Tests\WestcoastCars.Web.Tests.csproj", "{A4FAD191-1A40-4286-B982-E8CF0CD45904}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -144,6 +146,18 @@ Global
 		{B95F2BF2-1188-4FF7-B3C4-6D8B8B00D7D2}.Release|x64.Build.0 = Release|Any CPU
 		{B95F2BF2-1188-4FF7-B3C4-6D8B8B00D7D2}.Release|x86.ActiveCfg = Release|Any CPU
 		{B95F2BF2-1188-4FF7-B3C4-6D8B8B00D7D2}.Release|x86.Build.0 = Release|Any CPU
+		{A4FAD191-1A40-4286-B982-E8CF0CD45904}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A4FAD191-1A40-4286-B982-E8CF0CD45904}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A4FAD191-1A40-4286-B982-E8CF0CD45904}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A4FAD191-1A40-4286-B982-E8CF0CD45904}.Debug|x64.Build.0 = Debug|Any CPU
+		{A4FAD191-1A40-4286-B982-E8CF0CD45904}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A4FAD191-1A40-4286-B982-E8CF0CD45904}.Debug|x86.Build.0 = Debug|Any CPU
+		{A4FAD191-1A40-4286-B982-E8CF0CD45904}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A4FAD191-1A40-4286-B982-E8CF0CD45904}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A4FAD191-1A40-4286-B982-E8CF0CD45904}.Release|x64.ActiveCfg = Release|Any CPU
+		{A4FAD191-1A40-4286-B982-E8CF0CD45904}.Release|x64.Build.0 = Release|Any CPU
+		{A4FAD191-1A40-4286-B982-E8CF0CD45904}.Release|x86.ActiveCfg = Release|Any CPU
+		{A4FAD191-1A40-4286-B982-E8CF0CD45904}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{548EC7CF-2010-481E-A4FA-90C289AC1D29} = {03FB1595-BF8B-4956-8382-25840353B2F3}
@@ -155,6 +169,7 @@ Global
 		{A7D68882-D493-4A74-9259-7949C1AF58A5} = {A26D2F47-2180-4C62-B5A3-09E8F1A92D8D}
 		{96CC295D-4AB9-4799-865A-E0BAEF1E54B1} = {A26D2F47-2180-4C62-B5A3-09E8F1A92D8D}
 		{B95F2BF2-1188-4FF7-B3C4-6D8B8B00D7D2} = {A26D2F47-2180-4C62-B5A3-09E8F1A92D8D}
+		{A4FAD191-1A40-4286-B982-E8CF0CD45904} = {A26D2F47-2180-4C62-B5A3-09E8F1A92D8D}
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -74,10 +74,13 @@ public class VehicleDto
     public bool IsSold { get; set; } = false;
 
     /// <summary>
-    /// Relative path or URL to the vehicle's primary image.
+    /// Relative path or URL to the vehicle's primary image. Optional — a file upload
+    /// takes precedence over this field in the Create/Edit forms, so it must not render
+    /// as required (a non-nullable string here would trigger ASP.NET Core's implicit
+    /// "required" client-side validation and block submitting with only a file selected).
     /// </summary>
     [MaxLength(500)]
-    public string ImageUrl { get; set; } = string.Empty;
+    public string? ImageUrl { get; set; } = string.Empty;
 
     public string? Color { get; set; }
     public string? WheelDrive { get; set; }

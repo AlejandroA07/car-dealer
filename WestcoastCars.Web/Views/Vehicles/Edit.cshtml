@@ -17,7 +17,7 @@
                 </div>
             </header>
 
-            <form asp-action="Edit" asp-route-id="@Model.Vehicle.Id" method="post" class="vehicle-editor-form">
+            <form asp-action="Edit" asp-route-id="@Model.Vehicle.Id" method="post" enctype="multipart/form-data" class="vehicle-editor-form">
                 <input asp-for="Vehicle.Id" type="hidden" />
                 <input asp-for="Vehicle.RegistrationNumber" type="hidden" />
 
@@ -221,17 +221,19 @@
                         </div>
                     }
 
+                    <label class="vehicle-editor-upload-placeholder" for="ImageFile">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <strong>Ladda upp en ny 16:9-bild</strong>
+                        <span>JPEG, PNG, WEBP eller AVIF, max 5 MB. Lämna tomt för att behålla nuvarande bild.</span>
+                        <input type="file" asp-for="ImageFile" accept="image/jpeg,image/png,image/webp,image/avif" class="vehicle-editor-upload-input" />
+                    </label>
+                    <span class="vehicle-editor-error" asp-validation-for="ImageFile"></span>
+
                     <label class="vehicle-editor-field">
-                        <span>Bild-URL</span>
-                        <input asp-for="Vehicle.ImageUrl" placeholder="/images/no-car.png eller extern bild-URL" />
+                        <span>Bild-URL (används endast om ingen fil laddas upp ovan)</span>
+                        <input asp-for="Vehicle.ImageUrl" placeholder="https://exempel.se/bild.jpg" />
                         <span class="vehicle-editor-error" asp-validation-for="Vehicle.ImageUrl"></span>
                     </label>
-
-                    <div class="vehicle-editor-upload-placeholder" aria-label="Bilduppladdning kommer senare">
-                        <i class="fa-solid fa-cloud-arrow-up"></i>
-                        <strong>Dra och släpp 16:9-bilder här</strong>
-                        <span>Platshållare för framtida bilduppladdning. Just nu används Bild-URL ovan.</span>
-                    </div>
                 </section>
 
                 <div class="vehicle-editor-actions">

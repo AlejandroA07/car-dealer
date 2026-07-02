@@ -31,11 +31,13 @@ services:
       - Services__ApiUrl=http://api:8080
       - JwtSettings__Secret=${JWT_SECRET}
       - DataProtectionPath=/app/keys
+      - ImageUploadPath=/app/wwwroot/images/uploads
     depends_on:
       api:
         condition: service_healthy
     volumes:
       - ./dpkeys:/app/keys
+      - ./web-images:/app/wwwroot/images/uploads
 
   db:
     image: postgres:16-alpine

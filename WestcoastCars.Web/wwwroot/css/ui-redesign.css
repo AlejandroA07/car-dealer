@@ -1790,6 +1790,15 @@ textarea:focus,
   font-size: 0.78rem;
 }
 
+.vehicle-editor-upload-placeholder {
+  cursor: pointer;
+}
+
+.vehicle-editor-upload-input {
+  margin-top: 0.4rem;
+  font-size: 0.78rem;
+}
+
 .vehicle-editor-actions {
   position: sticky;
   bottom: 0;

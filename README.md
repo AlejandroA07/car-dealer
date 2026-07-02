@@ -60,6 +60,19 @@ docker compose up --build
 
 > **Data protection keys** — both containers persist ASP.NET Core Data Protection keys to `./dpkeys/` on the host. Created automatically on first run. **Back it up** — losing these keys invalidates all active sessions. Do not delete between deployments.
 
+### Test accounts
+
+These accounts are seeded automatically on first startup. The password for all of them is whatever you set as `ADMIN_PASSWORD` in your `.env`.
+
+| Email | Role |
+|-------|------|
+| `admin@westcoast-cars.com` | Admin |
+| `admin2@westcoast-cars.com` | Admin |
+| `salesperson@westcoast-cars.com` | Salesperson |
+| `salesperson2@westcoast-cars.com` | Salesperson |
+| `user@westcoast-cars.com` | Customer |
+| `user2@westcoast-cars.com` | Customer |
+
 ---
 
 ## Development

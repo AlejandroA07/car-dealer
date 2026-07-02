@@ -8,10 +8,11 @@ using WestcoastCars.Contracts.DTOs;
 namespace WestcoastCars.Web.Controllers;
 
 [Route("Vehicles")]
-public class VehiclesController(IVehicleService vehicleService, IManufacturerService manufacturerService, ILogger<VehiclesController> logger) : Controller
+public class VehiclesController(IVehicleService vehicleService, IManufacturerService manufacturerService, IImageUploadService imageUploadService, ILogger<VehiclesController> logger) : Controller
 {
     private readonly IVehicleService _vehicleService = vehicleService;
     private readonly IManufacturerService _manufacturerService = manufacturerService;
+    private readonly IImageUploadService _imageUploadService = imageUploadService;
     private readonly ILogger<VehiclesController> _logger = logger;
 
     [HttpGet("list", Name = "VehicleCatalog")]
@@ -293,9 +294,15 @@ public class VehiclesController(IVehicleService vehicleService, IManufacturerSer
     {
         try
         {
+            var existing = await _vehicleService.GetVehicleByIdAsync(id);
+
             var result = await _vehicleService.DeleteVehicleAsync(id);
             if (result)
             {
+                if (existing is not null)
+                {
+                    await _imageUploadService.DeleteIfOwnedAsync(existing.ImageUrl, HttpContext.RequestAborted);
+                }
                 TempData["success"] = "Vehicle deleted successfully";
                 return RedirectToAction(nameof(Index));
             }
@@ -333,7 +340,7 @@ public class VehiclesController(IVehicleService vehicleService, IManufacturerSer
     [Authorize(Roles = "Admin,Salesperson")]
     [HttpPost("edit/{id}")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, [Bind(Prefix = "Vehicle")] VehicleDto vehicle)
+    public async Task<IActionResult> Edit(int id, [Bind(Prefix = "Vehicle")] VehicleDto vehicle, IFormFile? imageFile)
     {
         try
         {
@@ -348,10 +355,21 @@ public class VehiclesController(IVehicleService vehicleService, IManufacturerSer
                 return View("Edit", viewModel);
             }
 
+            string? replacedImageUrl = null;
+            if (imageFile is not null && imageFile.Length > 0)
+            {
+                replacedImageUrl = vehicle.ImageUrl;
+                vehicle.ImageUrl = await _imageUploadService.SaveAsync(imageFile, HttpContext.RequestAborted);
+            }
+
             var result = await _vehicleService.UpdateVehicleAsync(id, vehicle);
 
             if (result)
             {
+                if (replacedImageUrl is not null)
+                {
+                    await _imageUploadService.DeleteIfOwnedAsync(replacedImageUrl, HttpContext.RequestAborted);
+                }
                 TempData["success"] = "Vehicle updated successfully";
                 return RedirectToAction(nameof(Index));
             }
@@ -364,6 +382,17 @@ public class VehiclesController(IVehicleService vehicleService, IManufacturerSer
             errorViewModel.FuelTypes = dropdownDataFail.FuelTypes;
             errorViewModel.TransmissionTypes = dropdownDataFail.TransmissionTypes;
             return View("Edit", errorViewModel);
+        }
+        catch (InvalidOperationException ex)
+        {
+            // Thrown by IImageUploadService for an unsupported file type or oversized upload.
+            ModelState.AddModelError("imageFile", ex.Message);
+            var viewModel = new VehicleBaseViewModel { Vehicle = vehicle };
+            var dropdownData = await _vehicleService.GetVehicleForCreateAsync();
+            viewModel.Manufacturers = dropdownData.Manufacturers;
+            viewModel.FuelTypes = dropdownData.FuelTypes;
+            viewModel.TransmissionTypes = dropdownData.TransmissionTypes;
+            return View("Edit", viewModel);
         }
         catch (Exception ex)
         {
@@ -412,6 +441,11 @@ public class VehiclesController(IVehicleService vehicleService, IManufacturerSer
                 return View("Create", vehicleViewModel);
             }
 
+            if (vehicleViewModel.ImageFile is not null && vehicleViewModel.ImageFile.Length > 0)
+            {
+                vehicleViewModel.Vehicle.ImageUrl = await _imageUploadService.SaveAsync(vehicleViewModel.ImageFile, HttpContext.RequestAborted);
+            }
+
             var result = await _vehicleService.CreateVehicleAsync(vehicleViewModel);
 
             if (result)
@@ -426,6 +460,16 @@ public class VehiclesController(IVehicleService vehicleService, IManufacturerSer
             vehicleViewModel.Manufacturers = freshViewModelOnFail.Manufacturers;
             vehicleViewModel.FuelTypes = freshViewModelOnFail.FuelTypes;
             vehicleViewModel.TransmissionTypes = freshViewModelOnFail.TransmissionTypes;
+            return View("Create", vehicleViewModel);
+        }
+        catch (InvalidOperationException ex)
+        {
+            // Thrown by IImageUploadService for an unsupported file type or oversized upload.
+            ModelState.AddModelError(nameof(VehicleBaseViewModel.ImageFile), ex.Message);
+            var freshViewModel = await _vehicleService.GetVehicleForCreateAsync();
+            vehicleViewModel.Manufacturers = freshViewModel.Manufacturers;
+            vehicleViewModel.FuelTypes = freshViewModel.FuelTypes;
+            vehicleViewModel.TransmissionTypes = freshViewModel.TransmissionTypes;
             return View("Create", vehicleViewModel);
         }
         catch (Exception ex)
