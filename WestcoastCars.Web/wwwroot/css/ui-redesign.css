@@ -1369,6 +1369,82 @@ textarea:focus,
   line-height: 1.45;
 }
 
+.service-otp-widget {
+  background: var(--wc-surface-container-low);
+  border-radius: var(--wc-radius-sm);
+  padding: 0.85rem 1rem;
+}
+
+.service-otp-idle,
+.service-otp-pending,
+.service-otp-verified {
+  display: none;
+}
+
+.service-otp-widget[data-state="idle"] .service-otp-idle,
+.service-otp-widget[data-state="pending"] .service-otp-pending {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.service-otp-widget[data-state="verified"] .service-otp-verified {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.service-otp-request-btn,
+.service-otp-confirm-btn {
+  width: max-content;
+  min-height: 2.5rem;
+  padding: 0 1.1rem;
+  border-radius: var(--wc-radius-sm);
+}
+
+.service-otp-pending label {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: var(--wc-text-muted);
+}
+
+.service-otp-pending input {
+  background: var(--wc-surface-card);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: var(--wc-radius-sm);
+  padding: 0.55rem 0.75rem;
+  font-size: 1.1rem;
+  letter-spacing: 0.25rem;
+  max-width: 10rem;
+}
+
+.service-otp-pending input:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(84, 98, 83, .08);
+}
+
+.service-otp-pending-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.service-otp-resend-btn {
+  background: none;
+  border: none;
+  color: var(--wc-primary);
+  font-size: 0.8rem;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
+
+.service-otp-verified {
+  color: var(--wc-success);
+  font-weight: 600;
+}
+
 /* Admin workspace shell + vehicle editor */
 .admin-editor-page {
   min-height: 100vh;

@@ -4,7 +4,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Moq;
+using WestcoastCars.Api.Configurations;
 using WestcoastCars.Api.Controllers;
 using WestcoastCars.Application.Common.Interfaces.Authentication;
 using WestcoastCars.Application.Exceptions;
@@ -60,6 +62,23 @@ public class AuthenticationControllerTests
     }
 
     [Fact]
+    public async Task Login_ShouldReturn403_WhenEmailNotConfirmed()
+    {
+        var controller = CreateController();
+
+        _authServiceMock
+            .Setup(service => service.LoginAsync("john.doe@example.com", "Password123!"))
+            .ThrowsAsync(new EmailNotConfirmedException("Email address has not been confirmed."));
+
+        var result = await controller.Login(new LoginRequest("john.doe@example.com", "Password123!"));
+
+        var objectResult = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(StatusCodes.Status403Forbidden, objectResult.StatusCode);
+        var problemDetails = Assert.IsType<ProblemDetails>(objectResult.Value);
+        Assert.Equal("Email not confirmed", problemDetails.Detail);
+    }
+
+    [Fact]
     public async Task Login_ShouldPropagateException_WhenLoginThrows()
     {
         var controller = CreateController();
@@ -74,24 +93,19 @@ public class AuthenticationControllerTests
     }
 
     [Fact]
-    public async Task Register_ShouldReturnOk_WhenRegistrationIsSuccessful()
+    public async Task Register_ShouldReturnAccepted_WhenRegistrationIsSuccessful()
     {
         var controller = CreateController();
-        var authResult = new AuthenticationResult(
-            new AuthenticatedUser(Guid.NewGuid(), "Jane", "Doe", "jane.doe@example.com"),
-            "registered-jwt-token"
-        );
 
         _authServiceMock
-            .Setup(service => service.RegisterAsync("Jane", "Doe", "jane.doe@example.com", "Password123!"))
-            .ReturnsAsync(authResult);
+            .Setup(service => service.RegisterAsync("Jane", "Doe", "jane.doe@example.com", "Password123!", It.IsAny<string>()))
+            .Returns(Task.CompletedTask);
 
         var result = await controller.Register(new RegisterRequest("Jane", "Doe", "jane.doe@example.com", "Password123!"));
 
-        var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = Assert.IsType<AuthenticationResponse>(okResult.Value);
-        Assert.Equal(authResult.User.Id, response.Id);
-        Assert.Equal(authResult.Token, response.Token);
+        var acceptedResult = Assert.IsType<AcceptedResult>(result);
+        Assert.IsType<RegisterPendingResponse>(acceptedResult.Value);
+        _authServiceMock.Verify(service => service.RegisterAsync("Jane", "Doe", "jane.doe@example.com", "Password123!", It.IsAny<string>()), Times.Once);
     }
 
     [Fact]
@@ -100,7 +114,7 @@ public class AuthenticationControllerTests
         var controller = CreateController();
 
         _authServiceMock
-            .Setup(service => service.RegisterAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+            .Setup(service => service.RegisterAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
             .ThrowsAsync(new ConflictException("Email already registered."));
 
         var result = await controller.Register(new RegisterRequest("Jane", "Doe", "jane.doe@example.com", "Password123!"));
@@ -115,16 +129,50 @@ public class AuthenticationControllerTests
         var exception = new Exception("User already exists.");
 
         _authServiceMock
-            .Setup(service => service.RegisterAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+            .Setup(service => service.RegisterAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
             .ThrowsAsync(exception);
 
         var actual = await Assert.ThrowsAsync<Exception>(() => controller.Register(new RegisterRequest("Jane", "Doe", "jane.doe@example.com", "Password123!")));
         Assert.Same(exception, actual);
     }
 
+    [Fact]
+    public async Task ConfirmEmail_ShouldReturnOk_WhenTokenIsValid()
+    {
+        var controller = CreateController();
+        var authResult = new AuthenticationResult(
+            new AuthenticatedUser(Guid.NewGuid(), "Jane", "Doe", "jane.doe@example.com"),
+            "confirmed-jwt-token"
+        );
+
+        _authServiceMock
+            .Setup(service => service.ConfirmEmailAsync("user-1", "some-token"))
+            .ReturnsAsync(authResult);
+
+        var result = await controller.ConfirmEmail("user-1", "some-token");
+
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var response = Assert.IsType<AuthenticationResponse>(okResult.Value);
+        Assert.Equal(authResult.Token, response.Token);
+    }
+
+    [Fact]
+    public async Task ConfirmEmail_ShouldPropagateException_WhenTokenIsInvalid()
+    {
+        var controller = CreateController();
+        var exception = new ValidationException("token", ["The confirmation link is invalid or has expired."]);
+
+        _authServiceMock
+            .Setup(service => service.ConfirmEmailAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ThrowsAsync(exception);
+
+        var actual = await Assert.ThrowsAsync<ValidationException>(() => controller.ConfirmEmail("user-1", "bad-token"));
+        Assert.Same(exception, actual);
+    }
+
     private AuthenticationController CreateController()
     {
-        return new AuthenticationController(_authServiceMock.Object)
+        return new AuthenticationController(_authServiceMock.Object, Options.Create(new AppOptions { BaseUrl = "http://localhost:5000" }))
         {
             ControllerContext = new ControllerContext
             {

@@ -19,7 +19,7 @@ public class ListServiceBookingsQueryHandler(IUnitOfWork unitOfWork) : IRequestH
 
         return new PagedResult<ServiceBookingSummaryDto>
         {
-            Items = paged.Items.Select(b => b.ToDto()).ToList(),
+            Items = [.. paged.Items.Select(b => b.ToDto())],
             TotalCount = paged.TotalCount,
             Page = paged.Page,
             PageSize = paged.PageSize

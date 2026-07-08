@@ -1,6 +1,6 @@
 # VPS deployment overlay.
 # Usage: docker compose -f docker-compose.yml -f docker-compose.deploy.yml up -d
-# Secrets: POSTGRES_PASSWORD, JWT_SECRET, ADMIN_PASSWORD must be set in a .env file
+# Secrets: POSTGRES_PASSWORD, JWT_SECRET, GUEST_VERIFICATION_SECRET, ADMIN_PASSWORD, WEB_BASE_URL must be set in a .env file
 #          on the VPS (chmod 600 .env). For stronger isolation, migrate to Docker
 #          Secrets by updating the API to read the password from /run/secrets/db_password.
 
@@ -19,6 +19,8 @@ services:
     ports: []
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
+      # Public URL of the Web app, used to build email confirmation links
+      - App__BaseUrl=${WEB_BASE_URL}
 
   # Remove the public database port — internal Docker network only
   db:

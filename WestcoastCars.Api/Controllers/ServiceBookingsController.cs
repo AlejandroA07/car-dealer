@@ -10,6 +10,7 @@ using WestcoastCars.Application.Features.ServiceBookings.Commands.Create;
 using WestcoastCars.Application.Features.ServiceBookings.Commands.Delete;
 using WestcoastCars.Application.Features.ServiceBookings.Queries.ListAll;
 using WestcoastCars.Application.Features.ServiceBookings.Queries.GetWeekSlots;
+using WestcoastCars.Application.Services;
 using WestcoastCars.Domain.Common.Enums;
 using WestcoastCars.Api.Observability;
 using System.Diagnostics;
@@ -22,11 +23,16 @@ namespace WestcoastCars.Api.Controllers;
 [ApiController]
 [Route("api/v1/service-bookings")]
 [Tags("Service Bookings")]
-public class ServiceBookingsController(IMediator mediator, ILogger<ServiceBookingsController> logger, AppTelemetry telemetry) : ControllerBase
+public class ServiceBookingsController(
+    IMediator mediator,
+    ILogger<ServiceBookingsController> logger,
+    AppTelemetry telemetry,
+    IGuestEmailVerificationService guestEmailVerificationService) : ControllerBase
 {
     private readonly IMediator _mediator = mediator;
     private readonly ILogger<ServiceBookingsController> _logger = logger;
     private readonly AppTelemetry _telemetry = telemetry;
+    private readonly IGuestEmailVerificationService _guestEmailVerificationService = guestEmailVerificationService;
 
     /// <summary>
     /// Lists all service bookings. Requires Admin or Salesperson role.
@@ -140,6 +146,11 @@ public class ServiceBookingsController(IMediator mediator, ILogger<ServiceBookin
     [ProducesResponseType(400)]
     public async Task<IActionResult> Create(ServiceBookingPostDto dto)
     {
+        if (User?.Identity?.IsAuthenticated != true)
+        {
+            await _guestEmailVerificationService.EnsureEmailIsVerifiedAsync(dto.VerifiedEmailToken, dto.CustomerEmail);
+        }
+
         var command = new CreateServiceBookingCommand
         {
             VehicleRegistrationNumber = dto.VehicleRegistrationNumber,

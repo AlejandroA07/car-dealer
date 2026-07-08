@@ -55,6 +55,36 @@ public class ServiceController(IServiceBookingService bookingService) : Controll
         return View();
     }
 
+    [HttpPost("Service/RequestVerificationCode")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RequestVerificationCode([FromBody] RequestCodeRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Email))
+        {
+            return Json(new { ok = false, error = "Ange en e-postadress." });
+        }
+
+        var result = await _bookingService.RequestVerificationCodeAsync(request.Email);
+        return result.Succeeded
+            ? Json(new { ok = true, sessionToken = result.SessionToken })
+            : Json(new { ok = false, error = result.ErrorMessage });
+    }
+
+    [HttpPost("Service/ConfirmVerificationCode")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ConfirmVerificationCode([FromBody] ConfirmCodeRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.SessionToken) || string.IsNullOrWhiteSpace(request.Code))
+        {
+            return Json(new { ok = false, error = "Ange koden." });
+        }
+
+        var result = await _bookingService.ConfirmVerificationCodeAsync(request.SessionToken, request.Code);
+        return result.Succeeded
+            ? Json(new { ok = true, verifiedEmailToken = result.VerifiedEmailToken })
+            : Json(new { ok = false, error = result.ErrorMessage });
+    }
+
     [HttpGet("admin/bookings")]
     [Authorize(Roles = "Admin,Salesperson")]
     public async Task<IActionResult> AdminList()
@@ -155,3 +185,6 @@ public class ServiceController(IServiceBookingService bookingService) : Controll
         model.AvailabilityErrorMessage = slotsResult.ErrorMessage ?? string.Empty;
     }
 }
+
+public record RequestCodeRequest(string Email);
+public record ConfirmCodeRequest(string SessionToken, string Code);

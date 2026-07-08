@@ -4,6 +4,7 @@ using WestcoastCars.Application.Features.Vehicles.Commands.Create;
 using WestcoastCars.Contracts.Admin;
 using WestcoastCars.Contracts.Auth;
 using WestcoastCars.Contracts.DTOs;
+using WestcoastCars.Contracts.Verification;
 using Xunit;
 
 namespace WestcoastCars.Api.IntegrationTests;
@@ -51,6 +52,56 @@ public class IntegrationTestBase(CustomWebApplicationFactory<Program> factory) :
         var authResponse = await response.Content.ReadFromJsonAsync<AuthenticationResponse>();
         Assert.NotNull(authResponse);
         return authResponse;
+    }
+
+    /// <summary>
+    /// Registers a new customer, confirms the email via the link captured by TestEmailService,
+    /// and returns the resulting JWT — mirrors the real register -> click link -> logged in flow.
+    /// </summary>
+    protected async Task<AuthenticationResponse> RegisterAndConfirmAsync(string firstName, string lastName, string email, string password)
+    {
+        var registerResponse = await _client.PostAsJsonAsync(
+            "/api/auth/register",
+            new RegisterRequest(firstName, lastName, email, password));
+        registerResponse.EnsureSuccessStatusCode();
+
+        var confirmationLink = CustomWebApplicationFactory<Program>.GetLastConfirmationLink(email);
+        Assert.NotNull(confirmationLink);
+
+        // The link points at the Web app's route (e.g. "/auth/confirm-email?...") since that's
+        // what production emails — but these are API-only integration tests, so hit the API's
+        // own "/api/auth/confirm-email" route directly instead of the Web-app path.
+        var confirmResponse = await _client.GetAsync("/api" + confirmationLink);
+        confirmResponse.EnsureSuccessStatusCode();
+        var authResponse = await confirmResponse.Content.ReadFromJsonAsync<AuthenticationResponse>();
+        Assert.NotNull(authResponse);
+        return authResponse;
+    }
+
+    /// <summary>
+    /// Runs the guest OTP flow (request-code -> read the code TestEmailService captured -> confirm-code)
+    /// and returns a verified-email token to submit with an anonymous service booking.
+    /// </summary>
+    protected async Task<string> GetVerifiedEmailTokenAsync(string email)
+    {
+        var requestResponse = await _client.PostAsJsonAsync(
+            "/api/v1/service-bookings/verification/request-code",
+            new RequestVerificationCodeDto { Email = email });
+        requestResponse.EnsureSuccessStatusCode();
+        var requestBody = await requestResponse.Content.ReadFromJsonAsync<RequestVerificationCodeResponseDto>();
+        Assert.NotNull(requestBody);
+
+        var code = CustomWebApplicationFactory<Program>.GetLastVerificationCode(email);
+        Assert.NotNull(code);
+
+        var confirmResponse = await _client.PostAsJsonAsync(
+            "/api/v1/service-bookings/verification/confirm-code",
+            new ConfirmVerificationCodeDto { SessionToken = requestBody.SessionToken, Code = code });
+        confirmResponse.EnsureSuccessStatusCode();
+        var confirmBody = await confirmResponse.Content.ReadFromJsonAsync<ConfirmVerificationCodeResponseDto>();
+        Assert.NotNull(confirmBody);
+
+        return confirmBody.VerifiedEmailToken;
     }
 
     protected async Task<(int ManufacturerId, int FuelTypeId, int TransmissionTypeId)> GetVehicleLookupIdsAsync()

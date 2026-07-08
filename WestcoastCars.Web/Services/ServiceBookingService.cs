@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using WestcoastCars.Web.ViewModels.ServiceBooking;
 using WestcoastCars.Contracts.DTOs;
+using WestcoastCars.Contracts.Verification;
 
 namespace WestcoastCars.Web.Services;
 
@@ -117,6 +118,56 @@ public class ServiceBookingService(IHttpClientFactory httpClientFactory, ILogger
         }
     }
 
+    public async Task<VerificationResult> RequestVerificationCodeAsync(string email)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync(
+                "api/v1/service-bookings/verification/request-code",
+                new RequestVerificationCodeDto { Email = email });
+
+            if (response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadFromJsonAsync<RequestVerificationCodeResponseDto>();
+                return body is null
+                    ? VerificationResult.Failure("Ogiltigt svar från verifieringstjänsten.")
+                    : VerificationResult.RequestSuccess(body.SessionToken);
+            }
+
+            return VerificationResult.Failure(await ExtractErrorAsync(response, "Det gick inte att skicka koden."));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error requesting verification code for {Email}", email);
+            return VerificationResult.Failure("Det gick inte att kontakta verifieringstjänsten.");
+        }
+    }
+
+    public async Task<VerificationResult> ConfirmVerificationCodeAsync(string sessionToken, string code)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync(
+                "api/v1/service-bookings/verification/confirm-code",
+                new ConfirmVerificationCodeDto { SessionToken = sessionToken, Code = code });
+
+            if (response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadFromJsonAsync<ConfirmVerificationCodeResponseDto>();
+                return body is null
+                    ? VerificationResult.Failure("Ogiltigt svar från verifieringstjänsten.")
+                    : VerificationResult.ConfirmSuccess(body.VerifiedEmailToken);
+            }
+
+            return VerificationResult.Failure(await ExtractErrorAsync(response, "Fel kod. Försök igen."));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error confirming verification code");
+            return VerificationResult.Failure("Det gick inte att kontakta verifieringstjänsten.");
+        }
+    }
+
     private async Task<ServiceBookingDataResult<IReadOnlyList<ServiceBookingSummaryDto>>> ListBookingsAsync(string state)
     {
         try
@@ -137,19 +188,22 @@ public class ServiceBookingService(IHttpClientFactory httpClientFactory, ILogger
 
     private static async Task<ServiceBookingActionResult> CreateFailureResultAsync(HttpResponseMessage response, string fallbackMessage)
     {
-        ProblemDetails? problemDetails = null;
+        return ServiceBookingActionResult.Failure(
+            response.StatusCode,
+            await ExtractErrorAsync(response, fallbackMessage));
+    }
 
+    private static async Task<string> ExtractErrorAsync(HttpResponseMessage response, string fallback)
+    {
         try
         {
-            problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+            var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+            return problemDetails?.Detail ?? fallback;
         }
         catch
         {
             // Ignore payload parsing issues and fall back to a generic message.
+            return fallback;
         }
-
-        return ServiceBookingActionResult.Failure(
-            response.StatusCode,
-            problemDetails?.Detail ?? fallbackMessage);
     }
 }

@@ -32,9 +32,11 @@ public class LocalImageUploadServiceTests : IDisposable
         {
             Directory.Delete(_storagePath, recursive: true);
         }
+
+        GC.SuppressFinalize(this);
     }
 
-    private static IFormFile CreateFormFile(byte[] content, string fileName = "photo.jpg", string contentType = "image/jpeg")
+    private static FormFile CreateFormFile(byte[] content, string fileName = "photo.jpg", string contentType = "image/jpeg")
     {
         var stream = new MemoryStream(content);
         return new FormFile(stream, 0, content.Length, "file", fileName)

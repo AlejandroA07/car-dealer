@@ -41,7 +41,9 @@ Open `.env` and fill in your values — Docker Compose injects these into all co
 |----------|-------------|
 | `POSTGRES_PASSWORD` | PostgreSQL password |
 | `JWT_SECRET` | JWT signing secret — minimum 32 characters |
+| `GUEST_VERIFICATION_SECRET` | Signing secret for guest booking email-verification tokens — minimum 32 characters, keep distinct from `JWT_SECRET` |
 | `ADMIN_PASSWORD` | Admin seed account password |
+| `EMAIL_SMTP_HOST`, `EMAIL_SMTP_PORT`, `EMAIL_SMTP_USERNAME`, `EMAIL_SMTP_PASSWORD`, `EMAIL_FROM_ADDRESS` | Outgoing SMTP for registration/booking-verification emails — **optional locally**: leave blank and confirmation links/codes are logged to the console instead of emailed; required for any non-Development deployment. Free option: [Brevo](https://brevo.com) (no domain needed); see `.env.example` for setup steps |
 
 **2. Start the stack**
 
@@ -60,9 +62,13 @@ docker compose up --build
 
 > **Data protection keys** — both containers persist ASP.NET Core Data Protection keys to `./dpkeys/` on the host. Created automatically on first run. **Back it up** — losing these keys invalidates all active sessions. Do not delete between deployments.
 
+> **No email setup needed to try it out** — if you leave the `EMAIL_SMTP_*` variables blank, registration confirmation links and guest-booking verification codes are printed to the API's logs (`docker compose logs api`) instead of emailed. You can type **any** email address (real or made up, e.g. `test@example.com`) when registering or booking as a guest — nothing is actually sent, so there's no need to use a real inbox. Just grab the link/code from the logs to complete the flow.
+>
+> Prefer not to touch the email flow at all? Log in with one of the seeded accounts below instead (they're pre-confirmed) — logged-in users skip email verification entirely when booking a service.
+
 ### Test accounts
 
-These accounts are seeded automatically on first startup. The password for all of them is whatever you set as `ADMIN_PASSWORD` in your `.env`.
+These accounts are seeded automatically on first startup, already confirmed. The password for all of them is whatever you set as `ADMIN_PASSWORD` in your `.env`.
 
 | Email | Role |
 |-------|------|
@@ -72,6 +78,8 @@ These accounts are seeded automatically on first startup. The password for all o
 | `salesperson2@westcoast-cars.com` | Salesperson |
 | `user@westcoast-cars.com` | Customer |
 | `user2@westcoast-cars.com` | Customer |
+
+The vehicle catalog is also seeded automatically on first startup (~10 vehicles) — no manual "seed" step needed before browsing.
 
 ---
 
@@ -99,7 +107,9 @@ Open `.env` and fill in your values:
 |----------|-------------|
 | `POSTGRES_PASSWORD` | PostgreSQL password |
 | `JWT_SECRET` | JWT signing secret — minimum 32 characters |
+| `GUEST_VERIFICATION_SECRET` | Signing secret for guest booking email-verification tokens — minimum 32 characters, keep distinct from `JWT_SECRET` |
 | `ADMIN_PASSWORD` | Admin seed account password |
+| `EMAIL_SMTP_HOST`, `EMAIL_SMTP_PORT`, `EMAIL_SMTP_USERNAME`, `EMAIL_SMTP_PASSWORD`, `EMAIL_FROM_ADDRESS` | Outgoing SMTP for registration/booking-verification emails — **optional locally**: leave blank and confirmation links/codes are logged to the console instead of emailed; required for any non-Development deployment. Free option: [Brevo](https://brevo.com) (no domain needed); see `.env.example` for setup steps |
 
 **b) Set user secrets**
 
@@ -115,7 +125,15 @@ dotnet user-secrets set "ConnectionStrings:DefaultConnection" \
 
 dotnet user-secrets set "JwtSettings:Secret" "<JWT_SECRET>"
 
+dotnet user-secrets set "GuestVerification:Secret" "<GUEST_VERIFICATION_SECRET>"
+
 dotnet user-secrets set "AdminSettings:Password" "<ADMIN_PASSWORD>"
+
+dotnet user-secrets set "Email:SmtpHost" "<EMAIL_SMTP_HOST>"
+dotnet user-secrets set "Email:SmtpPort" "<EMAIL_SMTP_PORT>"
+dotnet user-secrets set "Email:Username" "<EMAIL_SMTP_USERNAME>"
+dotnet user-secrets set "Email:Password" "<EMAIL_SMTP_PASSWORD>"
+dotnet user-secrets set "Email:FromAddress" "<EMAIL_FROM_ADDRESS>"
 ```
 
 Web — from `WestcoastCars.Web/`:

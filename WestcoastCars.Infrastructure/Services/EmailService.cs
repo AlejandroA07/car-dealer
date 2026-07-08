@@ -73,6 +73,48 @@ public class EmailService(IOptions<EmailOptions> options, ILogger<EmailService> 
         await SendAsync(toEmail, customerName, subject, body);
     }
 
+    public async Task SendEmailVerificationAsync(string toEmail, string name, string confirmationLink)
+    {
+        var subject = "Bekräfta din e-postadress – Westcoast Cars";
+        var body = $"""
+            Hej {name},
+
+            Tack för att du skapade ett konto hos Westcoast Cars!
+
+            Bekräfta din e-postadress genom att klicka på länken nedan:
+
+              {confirmationLink}
+
+            Om du inte har skapat detta konto kan du bortse från detta meddelande.
+
+            Vänliga hälsningar,
+            Westcoast Cars
+            """;
+
+        await SendAsync(toEmail, name, subject, body);
+    }
+
+    public async Task SendVerificationCodeAsync(string toEmail, string code, int expiryMinutes)
+    {
+        var subject = "Din verifieringskod – Westcoast Cars";
+        var body = $"""
+            Hej,
+
+            Din verifieringskod för att boka service är:
+
+              {code}
+
+            Koden är giltig i {expiryMinutes} minuter. Dela inte koden med någon.
+
+            Om du inte har begärt denna kod kan du bortse från detta meddelande.
+
+            Vänliga hälsningar,
+            Westcoast Cars
+            """;
+
+        await SendAsync(toEmail, toEmail, subject, body);
+    }
+
     private async Task SendAsync(string toEmail, string toName, string subject, string body)
     {
         if (string.IsNullOrWhiteSpace(_options.SmtpHost) || string.IsNullOrWhiteSpace(_options.FromAddress))

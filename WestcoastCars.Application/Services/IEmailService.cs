@@ -18,4 +18,8 @@ public interface IEmailService
         DateTime bookingDate,
         TimeSlot timeSlot,
         string reason);
+
+    Task SendEmailVerificationAsync(string toEmail, string name, string confirmationLink);
+
+    Task SendVerificationCodeAsync(string toEmail, string code, int expiryMinutes);
 }

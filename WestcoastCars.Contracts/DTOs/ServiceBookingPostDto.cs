@@ -37,4 +37,12 @@ public class ServiceBookingPostDto
 
     [MaxLength(36)]
     public string? IdempotencyKey { get; set; }
+
+    /// <summary>
+    /// Proof that <see cref="CustomerEmail"/> was verified via the OTP flow
+    /// (POST .../verification/request-code + confirm-code). Required unless the
+    /// caller is authenticated (their account email is already confirmed).
+    /// </summary>
+    [MaxLength(2000)]
+    public string? VerifiedEmailToken { get; set; }
 }

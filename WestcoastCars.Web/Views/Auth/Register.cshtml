@@ -1,0 +1,85 @@
+@model WestcoastCars.Web.ViewModels.Auth.RegisterViewModel
+
+@{
+    ViewData["Title"] = "Skapa konto";
+    ViewData["HideChrome"] = true;
+    Layout = "_Layout";
+}
+
+<section class="auth-login-page" style="position: relative;">
+    <a asp-action="Index" asp-controller="Home" class="auth-home-btn">
+        <i class="fa-solid fa-arrow-left"></i> Hem
+    </a>
+
+    <div class="auth-login-shell">
+        <div class="auth-login-panel">
+            <div class="auth-login-card">
+                <div class="auth-brand-block">
+                    <h1>Westcoast Cars</h1>
+                    <p>Nordisk enkelhet i varje steg</p>
+                </div>
+
+                <div class="auth-login-heading">
+                    <h2>Skapa konto</h2>
+                </div>
+
+                <form asp-controller="Auth" asp-action="Register" method="post" class="auth-login-form" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="auth-validation-summary"></div>
+
+                    <div class="auth-field">
+                        <label asp-for="FirstName">Förnamn</label>
+                        <input asp-for="FirstName" autocomplete="given-name" placeholder="Erik" />
+                        <span asp-validation-for="FirstName" class="auth-field-error"></span>
+                    </div>
+
+                    <div class="auth-field">
+                        <label asp-for="LastName">Efternamn</label>
+                        <input asp-for="LastName" autocomplete="family-name" placeholder="Larsson" />
+                        <span asp-validation-for="LastName" class="auth-field-error"></span>
+                    </div>
+
+                    <div class="auth-field">
+                        <label asp-for="Email">E-postadress</label>
+                        <input asp-for="Email" type="email" autocomplete="username" placeholder="namn@exempel.com" />
+                        <span asp-validation-for="Email" class="auth-field-error"></span>
+                    </div>
+
+                    <div class="auth-field">
+                        <label asp-for="Password">Lösenord</label>
+                        <input asp-for="Password" type="password" autocomplete="new-password" placeholder="••••••••" />
+                        <span asp-validation-for="Password" class="auth-field-error"></span>
+                    </div>
+
+                    <div class="auth-field">
+                        <label asp-for="ConfirmPassword">Bekräfta lösenord</label>
+                        <input asp-for="ConfirmPassword" type="password" autocomplete="new-password" placeholder="••••••••" />
+                        <span asp-validation-for="ConfirmPassword" class="auth-field-error"></span>
+                    </div>
+
+                    <button type="submit" class="auth-submit-button">
+                        Skapa konto <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </form>
+
+                <div class="auth-catalog-link">
+                    <span>Har du redan ett konto?</span>
+                    <a asp-controller="Auth" asp-action="Login">Logga in</a>
+                </div>
+
+                <p class="auth-copyright">© 2026 Westcoast Cars. Alla rättigheter förbehållna.</p>
+            </div>
+        </div>
+
+        <aside class="auth-login-visual" aria-label="Westcoast Cars">
+            <div>
+                <span class="auth-visual-chip">Nordic engineering</span>
+                <h2>Horisonten väntar.</h2>
+                <p>Upplev tydlighet, kvalitet och personlig service med Westcoast Cars.</p>
+            </div>
+        </aside>
+    </div>
+</section>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
