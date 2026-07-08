@@ -68,7 +68,10 @@ public class IntegrationTestBase(CustomWebApplicationFactory<Program> factory) :
         var confirmationLink = CustomWebApplicationFactory<Program>.GetLastConfirmationLink(email);
         Assert.NotNull(confirmationLink);
 
-        var confirmResponse = await _client.GetAsync(confirmationLink);
+        // The link points at the Web app's route (e.g. "/auth/confirm-email?...") since that's
+        // what production emails — but these are API-only integration tests, so hit the API's
+        // own "/api/auth/confirm-email" route directly instead of the Web-app path.
+        var confirmResponse = await _client.GetAsync("/api" + confirmationLink);
         confirmResponse.EnsureSuccessStatusCode();
         var authResponse = await confirmResponse.Content.ReadFromJsonAsync<AuthenticationResponse>();
         Assert.NotNull(authResponse);

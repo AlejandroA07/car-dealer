@@ -19,7 +19,7 @@ public class ListAllVehiclesQueryHandler(IUnitOfWork unitOfWork) : IRequestHandl
 
         return new PagedResult<VehicleSummaryDto>
         {
-            Items = vehicles.Items.Select(v => v.ToSummaryDto()).ToList(),
+            Items = [.. vehicles.Items.Select(v => v.ToSummaryDto())],
             TotalCount = vehicles.TotalCount,
             Page = vehicles.Page,
             PageSize = vehicles.PageSize

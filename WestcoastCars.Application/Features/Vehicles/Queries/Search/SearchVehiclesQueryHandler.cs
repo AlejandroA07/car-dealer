@@ -14,7 +14,7 @@ public class SearchVehiclesQueryHandler(IUnitOfWork unitOfWork) : IRequestHandle
         var vehicles = await _unitOfWork.VehicleRepository.SearchAsync(request.Criteria);
         return new PagedResult<VehicleSummaryDto>
         {
-            Items = vehicles.Items.Select(v => v.ToSummaryDto()).ToList(),
+            Items = [.. vehicles.Items.Select(v => v.ToSummaryDto())],
             TotalCount = vehicles.TotalCount,
             Page = vehicles.Page,
             PageSize = vehicles.PageSize

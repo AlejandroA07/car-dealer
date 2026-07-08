@@ -99,12 +99,7 @@ public class AuthService(
 
     public async Task<AuthenticationResult> ConfirmEmailAsync(string userId, string token)
     {
-        var user = await _userManager.FindByIdAsync(userId);
-        if (user is null)
-        {
-            throw new ValidationException(nameof(userId), ["The confirmation link is invalid or has expired."]);
-        }
-
+        var user = await _userManager.FindByIdAsync(userId) ?? throw new ValidationException(nameof(userId), ["The confirmation link is invalid or has expired."]);
         var result = await _userManager.ConfirmEmailAsync(user, token);
         if (!result.Succeeded)
         {

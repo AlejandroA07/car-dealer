@@ -328,7 +328,7 @@ public class WebVehiclesControllerTests
         _imageUploadServiceMock.Verify(s => s.DeleteIfOwnedAsync(It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
-    private static IFormFile CreateFormFile()
+    private static FormFile CreateFormFile()
     {
         var content = new byte[] { 0xFF, 0xD8, 0xFF };
         var stream = new MemoryStream(content);
