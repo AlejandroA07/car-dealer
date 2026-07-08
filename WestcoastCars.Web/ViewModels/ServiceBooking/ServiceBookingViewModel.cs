@@ -42,4 +42,6 @@ public class ServiceBookingViewModel
     public string Description { get; set; } = string.Empty;
 
     public string? IdempotencyKey { get; set; }
+
+    public string? VerifiedEmailToken { get; set; }
 }

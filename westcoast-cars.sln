@@ -28,6 +28,8 @@ Project("{66A26720-8FB5-11D2-AA7E-00C04F688DDE}") = "Tests", "Tests", "{A26D2F47
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WestcoastCars.Web.Tests", "WestcoastCars.Web.Tests\WestcoastCars.Web.Tests.csproj", "{A4FAD191-1A40-4286-B982-E8CF0CD45904}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WestcoastCars.Infrastructure.Tests", "WestcoastCars.Infrastructure.Tests\WestcoastCars.Infrastructure.Tests.csproj", "{71B354F3-C5CC-4367-B4D2-CE1D1E3E4DD6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -158,6 +160,21 @@ Global
 		{A4FAD191-1A40-4286-B982-E8CF0CD45904}.Release|x64.Build.0 = Release|Any CPU
 		{A4FAD191-1A40-4286-B982-E8CF0CD45904}.Release|x86.ActiveCfg = Release|Any CPU
 		{A4FAD191-1A40-4286-B982-E8CF0CD45904}.Release|x86.Build.0 = Release|Any CPU
+		{71B354F3-C5CC-4367-B4D2-CE1D1E3E4DD6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{71B354F3-C5CC-4367-B4D2-CE1D1E3E4DD6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{71B354F3-C5CC-4367-B4D2-CE1D1E3E4DD6}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{71B354F3-C5CC-4367-B4D2-CE1D1E3E4DD6}.Debug|x64.Build.0 = Debug|Any CPU
+		{71B354F3-C5CC-4367-B4D2-CE1D1E3E4DD6}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{71B354F3-C5CC-4367-B4D2-CE1D1E3E4DD6}.Debug|x86.Build.0 = Debug|Any CPU
+		{71B354F3-C5CC-4367-B4D2-CE1D1E3E4DD6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{71B354F3-C5CC-4367-B4D2-CE1D1E3E4DD6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{71B354F3-C5CC-4367-B4D2-CE1D1E3E4DD6}.Release|x64.ActiveCfg = Release|Any CPU
+		{71B354F3-C5CC-4367-B4D2-CE1D1E3E4DD6}.Release|x64.Build.0 = Release|Any CPU
+		{71B354F3-C5CC-4367-B4D2-CE1D1E3E4DD6}.Release|x86.ActiveCfg = Release|Any CPU
+		{71B354F3-C5CC-4367-B4D2-CE1D1E3E4DD6}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{548EC7CF-2010-481E-A4FA-90C289AC1D29} = {03FB1595-BF8B-4956-8382-25840353B2F3}
@@ -170,8 +187,6 @@ Global
 		{96CC295D-4AB9-4799-865A-E0BAEF1E54B1} = {A26D2F47-2180-4C62-B5A3-09E8F1A92D8D}
 		{B95F2BF2-1188-4FF7-B3C4-6D8B8B00D7D2} = {A26D2F47-2180-4C62-B5A3-09E8F1A92D8D}
 		{A4FAD191-1A40-4286-B982-E8CF0CD45904} = {A26D2F47-2180-4C62-B5A3-09E8F1A92D8D}
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
+		{71B354F3-C5CC-4367-B4D2-CE1D1E3E4DD6} = {A26D2F47-2180-4C62-B5A3-09E8F1A92D8D}
 	EndGlobalSection
 EndGlobal

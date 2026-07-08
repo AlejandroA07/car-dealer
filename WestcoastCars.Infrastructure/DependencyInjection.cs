@@ -50,18 +50,21 @@ public static class DependencyInjection
             options.Password.RequireUppercase = true;
             options.Password.RequireNonAlphanumeric = false;
             options.Password.RequiredLength = 8;
+            options.SignIn.RequireConfirmedEmail = true;
         })
         .AddEntityFrameworkStores<WestcoastCarsContext>()
         .AddDefaultTokenProviders();
 
         services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
         services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
+        services.Configure<GuestVerificationSettings>(configuration.GetSection(GuestVerificationSettings.SectionName));
 
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
         services.AddScoped<WestcoastCars.Application.Services.IAuthService, AuthService>();
         services.AddScoped<WestcoastCars.Application.Services.IAdminService, AdminService>();
         services.AddScoped<WestcoastCars.Application.Services.IEmailService, EmailService>();
+        services.AddScoped<WestcoastCars.Application.Services.IGuestEmailVerificationService, GuestEmailVerificationService>();
 
         return services;
     }

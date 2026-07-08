@@ -69,6 +69,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<AuthHandler>();
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>

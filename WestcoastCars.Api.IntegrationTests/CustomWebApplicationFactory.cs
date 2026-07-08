@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using DotNet.Testcontainers.Builders;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Hosting;
@@ -34,10 +35,20 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
     {
         builder.UseSetting("ConnectionStrings:DefaultConnection", _connectionString);
         builder.UseSetting("RateLimiting:BookingCreatePermitLimit", "100");
+        builder.UseSetting("RateLimiting:AuthPermitLimit", "1000");
+        builder.UseSetting("RateLimiting:OtpRequestPermitLimit", "100");
+        builder.UseSetting("RateLimiting:OtpConfirmPermitLimit", "100");
         builder.UseSetting("JwtSettings:Secret", "super-secret-key-for-testing-purposes-only-123");
         builder.UseSetting("JwtSettings:Issuer", "WestcoastCars.Auth");
         builder.UseSetting("JwtSettings:Audience", "WestcoastCars.Auth");
         builder.UseSetting("JwtSettings:ExpiryMinutes", "60");
+        builder.UseSetting("App:BaseUrl", "");
+        builder.UseSetting("GuestVerification:Secret", "another-super-secret-key-for-testing-purposes-only-456");
+        builder.UseSetting("GuestVerification:Issuer", "WestcoastCars.GuestVerification");
+        builder.UseSetting("GuestVerification:Audience", "WestcoastCars.GuestVerification");
+        builder.UseSetting("GuestVerification:CodeLength", "6");
+        builder.UseSetting("GuestVerification:CodeExpiryMinutes", "10");
+        builder.UseSetting("GuestVerification:VerifiedTokenExpiryMinutes", "20");
         builder.UseSetting("AdminSettings:Password", AdminPassword);
         builder.ConfigureServices(services =>
         {
@@ -46,8 +57,17 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
         });
     }
 
+    public static string? GetLastConfirmationLink(string email) => TestEmailService.LastConfirmationLinks.GetValueOrDefault(NormalizeEmail(email));
+
+    public static string? GetLastVerificationCode(string email) => TestEmailService.LastVerificationCodes.GetValueOrDefault(NormalizeEmail(email));
+
+    private static string NormalizeEmail(string email) => email.Trim().ToLowerInvariant();
+
     public async Task ResetDatabaseAsync()
     {
+        TestEmailService.LastConfirmationLinks.Clear();
+        TestEmailService.LastVerificationCodes.Clear();
+
         using var scope = Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<WestcoastCarsContext>();
 
@@ -88,6 +108,21 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
 
     private sealed class TestEmailService : IEmailService
     {
+        public static readonly ConcurrentDictionary<string, string> LastConfirmationLinks = new();
+        public static readonly ConcurrentDictionary<string, string> LastVerificationCodes = new();
+
+        public Task SendEmailVerificationAsync(string toEmail, string name, string confirmationLink)
+        {
+            LastConfirmationLinks[NormalizeEmail(toEmail)] = confirmationLink;
+            return Task.CompletedTask;
+        }
+
+        public Task SendVerificationCodeAsync(string toEmail, string code, int expiryMinutes)
+        {
+            LastVerificationCodes[NormalizeEmail(toEmail)] = code;
+            return Task.CompletedTask;
+        }
+
         public Task SendBookingConfirmationAsync(
             string toEmail,
             string customerName,

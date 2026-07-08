@@ -15,6 +15,8 @@ public class ServiceBookingsIntegrationTests(CustomWebApplicationFactory<Program
         var adminClient = await CreateAuthenticatedClientAsync();
         var registrationNumber = $"BOOK{Guid.NewGuid():N}"[..8].ToUpperInvariant();
         await CreateVehicleAsync(adminClient, registrationNumber, "Booking Model");
+        var customerEmail = $"integration-{Guid.NewGuid():N}@example.com";
+        var verifiedEmailToken = await GetVerifiedEmailTokenAsync(customerEmail);
 
         var createResponse = await _client.PostAsJsonAsync("/api/v1/service-bookings", new ServiceBookingPostDto
         {
@@ -23,9 +25,10 @@ public class ServiceBookingsIntegrationTests(CustomWebApplicationFactory<Program
             BookingDate = DateTime.UtcNow.AddDays(7),
             TimeSlot = (int)TimeSlot.Morning,
             CustomerName = "Integration Customer",
-            CustomerEmail = "integration@example.com",
+            CustomerEmail = customerEmail,
             CustomerPhone = "0700000000",
-            Description = "Booking flow integration test"
+            Description = "Booking flow integration test",
+            VerifiedEmailToken = verifiedEmailToken
         });
 
         createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -47,6 +50,8 @@ public class ServiceBookingsIntegrationTests(CustomWebApplicationFactory<Program
     public async Task Create_ShouldPersistServiceBooking_WhenVehicleRegistrationDoesNotExist()
     {
         var adminClient = await CreateAuthenticatedClientAsync();
+        var customerEmail = $"missing-{Guid.NewGuid():N}@example.com";
+        var verifiedEmailToken = await GetVerifiedEmailTokenAsync(customerEmail);
 
         var response = await _client.PostAsJsonAsync("/api/v1/service-bookings", new ServiceBookingPostDto
         {
@@ -55,9 +60,10 @@ public class ServiceBookingsIntegrationTests(CustomWebApplicationFactory<Program
             BookingDate = DateTime.UtcNow.AddDays(7),
             TimeSlot = (int)TimeSlot.Afternoon,
             CustomerName = "Missing Vehicle",
-            CustomerEmail = "missing@example.com",
+            CustomerEmail = customerEmail,
             CustomerPhone = "0700000001",
-            Description = "Invalid registration"
+            Description = "Invalid registration",
+            VerifiedEmailToken = verifiedEmailToken
         });
 
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -100,6 +106,10 @@ public class ServiceBookingsIntegrationTests(CustomWebApplicationFactory<Program
     public async Task Create_ShouldReturnConflict_WhenRegistrationAlreadyHasActiveBooking()
     {
         var bookingDate = DateTime.UtcNow.AddDays(7);
+        var firstEmail = $"first-{Guid.NewGuid():N}@example.com";
+        var secondEmail = $"second-{Guid.NewGuid():N}@example.com";
+        var firstToken = await GetVerifiedEmailTokenAsync(firstEmail);
+        var secondToken = await GetVerifiedEmailTokenAsync(secondEmail);
 
         var firstResponse = await _client.PostAsJsonAsync("/api/v1/service-bookings", new ServiceBookingPostDto
         {
@@ -108,8 +118,9 @@ public class ServiceBookingsIntegrationTests(CustomWebApplicationFactory<Program
             BookingDate = bookingDate,
             TimeSlot = (int)TimeSlot.Morning,
             CustomerName = "First Customer",
-            CustomerEmail = "first@example.com",
-            CustomerPhone = "0700000002"
+            CustomerEmail = firstEmail,
+            CustomerPhone = "0700000002",
+            VerifiedEmailToken = firstToken
         });
 
         firstResponse.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -121,8 +132,9 @@ public class ServiceBookingsIntegrationTests(CustomWebApplicationFactory<Program
             BookingDate = bookingDate.AddDays(1),
             TimeSlot = (int)TimeSlot.Afternoon,
             CustomerName = "Second Customer",
-            CustomerEmail = "second@example.com",
-            CustomerPhone = "0700000003"
+            CustomerEmail = secondEmail,
+            CustomerPhone = "0700000003",
+            VerifiedEmailToken = secondToken
         });
 
         secondResponse.StatusCode.Should().Be(HttpStatusCode.Conflict);
@@ -152,6 +164,10 @@ public class ServiceBookingsIntegrationTests(CustomWebApplicationFactory<Program
     public async Task Create_ShouldAllowOnlyOneConcurrentBookingPerSlot()
     {
         var bookingDate = DateTime.UtcNow.AddDays(8);
+        var firstEmail = $"first-slot-{Guid.NewGuid():N}@example.com";
+        var secondEmail = $"second-slot-{Guid.NewGuid():N}@example.com";
+        var firstToken = await GetVerifiedEmailTokenAsync(firstEmail);
+        var secondToken = await GetVerifiedEmailTokenAsync(secondEmail);
 
         var firstRequest = new ServiceBookingPostDto
         {
@@ -160,8 +176,9 @@ public class ServiceBookingsIntegrationTests(CustomWebApplicationFactory<Program
             BookingDate = bookingDate,
             TimeSlot = (int)TimeSlot.MidMorning,
             CustomerName = "First Customer",
-            CustomerEmail = "first-slot@example.com",
-            CustomerPhone = "0700000010"
+            CustomerEmail = firstEmail,
+            CustomerPhone = "0700000010",
+            VerifiedEmailToken = firstToken
         };
 
         var secondRequest = new ServiceBookingPostDto
@@ -171,8 +188,9 @@ public class ServiceBookingsIntegrationTests(CustomWebApplicationFactory<Program
             BookingDate = bookingDate,
             TimeSlot = (int)TimeSlot.MidMorning,
             CustomerName = "Second Customer",
-            CustomerEmail = "second-slot@example.com",
-            CustomerPhone = "0700000011"
+            CustomerEmail = secondEmail,
+            CustomerPhone = "0700000011",
+            VerifiedEmailToken = secondToken
         };
 
         var firstTask = _client.PostAsJsonAsync("/api/v1/service-bookings", firstRequest);

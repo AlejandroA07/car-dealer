@@ -12,7 +12,13 @@ services:
       - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=westcoast_cars;Username=postgres;Password=${POSTGRES_PASSWORD};SSL Mode=Prefer
       - apiImageUrl=http://api:8080/images/
       - JwtSettings__Secret=${JWT_SECRET}
+      - GuestVerification__Secret=${GUEST_VERIFICATION_SECRET}
       - AdminSettings__Password=${ADMIN_PASSWORD}
+      - Email__SmtpHost=${EMAIL_SMTP_HOST}
+      - Email__SmtpPort=${EMAIL_SMTP_PORT}
+      - Email__Username=${EMAIL_SMTP_USERNAME}
+      - Email__Password=${EMAIL_SMTP_PASSWORD}
+      - Email__FromAddress=${EMAIL_FROM_ADDRESS}
       - DataProtectionPath=/app/keys
     depends_on:
       db:

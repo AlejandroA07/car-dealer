@@ -249,11 +249,40 @@
                             <input asp-for="BookingForm.CustomerEmail" type="email" placeholder="erik.larsson@example.com" autocomplete="email" />
                             <span asp-validation-for="BookingForm.CustomerEmail" class="service-field-error"></span>
                         </label>
+
+                        @if (User.Identity?.IsAuthenticated != true)
+                        {
+                            <div class="service-field service-field-wide service-otp-widget" id="otpWidget" data-state="idle">
+                                <input type="hidden" asp-for="BookingForm.VerifiedEmailToken" id="verifiedEmailToken" />
+
+                                <div class="service-otp-idle">
+                                    <button type="button" class="btn btn-dark service-otp-request-btn" id="otpRequestBtn">
+                                        Skicka verifieringskod till e-post
+                                    </button>
+                                </div>
+
+                                <div class="service-otp-pending">
+                                    <label>
+                                        <span>Ange 6-siffrig kod</span>
+                                        <input type="text" inputmode="numeric" maxlength="6" id="otpCodeInput" autocomplete="one-time-code" placeholder="123456" />
+                                    </label>
+                                    <div class="service-otp-pending-actions">
+                                        <button type="button" class="btn btn-primary service-otp-confirm-btn" id="otpConfirmBtn">Bekräfta kod</button>
+                                        <button type="button" class="service-otp-resend-btn" id="otpResendBtn">Skicka ny kod</button>
+                                    </div>
+                                    <span class="service-field-error" id="otpError"></span>
+                                </div>
+
+                                <div class="service-otp-verified">
+                                    <i class="fa-solid fa-circle-check"></i> E-post verifierad
+                                </div>
+                            </div>
+                        }
                     </div>
                 </section>
 
                 <div class="service-submit-row">
-                    <button type="submit" class="btn btn-primary service-submit-button" @(Model.AvailabilityLoadFailed ? "disabled" : "")>
+                    <button type="submit" class="btn btn-primary service-submit-button" id="serviceSubmitButton" @((Model.AvailabilityLoadFailed || User.Identity?.IsAuthenticated != true) ? "disabled" : "")>
                         Bekräfta bokning <i class="fa-solid fa-calendar-check"></i>
                     </button>
                     <p>Din tid bekräftas direkt när bokningen lyckas och bekräftelsen skickas till din e-post.</p>
@@ -265,6 +294,7 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/service-booking-verification.js"></script>
     <script nonce="@Context.Items["CspNonce"]">
         (function () {
             var dateInput = document.getElementById('selectedDate');

@@ -34,7 +34,11 @@ public class AdminService(
         var user = new IdentityUser
         {
             Email = email,
-            UserName = email
+            UserName = email,
+            // Admin-created accounts are vouched for out-of-band; they don't go through
+            // the customer email-confirmation flow, so mark the email confirmed up front
+            // (otherwise RequireConfirmedEmail would lock these accounts out of login).
+            EmailConfirmed = true
         };
 
         var result = await _userManager.CreateAsync(user, password);

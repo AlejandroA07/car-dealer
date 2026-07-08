@@ -1,7 +1,7 @@
-@model WestcoastCars.Web.ViewModels.Auth.LoginViewModel
+@model WestcoastCars.Web.ViewModels.Auth.RegisterViewModel
 
 @{
-    ViewData["Title"] = "Logga in";
+    ViewData["Title"] = "Skapa konto";
     ViewData["HideChrome"] = true;
     Layout = "_Layout";
 }
@@ -20,13 +20,23 @@
                 </div>
 
                 <div class="auth-login-heading">
-                    <h2>Logga in</h2>
+                    <h2>Skapa konto</h2>
                 </div>
 
-                <form asp-controller="Auth" asp-action="Login" asp-route-returnurl="@Model.ReturnUrl" method="post" class="auth-login-form" novalidate>
-                    <input asp-for="ReturnUrl" type="hidden" />
-
+                <form asp-controller="Auth" asp-action="Register" method="post" class="auth-login-form" novalidate>
                     <div asp-validation-summary="ModelOnly" class="auth-validation-summary"></div>
+
+                    <div class="auth-field">
+                        <label asp-for="FirstName">Förnamn</label>
+                        <input asp-for="FirstName" autocomplete="given-name" placeholder="Erik" />
+                        <span asp-validation-for="FirstName" class="auth-field-error"></span>
+                    </div>
+
+                    <div class="auth-field">
+                        <label asp-for="LastName">Efternamn</label>
+                        <input asp-for="LastName" autocomplete="family-name" placeholder="Larsson" />
+                        <span asp-validation-for="LastName" class="auth-field-error"></span>
+                    </div>
 
                     <div class="auth-field">
                         <label asp-for="Email">E-postadress</label>
@@ -35,32 +45,25 @@
                     </div>
 
                     <div class="auth-field">
-                        <div class="auth-label-row">
-                            <label asp-for="Password">Lösenord</label>
-                            <span>Glömt lösenord?</span>
-                        </div>
-                        <input asp-for="Password" type="password" autocomplete="current-password" placeholder="••••••••" />
+                        <label asp-for="Password">Lösenord</label>
+                        <input asp-for="Password" type="password" autocomplete="new-password" placeholder="••••••••" />
                         <span asp-validation-for="Password" class="auth-field-error"></span>
                     </div>
 
-                    <label class="auth-remember-row">
-                        <input asp-for="RememberMe" type="checkbox" />
-                        <span>Kom ihåg mig i 30 dagar</span>
-                    </label>
+                    <div class="auth-field">
+                        <label asp-for="ConfirmPassword">Bekräfta lösenord</label>
+                        <input asp-for="ConfirmPassword" type="password" autocomplete="new-password" placeholder="••••••••" />
+                        <span asp-validation-for="ConfirmPassword" class="auth-field-error"></span>
+                    </div>
 
                     <button type="submit" class="auth-submit-button">
-                        Logga in <i class="fa-solid fa-arrow-right"></i>
+                        Skapa konto <i class="fa-solid fa-arrow-right"></i>
                     </button>
                 </form>
 
                 <div class="auth-catalog-link">
-                    <span>Inget konto?</span>
-                    <a asp-controller="Auth" asp-action="Register">Registrera dig</a>
-                </div>
-
-                <div class="auth-catalog-link">
-                    <span>Intresserad av vårt lager?</span>
-                    <a asp-route="VehicleCatalog">Visa katalog</a>
+                    <span>Har du redan ett konto?</span>
+                    <a asp-controller="Auth" asp-action="Login">Logga in</a>
                 </div>
 
                 <p class="auth-copyright">© 2026 Westcoast Cars. Alla rättigheter förbehållna.</p>

@@ -13,4 +13,6 @@ public interface IServiceBookingService
     Task<ServiceBookingActionResult> CancelAsync(int id, string cancellationReason);
     Task<ServiceBookingActionResult> CompleteAsync(int id);
     Task<ServiceBookingActionResult> DeleteAsync(int id);
+    Task<VerificationResult> RequestVerificationCodeAsync(string email);
+    Task<VerificationResult> ConfirmVerificationCodeAsync(string sessionToken, string code);
 }

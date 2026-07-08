@@ -8,19 +8,54 @@ namespace WestcoastCars.Api.IntegrationTests;
 public class AuthIntegrationTests(CustomWebApplicationFactory<Program> factory) : IntegrationTestBase(factory)
 {
     [Fact]
-    public async Task Register_ShouldCreateCustomerAndReturnJwt()
+    public async Task Register_ShouldReturnAccepted_AndSendConfirmationEmail_WithNoJwt()
     {
         var email = $"customer-{Guid.NewGuid():N}@example.com";
         var response = await _client.PostAsJsonAsync(
             "/api/auth/register",
             new RegisterRequest("Test", "Customer", email, "Password123!"));
 
-        response.EnsureSuccessStatusCode();
-        var authResponse = await response.Content.ReadFromJsonAsync<AuthenticationResponse>();
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
+        var pending = await response.Content.ReadFromJsonAsync<RegisterPendingResponse>();
+        Assert.NotNull(pending);
 
-        Assert.NotNull(authResponse);
+        var confirmationLink = CustomWebApplicationFactory<Program>.GetLastConfirmationLink(email);
+        Assert.False(string.IsNullOrWhiteSpace(confirmationLink));
+    }
+
+    [Fact]
+    public async Task Login_ShouldReturnForbidden_BeforeEmailIsConfirmed()
+    {
+        var email = $"customer-{Guid.NewGuid():N}@example.com";
+        var registerResponse = await _client.PostAsJsonAsync(
+            "/api/auth/register",
+            new RegisterRequest("Test", "Customer", email, "Password123!"));
+        registerResponse.EnsureSuccessStatusCode();
+
+        var response = await _client.PostAsJsonAsync(
+            "/api/auth/login",
+            new LoginRequest(email, "Password123!"));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ConfirmEmail_ShouldReturnJwt_AndAllowSubsequentLogin()
+    {
+        var email = $"customer-{Guid.NewGuid():N}@example.com";
+        var authResponse = await RegisterAndConfirmAsync("Test", "Customer", email, "Password123!");
+
         Assert.Equal(email, authResponse.Email);
         Assert.False(string.IsNullOrWhiteSpace(authResponse.Token));
+
+        var loginResponse = await _client.PostAsJsonAsync(
+            "/api/auth/login",
+            new LoginRequest(email, "Password123!"));
+
+        loginResponse.EnsureSuccessStatusCode();
+        var loginAuthResponse = await loginResponse.Content.ReadFromJsonAsync<AuthenticationResponse>();
+        Assert.NotNull(loginAuthResponse);
+        Assert.Equal(email, loginAuthResponse.Email);
     }
 
     [Fact]
@@ -84,12 +119,7 @@ public class AuthIntegrationTests(CustomWebApplicationFactory<Program> factory) 
     public async Task Customer_ShouldBeForbiddenFromAdminOnlyEndpoint()
     {
         var email = $"customer-{Guid.NewGuid():N}@example.com";
-        var registerResponse = await _client.PostAsJsonAsync(
-            "/api/auth/register",
-            new RegisterRequest("Test", "Customer", email, "Password123!"));
-        registerResponse.EnsureSuccessStatusCode();
-        var customer = await registerResponse.Content.ReadFromJsonAsync<AuthenticationResponse>();
-        Assert.NotNull(customer);
+        var customer = await RegisterAndConfirmAsync("Test", "Customer", email, "Password123!");
 
         var customerClient = _factory.CreateClient();
         customerClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", customer.Token);

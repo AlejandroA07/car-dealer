@@ -9,9 +9,13 @@ using Microsoft.IdentityModel.Tokens;
 using WestcoastCars.Api.Configurations;
 
 using WestcoastCars.Application.Interfaces;
+using WestcoastCars.Application.Services;
 using WestcoastCars.Infrastructure.Data;
+using WestcoastCars.Infrastructure.Options;
 using WestcoastCars.Infrastructure.Repositories;
+using WestcoastCars.Infrastructure.Services;
 using WestcoastCars.Infrastructure;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using FluentValidation;
 using WestcoastCars.Application.Common.Behaviors;
 using Microsoft.AspNetCore.DataProtection;
@@ -38,6 +42,24 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
+
+// Email is optional in Development: if no SMTP host is configured, fall back to logging
+// email content to the console instead (confirmation links / OTP codes show up in the
+// logs) so the register/confirm and guest-booking flows work with zero setup. Any other
+// environment fails fast at startup if SMTP isn't configured, rather than silently
+// dropping emails.
+var emailOptions = builder.Configuration.GetSection(EmailOptions.SectionName).Get<EmailOptions>();
+if (string.IsNullOrWhiteSpace(emailOptions?.SmtpHost))
+{
+    if (!builder.Environment.IsDevelopment())
+    {
+        throw new InvalidOperationException(
+            "Email:SmtpHost is not configured. Set the EMAIL_SMTP_* environment variables (see .env.example) before deploying outside Development.");
+    }
+
+    builder.Services.RemoveAll<IEmailService>();
+    builder.Services.AddScoped<IEmailService, ConsoleEmailService>();
+}
 builder.Services.AddSingleton<AppTelemetry>();
 builder.Services.AddOpenTelemetry()
     .WithTracing(tracing =>
@@ -60,6 +82,7 @@ builder.Services.AddOpenTelemetry()
 // Configure Options
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
 builder.Services.Configure<AdminOptions>(builder.Configuration.GetSection(AdminOptions.SectionName));
+builder.Services.Configure<AppOptions>(builder.Configuration.GetSection(AppOptions.SectionName));
 
 // Configure data protection to persist keys from configuration.
 var keysPath = builder.Configuration["DataProtectionPath"] ?? "dpkeys";
@@ -97,7 +120,7 @@ builder.Services.AddRateLimiter(options =>
 
     options.AddFixedWindowLimiter("auth", o =>
     {
-        o.PermitLimit = 10;
+        o.PermitLimit = builder.Configuration.GetValue<int>("RateLimiting:AuthPermitLimit", 10);
         o.Window = TimeSpan.FromMinutes(1);
         o.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
         o.QueueLimit = 0;
@@ -105,6 +128,20 @@ builder.Services.AddRateLimiter(options =>
     options.AddFixedWindowLimiter("booking-create", o =>
     {
         o.PermitLimit = builder.Configuration.GetValue<int>("RateLimiting:BookingCreatePermitLimit", 5);
+        o.Window = TimeSpan.FromMinutes(10);
+        o.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        o.QueueLimit = 0;
+    });
+    options.AddFixedWindowLimiter("otp-request", o =>
+    {
+        o.PermitLimit = builder.Configuration.GetValue<int>("RateLimiting:OtpRequestPermitLimit", 5);
+        o.Window = TimeSpan.FromMinutes(10);
+        o.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        o.QueueLimit = 0;
+    });
+    options.AddFixedWindowLimiter("otp-confirm", o =>
+    {
+        o.PermitLimit = builder.Configuration.GetValue<int>("RateLimiting:OtpConfirmPermitLimit", 10);
         o.Window = TimeSpan.FromMinutes(10);
         o.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
         o.QueueLimit = 0;
@@ -245,6 +282,10 @@ using (var scope = app.Services.CreateScope())
             throw new InvalidOperationException("AdminSettings:Password is not configured. Set the ADMIN_PASSWORD environment variable (production) or add it to user secrets (development).");
 
         await IdentitySeedData.SeedRolesAndUsers(userManager, roleManager, adminPassword, logger);
+
+        // Idempotent — no-ops if vehicles already exist. Keeps the catalog populated
+        // out of the box (e.g. for `docker compose up` with no manual setup).
+        await SeedData.LoadVehicleData(context);
     }
     catch (Exception ex)
     {
