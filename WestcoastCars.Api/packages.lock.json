@@ -97,6 +97,12 @@
           "OpenTelemetry.Api": "[1.15.0, 2.0.0)"
         }
       },
+      "SonarAnalyzer.CSharp": {
+        "type": "Direct",
+        "requested": "[10.28.0.143324, )",
+        "resolved": "10.28.0.143324",
+        "contentHash": "ZnmYHFiQw2Aph2ft9c7UqVrqe79aZR5l7oeG59+sgrSAO9J159meglP1Zo34+Mcw4etIUTC9btYnP0Ar/rQIyg=="
+      },
       "Swashbuckle.AspNetCore": {
         "type": "Direct",
         "requested": "[10.1.7, )",

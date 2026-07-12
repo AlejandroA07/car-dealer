@@ -20,3 +20,9 @@ dotnet_diagnostic.CA1873.severity = none
 dotnet_diagnostic.CA2254.severity = none
 dotnet_diagnostic.ASP0015.severity = none
 dotnet_diagnostic.SYSLIB1045.severity = none
+
+# Demoted analyzer rules — high volume, low value here:
+# CA1707: underscores in identifiers — conflicts with xUnit test naming convention
+# CA1848: LoggerMessage delegates — perf micro-optimization, not worth a codebase-wide refactor
+dotnet_diagnostic.CA1707.severity = suggestion
+dotnet_diagnostic.CA1848.severity = suggestion
