@@ -3,6 +3,9 @@ name: Blocket E2E
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   blocket-e2e:
     runs-on: ubuntu-latest
@@ -10,10 +13,12 @@ jobs:
       RUN_BLOCKET_E2E: "1"
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
         with:
           dotnet-version: "10.0.x"
 
@@ -24,7 +29,7 @@ jobs:
         run: dotnet test --configuration Release --filter "Category=ExternalE2E" --logger "trx;LogFileName=blocket-e2e.trx" --results-directory ./TestResults
 
       - name: Upload E2E results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: blocket-e2e-results
           path: TestResults/**/*.trx

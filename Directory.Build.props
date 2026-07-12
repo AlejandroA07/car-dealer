@@ -4,5 +4,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <!-- Built-in .NET analyzers incl. security rules. Disable per build with -p:DisableExtraAnalyzers=true -->
+    <AnalysisLevel Condition="'$(DisableExtraAnalyzers)' != 'true'">latest-recommended</AnalysisLevel>
   </PropertyGroup>
 </Project>
