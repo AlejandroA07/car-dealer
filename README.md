@@ -32,7 +32,7 @@ Just want to run the app? You only need Docker — no .NET SDK required.
 **1. Set up credentials**
 
 ```bash
-cp .env.example .env
+cp env.example .env
 ```
 
 Open `.env` and fill in your values — Docker Compose injects these into all containers:
@@ -43,7 +43,7 @@ Open `.env` and fill in your values — Docker Compose injects these into all co
 | `JWT_SECRET` | JWT signing secret — minimum 32 characters |
 | `GUEST_VERIFICATION_SECRET` | Signing secret for guest booking email-verification tokens — minimum 32 characters, keep distinct from `JWT_SECRET` |
 | `ADMIN_PASSWORD` | Admin seed account password |
-| `EMAIL_SMTP_HOST`, `EMAIL_SMTP_PORT`, `EMAIL_SMTP_USERNAME`, `EMAIL_SMTP_PASSWORD`, `EMAIL_FROM_ADDRESS` | Outgoing SMTP for registration/booking-verification emails — **optional locally**: leave blank and confirmation links/codes are logged to the console instead of emailed; required for any non-Development deployment. Free option: [Brevo](https://brevo.com) (no domain needed); see `.env.example` for setup steps |
+| `EMAIL_SMTP_HOST`, `EMAIL_SMTP_PORT`, `EMAIL_SMTP_USERNAME`, `EMAIL_SMTP_PASSWORD`, `EMAIL_FROM_ADDRESS` | Outgoing SMTP for registration/booking-verification emails — **optional locally**: leave blank and confirmation links/codes are logged to the console instead of emailed; required for any non-Development deployment. Free option: [Brevo](https://brevo.com) (no domain needed); see `env.example` for setup steps |
 
 **2. Start the stack**
 
@@ -98,7 +98,7 @@ You need credentials in two places: `.env` (used by the DB container) and user s
 **a) Create your `.env`**
 
 ```bash
-cp .env.example .env
+cp env.example .env
 ```
 
 Open `.env` and fill in your values:
@@ -109,7 +109,7 @@ Open `.env` and fill in your values:
 | `JWT_SECRET` | JWT signing secret — minimum 32 characters |
 | `GUEST_VERIFICATION_SECRET` | Signing secret for guest booking email-verification tokens — minimum 32 characters, keep distinct from `JWT_SECRET` |
 | `ADMIN_PASSWORD` | Admin seed account password |
-| `EMAIL_SMTP_HOST`, `EMAIL_SMTP_PORT`, `EMAIL_SMTP_USERNAME`, `EMAIL_SMTP_PASSWORD`, `EMAIL_FROM_ADDRESS` | Outgoing SMTP for registration/booking-verification emails — **optional locally**: leave blank and confirmation links/codes are logged to the console instead of emailed; required for any non-Development deployment. Free option: [Brevo](https://brevo.com) (no domain needed); see `.env.example` for setup steps |
+| `EMAIL_SMTP_HOST`, `EMAIL_SMTP_PORT`, `EMAIL_SMTP_USERNAME`, `EMAIL_SMTP_PASSWORD`, `EMAIL_FROM_ADDRESS` | Outgoing SMTP for registration/booking-verification emails — **optional locally**: leave blank and confirmation links/codes are logged to the console instead of emailed; required for any non-Development deployment. Free option: [Brevo](https://brevo.com) (no domain needed); see `env.example` for setup steps |
 
 **b) Set user secrets**
 

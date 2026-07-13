@@ -72,7 +72,7 @@ NUnit-*.xml
 
 .env
 .env.*
-!.env.example
+# example env files are committed as env.example (no leading dot)
 prod_db_password.txt
 **/dpkeys/
 web-images/
@@ -94,13 +94,3 @@ Thumbs.db
 hotreload.json
 dev-env.cmd
 westcoastcars.db
-
-# ─── AI tooling ──────────────────────────────────────────────────────────────
-
-.claude/
-
-# ─── Docs & markdown (local / draft) ─────────────────────────────────────────
-
-/*.md
-!/README.md
-docs/

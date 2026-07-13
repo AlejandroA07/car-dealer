@@ -3,11 +3,17 @@ name: Blocket E2E
 on:
   workflow_dispatch:
 
+# Manual-only workflow; still cap to one run at a time.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
-  contents: read
+  contents: read # checkout only
 
 jobs:
   blocket-e2e:
+    name: Blocket external E2E suite
     runs-on: ubuntu-latest
     env:
       RUN_BLOCKET_E2E: "1"

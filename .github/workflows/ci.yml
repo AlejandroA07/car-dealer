@@ -6,11 +6,17 @@ on:
   pull_request:
     branches: [main]
 
+# One run per branch/PR; superseded runs are cancelled to save minutes.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
-  contents: read
+  contents: read # default for all jobs — build-and-test widens only for the PR coverage comment
 
 jobs:
   secret-scan:
+    name: Secret scan (full history)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout (full history for scan)
@@ -25,6 +31,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   lint:
+    name: Format gate
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -46,11 +53,12 @@ jobs:
           dotnet format style --verify-no-changes --severity info
 
   build-and-test:
+    name: Build, test, coverage
     needs: lint
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      pull-requests: write
+      contents: read # checkout
+      pull-requests: write # sticky coverage comment on PRs
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -75,8 +83,22 @@ jobs:
 
       - name: Check for vulnerable packages
         run: |
-          dotnet list package --vulnerable --include-transitive 2>&1 | tee vuln.txt
-          if grep -q "has the following vulnerable packages" vuln.txt; then
+          dotnet list package --vulnerable --include-transitive --format json > vuln.json
+          count=$(python3 - <<'PY'
+          import json
+          d = json.load(open('vuln.json'))
+          print(sum(
+              len(pkg.get('vulnerabilities') or [])
+              for proj in d.get('projects', [])
+              for fw in proj.get('frameworks') or []
+              for key in ('topLevelPackages', 'transitivePackages')
+              for pkg in fw.get(key) or []
+          ))
+          PY
+          )
+          echo "vulnerabilities found: $count"
+          if [ "$count" -gt 0 ]; then
+            cat vuln.json
             echo "Vulnerable packages detected — failing build."
             exit 1
           fi
@@ -124,6 +146,7 @@ jobs:
           path: code-coverage-results.md
 
   docker-build:
+    name: Docker compose build
     needs: build-and-test
     runs-on: ubuntu-latest
     steps:
