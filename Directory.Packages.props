@@ -34,7 +34,7 @@
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.17.0" />
     <PackageVersion Include="Testcontainers.PostgreSql" Version="4.11.0" />
     <PackageVersion Include="xunit" Version="2.9.3" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0" />
   </ItemGroup>
   <!-- Solution-wide static analysis. Disable per build with -p:DisableExtraAnalyzers=true -->
   <ItemGroup Condition="'$(DisableExtraAnalyzers)' != 'true'">
